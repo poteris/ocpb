@@ -1,11 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Welcome } from '@/components/screens/WelcomePage';
-import { ScenarioSetup } from '@/components/screens/ScenarioSetup';
-import { InitiateChat } from '@/components/screens/InitiateChat';
-import { ChatScreen } from '@/components/screens/ChatScreen';
-import { HistoryScreen } from '@/components/screens/History';
+'use client';
 
-type Screen = 'welcome' | 'scenarioSetup' | 'initiateChat' | 'activeChat' | 'feedback' | 'history';
+import React, { createContext, useContext, useState } from 'react';
+
+type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
 
 interface RouterParams {
   [key: string]: string | number | boolean;
@@ -13,8 +10,8 @@ interface RouterParams {
 
 interface RouterContextType {
   currentScreen: Screen;
-  navigateTo: (screen: Screen, params?: RouterParams) => void;
   params: RouterParams;
+  navigateTo: (screen: Screen, params?: RouterParams) => void;
 }
 
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
@@ -46,24 +43,3 @@ export const useRouter = () => {
   }
   return context;
 };
-
-export const Router: React.FC = () => {
-  const { currentScreen } = useRouter();
-
-  switch (currentScreen) {
-    case 'welcome':
-      return <Welcome />;
-    case 'scenarioSetup':
-      return <ScenarioSetup />;
-    case 'initiateChat':
-      return <InitiateChat />;
-    case 'activeChat':
-      return <ChatScreen />;
-    case 'history':
-      return <HistoryScreen />;
-    default:
-      return <Welcome />;
-  }
-};
-
-// Removed unused 'routes' variable

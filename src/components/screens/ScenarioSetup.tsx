@@ -49,7 +49,7 @@ export const ScenarioSetup: React.FC = () => {
             <Button
               variant="progress"
               text="Start Chat"
-              onClick={() => navigateTo('initiateChat')}
+              onClick={() => navigateTo('initiate-chat')}
               className="flex-1"
             />
           </div>

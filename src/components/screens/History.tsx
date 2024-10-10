@@ -69,7 +69,7 @@ export const HistoryScreen: React.FC = () => {
                     <Button 
                       variant="default" 
                       text="View" 
-                      onClick={() => navigateTo('activeChat', { sessionId: session.id })}
+                      onClick={() => navigateTo('chat', { sessionId: session.id })}
                       size="sm"
                     />
                   </div>
@@ -97,7 +97,7 @@ export const HistoryScreen: React.FC = () => {
                 variant="progress"
                 text="New Scenario"
                 icon={<Plus size={16} />}
-                onClick={() => navigateTo('scenarioSetup')}
+                onClick={() => navigateTo('scenario-setup')}
               />
             </div>
           </div>

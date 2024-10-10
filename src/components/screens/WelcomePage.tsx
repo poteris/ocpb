@@ -28,7 +28,7 @@ export const Welcome: React.FC = () => {
                 <Button
                   variant="options"
                   text={scenario}
-                  onClick={() => navigateTo('scenarioSetup')}
+                  onClick={() => navigateTo('scenario-setup', { scenario })}
                   className="w-full"
                 />
               </li>

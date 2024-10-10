@@ -21,12 +21,12 @@ export const InitiateChat: React.FC = () => {
 
   const handlePromptSelect = (shortPrompt: string) => {
     const fullPrompt = promptMap[shortPrompt as keyof typeof promptMap];
-    navigateTo('activeChat', { firstMessage: fullPrompt });
+    navigateTo('chat', { firstMessage: fullPrompt });
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      navigateTo('activeChat', { firstMessage: inputMessage.trim() });
+      navigateTo('chat', { firstMessage: inputMessage.trim() });
     }
   };
 
