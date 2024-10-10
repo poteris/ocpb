@@ -7,19 +7,23 @@ import { HistoryScreen } from '@/components/screens/History';
 
 type Screen = 'welcome' | 'scenarioSetup' | 'initiateChat' | 'activeChat' | 'feedback' | 'history';
 
+interface RouterParams {
+  [key: string]: string | number | boolean;
+}
+
 interface RouterContextType {
   currentScreen: Screen;
-  navigateTo: (screen: Screen, params?: any) => void;
-  params: any;
+  navigateTo: (screen: Screen, params?: RouterParams) => void;
+  params: RouterParams;
 }
 
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
 
 export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('welcome');
-  const [params, setParams] = useState<any>({});
+  const [params, setParams] = useState<RouterParams>({});
 
-  const navigateTo = (screen: Screen, newParams?: any) => {
+  const navigateTo = (screen: Screen, newParams?: RouterParams) => {
     setCurrentScreen(screen);
     if (newParams) {
       setParams(newParams);
@@ -62,9 +66,4 @@ export const Router: React.FC = () => {
   }
 };
 
-const routes: Record<string, React.ComponentType> = {
-  welcome: Welcome,
-  chat: ChatScreen,
-  history: HistoryScreen,
-  // ... (other routes)
-};
+// Removed unused 'routes' variable

@@ -20,7 +20,6 @@ export const Button = ({
   text,
   onClick,
   icon,
-  size = "md",
 }: Props): JSX.Element => {
   const baseClasses = "inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium";
   

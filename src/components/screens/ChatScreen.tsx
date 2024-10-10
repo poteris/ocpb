@@ -89,7 +89,7 @@ export const ChatScreen: React.FC = () => {
       if (params.firstMessage) {
         const userMessage: Message = {
           id: Date.now().toString(),
-          text: params.firstMessage,
+          text: params.firstMessage.toString(),
           sender: 'user',
         };
         newSession.messages.push(userMessage);
@@ -99,7 +99,7 @@ export const ChatScreen: React.FC = () => {
       saveSessionToStorage(newSession);
 
       if (params.firstMessage) {
-        generateBotResponse(params.firstMessage);
+        generateBotResponse(params.firstMessage.toString());
       }
     }
 
