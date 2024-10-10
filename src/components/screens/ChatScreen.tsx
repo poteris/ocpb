@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Layout } from '../Layout';
 import { InfoPopover, Modal } from '../ui';
 import { MessageList } from "./ChatMessageList";
-import { useRouter } from '@/utils/router';
 import { Info, Mic } from 'react-feather';
 import { Button } from '../ui';
 import { generateResponse } from '@/utils/api';
@@ -10,11 +9,20 @@ import { Message, ChatSession } from '@/types';
 import { FeedbackPopover } from './FeedbackScreen';
 import analysisData from './analysis.json';
 
+type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
+
+interface ChatScreenProps {
+  navigateTo: (screen: Screen) => void;
+  params: {
+    sessionId?: string;
+    firstMessage?: string;
+  };
+}
+
 const STORAGE_KEY = 'chatSessions';
 
-export const ChatScreen: React.FC = () => {
+export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) => {
   const [inputMessage, setInputMessage] = useState("");
-  const { params, navigateTo } = useRouter();
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -22,6 +30,7 @@ export const ChatScreen: React.FC = () => {
   const [showEndChatModal, setShowEndChatModal] = useState(false);
   const sessionInitialized = useRef(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
+  console.log(params.firstMessage)
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -114,12 +123,12 @@ export const ChatScreen: React.FC = () => {
     if (inputMessage.trim()) {
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: inputMessage,
+        text: inputMessage.trim(),
         sender: 'user',
       };
       addMessage(newMessage);
       setInputMessage("");
-      generateBotResponse(inputMessage);
+      generateBotResponse(inputMessage.trim());
     }
   };
 
@@ -172,13 +181,14 @@ export const ChatScreen: React.FC = () => {
               placeholder="Start typing ..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             />
           </div>
           <button 
             onClick={handleSendMessage} 
             className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
             aria-label="Send message"
+            disabled={!inputMessage.trim()} // Disable the button when input is empty
           >
             <Mic size={18} />
           </button>

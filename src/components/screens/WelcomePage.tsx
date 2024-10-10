@@ -1,7 +1,6 @@
 import React from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui';
-import { useRouter } from '@/utils/router';
 
 const scenarios = [
   'Grievance Handling',
@@ -11,9 +10,13 @@ const scenarios = [
   'Union Leadership',
 ];
 
-export const Welcome: React.FC = () => {
-  const { navigateTo } = useRouter();
+type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
 
+interface WelcomeProps {
+  navigateTo: (screen: Screen) => void;
+}
+
+export const Welcome: React.FC<WelcomeProps> = ({ navigateTo }) => {
   return (
     <Layout headerType="alt">
       <div className="flex flex-col h-full">
@@ -28,7 +31,7 @@ export const Welcome: React.FC = () => {
                 <Button
                   variant="options"
                   text={scenario}
-                  onClick={() => navigateTo('scenario-setup', { scenario })}
+                  onClick={() => navigateTo('scenario-setup')}
                   className="w-full"
                 />
               </li>

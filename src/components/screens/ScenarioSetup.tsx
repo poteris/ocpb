@@ -1,11 +1,14 @@
 import React from 'react';
 import { Layout } from '../Layout';
 import { Button } from '../ui';
-import { useRouter } from '@/utils/router';
 
-export const ScenarioSetup: React.FC = () => {
-  const { navigateTo } = useRouter();
+type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
 
+interface ScenarioSetupProps {
+  navigateTo: (screen: Screen) => void;
+}
+
+export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ navigateTo }) => {
   return (
     <Layout>
       <div className="flex flex-col h-full">
