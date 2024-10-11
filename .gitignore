@@ -1,4 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 ocpb.code-workspace
 
@@ -7,6 +6,8 @@ ocpb.code-workspace
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+# just to be sure
+node_modules 
 
 # testing
 /coverage
@@ -29,6 +30,7 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
 
 # vercel
 .vercel
@@ -36,3 +38,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vscode
+.vscode
+setup.code-workspace
