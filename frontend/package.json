@@ -16,7 +16,7 @@
     "react-feather": "^2.0.10"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "20.16.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",
