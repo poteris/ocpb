@@ -10,7 +10,7 @@ import { Button } from '@/components/ui';
 import { ChatSession, Message } from '@/types/chat';
 import { FeedbackPopover } from './FeedbackScreen';
 import analysisData from './analysis.json';
-import { createThread, sendMessage, runAssistant, getThreadMessages } from '@/utils/api';
+import { createAssistant, createThread, sendMessage, runAssistant, getThreadMessages } from '@/utils/api';
 
 const STORAGE_KEY = 'chatSessions';
 
@@ -28,6 +28,7 @@ const ChatScreenContent: React.FC = () => {
   const sessionInitialized = useRef(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [assistantId, setAssistantId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -92,24 +93,32 @@ const ChatScreenContent: React.FC = () => {
       if (session) {
         setCurrentSession(session);
         setThreadId(session.threadId);
+        setAssistantId(session.assistantId);
         thread = { id: session.threadId };
       } else {
         console.error('Session not found');
         // Handle error - maybe navigate back to history or create a new session
       }
     } else {
-      // Create a new chat session
-      const userId = 'user-id'; // Replace with actual user ID
-      const assistantId = 'assistant-id'; // Replace with your assistant ID
-      thread = await createThread(userId, assistantId);
-      const newSession: ChatSession = {
-        id: Date.now().toString(),
-        threadId: thread.id,
-        messages: []
-      };
-      setCurrentSession(newSession);
-      setThreadId(thread.id);
-      saveSessionToStorage(newSession);
+      // Create a new assistant and chat session
+      try {
+        const assistant = await createAssistant('My Assistant', 'A helpful assistant', 'gpt-3.5-turbo');
+        setAssistantId(assistant.assistant_id);
+        
+        thread = await createThread(assistant.assistant_id);
+        const newSession: ChatSession = {
+          id: Date.now().toString(),
+          threadId: thread.id,
+          assistantId: assistant.assistant_id,
+          messages: []
+        };
+        setCurrentSession(newSession);
+        setThreadId(thread.id);
+        saveSessionToStorage(newSession);
+      } catch (error) {
+        console.error('Error creating assistant or thread:', error);
+        // Handle error - maybe show an error message to the user
+      }
     }
 
     if (firstMessage && thread) {
