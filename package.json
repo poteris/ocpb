@@ -1,5 +1,24 @@
 {
+  "name": "ocpb",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "yarn workspace frontend dev",
+    "dev:backend": "yarn workspace backend supabase start",
+    "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
+    "build": "yarn workspace frontend build",
+    "start": "yarn workspace frontend start",
+    "lint": "yarn workspace frontend lint",
+    "db:pull": "yarn workspace backend supabase db pull",
+    "db:reset": "yarn workspace backend supabase db reset",
+    "functions:serve": "yarn workspace backend supabase functions serve",
+    "functions:deploy": "yarn workspace backend supabase functions deploy"
+  },
   "devDependencies": {
-    "@types/node": "^22.7.5"
+    "concurrently": "^6.2.0"
   }
 }
