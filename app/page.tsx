@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { RouterProvider, Router } from "@/utils/router";
+import { Welcome } from '@/components/screens/WelcomePage';
+import { useRouter } from 'next/navigation';
 
-export default function Home() {
-  return (
-    <RouterProvider>
-      <Router />
-    </RouterProvider>
-  );
+export default function WelcomePage() {
+  const router = useRouter();
+
+  const handleScenarioSelect = () => {
+    // Replace with the actual route you want to navigate to
+    router.push('/scenario-setup');
+  };
+
+  return <Welcome onScenarioSelect={handleScenarioSelect} />;
 }

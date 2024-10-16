@@ -1,10 +1,12 @@
+'use client';
+
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Layout } from '../Layout';
-import { InfoPopover, Modal } from '../ui';
+import { Layout } from '@/components/Layout';
+import { InfoPopover, Modal } from '@/components/ui';
 import { MessageList } from "./ChatMessageList";
-import { useRouter } from '@/utils/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Info, Mic } from 'react-feather';
-import { Button } from '../ui';
+import { Button } from '@/components/ui';
 import { generateResponse } from '@/utils/api';
 import { Message, ChatSession } from '@/types';
 import { FeedbackPopover } from './FeedbackScreen';
@@ -14,7 +16,10 @@ const STORAGE_KEY = 'chatSessions';
 
 export const ChatScreen: React.FC = () => {
   const [inputMessage, setInputMessage] = useState("");
-  const { params, navigateTo } = useRouter();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('sessionId');
+  const firstMessage = searchParams.get('firstMessage');
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,10 +74,10 @@ export const ChatScreen: React.FC = () => {
   const initializeSession = useCallback(() => {
     if (sessionInitialized.current) return;
 
-    if (params.sessionId) {
+    if (sessionId) {
       // Load existing session
       const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const session = sessions.find((s: ChatSession) => s.id === params.sessionId);
+      const session = sessions.find((s: ChatSession) => s.id === sessionId);
       if (session) {
         setCurrentSession(session);
       } else {
@@ -86,25 +91,24 @@ export const ChatScreen: React.FC = () => {
         messages: []
       };
 
-      if (params.firstMessage) {
+      if (firstMessage) {
         const userMessage: Message = {
           id: Date.now().toString(),
-          text: params.firstMessage,
+          text: firstMessage,
           sender: 'user',
         };
         newSession.messages.push(userMessage);
-      }
-
-      setCurrentSession(newSession);
-      saveSessionToStorage(newSession);
-
-      if (params.firstMessage) {
-        generateBotResponse(params.firstMessage);
+        setCurrentSession(newSession);
+        saveSessionToStorage(newSession);
+        generateBotResponse(firstMessage);
+      } else {
+        setCurrentSession(newSession);
+        saveSessionToStorage(newSession);
       }
     }
 
     sessionInitialized.current = true;
-  }, [params.sessionId, params.firstMessage, saveSessionToStorage, generateBotResponse]);
+  }, [sessionId, firstMessage, saveSessionToStorage, generateBotResponse]);
 
   useEffect(() => {
     initializeSession();
@@ -134,7 +138,7 @@ export const ChatScreen: React.FC = () => {
 
   const handleFeedbackClose = () => {
     setShowFeedbackPopover(false);
-    navigateTo('history');
+    router.push('/history');
   };
 
   useEffect(() => {

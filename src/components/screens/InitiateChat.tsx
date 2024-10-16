@@ -1,9 +1,11 @@
+'use client';
+
 import React, { useState } from "react";
 import { Layout } from '../Layout';
 import { Button, InfoPopover } from '../ui';
 import { Info } from 'react-feather';
 import Image from "next/image";
-import { useRouter } from '@/utils/router';
+import { useRouter } from 'next/navigation';
 
 const promptMap = {
   "Grievance handling": "I'm a new union rep and I've just received a grievance from a member about unfair treatment. How should I approach this?",
@@ -17,16 +19,16 @@ const promptMap = {
 export const InitiateChat: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
-  const { navigateTo } = useRouter();
+  const router = useRouter();
 
   const handlePromptSelect = (shortPrompt: string) => {
     const fullPrompt = promptMap[shortPrompt as keyof typeof promptMap];
-    navigateTo('activeChat', { firstMessage: fullPrompt });
+    router.push(`/chat-screen?firstMessage=${fullPrompt}`);
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      navigateTo('activeChat', { firstMessage: inputMessage.trim() });
+      router.push(`/chat-screen?firstMessage=${inputMessage.trim()}`);
     }
   };
 

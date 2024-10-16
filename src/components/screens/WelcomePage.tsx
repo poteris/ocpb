@@ -1,7 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui';
-import { useRouter } from '@/utils/router';
 
 const scenarios = [
   'Grievance Handling',
@@ -11,9 +12,12 @@ const scenarios = [
   'Union Leadership',
 ];
 
-export const Welcome: React.FC = () => {
-  const { navigateTo } = useRouter();
+interface WelcomeProps {
+  onScenarioSelect: () => void;
+  // onCreateAccount: () => void;
+}
 
+export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => { //, onCreateAccount 
   return (
     <Layout headerType="alt">
       <div className="flex flex-col h-full">
@@ -28,7 +32,7 @@ export const Welcome: React.FC = () => {
                 <Button
                   variant="options"
                   text={scenario}
-                  onClick={() => navigateTo('scenarioSetup')}
+                  onClick={onScenarioSelect}
                   className="w-full"
                 />
               </li>
@@ -40,7 +44,7 @@ export const Welcome: React.FC = () => {
             <Button
               variant="progress"
               text="Create an Account"
-              onClick={() => console.log('Create account clicked')}
+              onClick={() => {}} //onCreateAccount
               className="w-full"
             />
           </div>

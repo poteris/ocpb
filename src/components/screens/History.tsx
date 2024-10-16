@@ -1,16 +1,18 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../Layout';
 import { Button, Modal } from '../ui';
 import { Download, Info, Trash2, Plus } from 'react-feather';
-import { useRouter } from '@/utils/router';
+import { useRouter } from 'next/navigation';
 import { downloadChatHistory, downloadFeedbackAsPDF } from '@/utils/downloadData';
 import { ChatSession } from '@/types';
 import analysisData from './analysis.json';
 
 const STORAGE_KEY = 'chatSessions';
 
-export const HistoryScreen: React.FC = () => {
-  const { navigateTo } = useRouter();
+export const History: React.FC = () => {
+  const router = useRouter();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
 
@@ -69,7 +71,7 @@ export const HistoryScreen: React.FC = () => {
                     <Button 
                       variant="default" 
                       text="View" 
-                      onClick={() => navigateTo('activeChat', { sessionId: session.id })}
+                      onClick={() => router.push(`/initiate-chat?sessionId=${session.id}`)}
                       size="sm"
                     />
                   </div>
@@ -97,7 +99,7 @@ export const HistoryScreen: React.FC = () => {
                 variant="progress"
                 text="New Scenario"
                 icon={<Plus size={16} />}
-                onClick={() => navigateTo('scenarioSetup')}
+                onClick={() => router.push('/scenario-setup')}
               />
             </div>
           </div>

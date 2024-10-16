@@ -1,10 +1,16 @@
+'use client';
+
 import React from 'react';
 import { Layout } from '../Layout';
 import { Button } from '../ui';
-import { useRouter } from '@/utils/router';
+import { useRouter } from 'next/navigation';
 
 export const ScenarioSetup: React.FC = () => {
-  const { navigateTo } = useRouter();
+  const router = useRouter();
+
+  const navigateTo = (screen: string) => {
+    router.push(`/${screen}`);
+  };
 
   return (
     <Layout>
@@ -49,7 +55,7 @@ export const ScenarioSetup: React.FC = () => {
             <Button
               variant="progress"
               text="Start Chat"
-              onClick={() => navigateTo('initiateChat')}
+              onClick={() => navigateTo('initiate-chat')}
               className="flex-1"
             />
           </div>
