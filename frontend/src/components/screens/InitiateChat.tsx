@@ -1,14 +1,11 @@
+'use client';
+
 import React, { useState } from "react";
 import { Layout } from '../Layout';
 import { Button, InfoPopover } from '../ui';
 import { Info } from 'react-feather';
 import Image from "next/image";
-
-type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
-
-interface InitiateChatProps {
-  navigateTo: (screen: Screen, params?: { firstMessage?: string }) => void;
-}
+import { useRouter } from 'next/navigation';
 
 const promptMap = {
   "Grievance handling": "I'm a new union rep and I've just received a grievance from a member about unfair treatment. How should I approach this?",
@@ -19,22 +16,19 @@ const promptMap = {
   "Union organizing": "We're trying to organize a non-union workplace. What are the first steps I should take?",
 };
 
-export const InitiateChat: React.FC<InitiateChatProps> = ({ navigateTo }) => {
+export const InitiateChat: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const router = useRouter();
 
   const handlePromptSelect = (shortPrompt: string) => {
     const fullPrompt = promptMap[shortPrompt as keyof typeof promptMap];
-    navigateTo('chat', { firstMessage: fullPrompt });
+    router.push(`/chat-screen?firstMessage=${fullPrompt}`);
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      console.log(inputMessage.trim())
-      navigateTo('chat', { firstMessage: inputMessage.trim() });
-    } else {
-      // Optionally, you can show an error message or tooltip here
-      console.log("Please enter a message or select a prompt");
+      router.push(`/chat-screen?firstMessage=${inputMessage.trim()}`);
     }
   };
 

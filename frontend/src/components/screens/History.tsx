@@ -1,20 +1,18 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../Layout';
 import { Button, Modal } from '../ui';
 import { Download, Info, Trash2, Plus } from 'react-feather';
+import { useRouter } from 'next/navigation';
 import { downloadChatHistory, downloadFeedbackAsPDF } from '@/utils/downloadData';
-import { ChatSession } from '@/types';
+import { ChatSession } from '@/types/chat';
 import analysisData from './analysis.json';
-
-type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
-
-interface HistoryScreenProps {
-  navigateTo: (screen: Screen, params?: { sessionId?: string }) => void;
-}
 
 const STORAGE_KEY = 'chatSessions';
 
-export const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigateTo }) => {
+export const History: React.FC = () => {
+  const router = useRouter();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
 
@@ -43,13 +41,6 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigateTo }) => {
     setShowClearHistoryModal(false);
   };
 
-  const getChatTitle = (session: ChatSession) => {
-    if (session.messages && session.messages.length > 0 && session.messages[0].text) {
-      return session.messages[0].text.substring(0, 50) + (session.messages[0].text.length > 50 ? '...' : '');
-    }
-    return 'Untitled Chat';
-  };
-
   return (
     <Layout headerType="alt">
       <div className="flex flex-col h-full max-w-md mx-auto bg-gray-100">
@@ -76,18 +67,18 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigateTo }) => {
               chatSessions.map((session) => (
                 <div key={session.id} className="mb-4 border-b pb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">{getChatTitle(session)}</h3>
+                    <h3 className="font-medium">{session.messages[0].text}</h3>
                     <Button 
                       variant="default" 
                       text="View" 
-                      onClick={() => navigateTo('chat', { sessionId: session.id })}
+                      onClick={() => router.push(`/initiate-chat?sessionId=${session.id}`)}
                       size="sm"
                     />
                   </div>
                   <p className="text-sm text-gray-600">
-                    {session.messages?.length || 0} messages
+                    {session.messages.length} messages
                   </p>
-                  {session.messages?.[0] && (
+                  {session.messages[0] && (
                     <p className="text-sm mt-2">
                       {formatDate(session.id)}
                     </p>
@@ -108,7 +99,7 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = ({ navigateTo }) => {
                 variant="progress"
                 text="New Scenario"
                 icon={<Plus size={16} />}
-                onClick={() => navigateTo('scenario-setup')}
+                onClick={() => router.push('/scenario-setup')}
               />
             </div>
           </div>

@@ -1,14 +1,17 @@
+'use client';
+
 import React from 'react';
 import { Layout } from '../Layout';
 import { Button } from '../ui';
+import { useRouter } from 'next/navigation';
 
-type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
+export const ScenarioSetup: React.FC = () => {
+  const router = useRouter();
 
-interface ScenarioSetupProps {
-  navigateTo: (screen: Screen) => void;
-}
+  const navigateTo = (screen: string) => {
+    router.push(`/${screen}`);
+  };
 
-export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ navigateTo }) => {
   return (
     <Layout>
       <div className="flex flex-col h-full">

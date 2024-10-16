@@ -6,5 +6,6 @@ export interface Message {
 
 export interface ChatSession {
   id: string;
+  threadId: string;
   messages: Message[];
 }

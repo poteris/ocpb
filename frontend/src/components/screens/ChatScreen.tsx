@@ -1,28 +1,25 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Layout } from '../Layout';
-import { InfoPopover, Modal } from '../ui';
+'use client';
+
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { Layout } from '@/components/Layout';
+import { InfoPopover, Modal } from '@/components/ui';
 import { MessageList } from "./ChatMessageList";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Info, Mic } from 'react-feather';
-import { Button } from '../ui';
-import { generateResponse } from '@/utils/api';
-import { Message, ChatSession } from '@/types';
+import { Button } from '@/components/ui';
+import { ChatSession, Message } from '@/types/chat';
 import { FeedbackPopover } from './FeedbackScreen';
 import analysisData from './analysis.json';
-
-type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
-
-interface ChatScreenProps {
-  navigateTo: (screen: Screen) => void;
-  params: {
-    sessionId?: string;
-    firstMessage?: string;
-  };
-}
+import { createThread, sendMessage, runAssistant, getThreadMessages } from '@/utils/api';
 
 const STORAGE_KEY = 'chatSessions';
 
-export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) => {
+const ChatScreenContent: React.FC = () => {
   const [inputMessage, setInputMessage] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('sessionId');
+  const firstMessage = searchParams.get('firstMessage');
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -30,7 +27,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) =>
   const [showEndChatModal, setShowEndChatModal] = useState(false);
   const sessionInitialized = useRef(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
-  console.log(params.firstMessage)
+  const [threadId, setThreadId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -43,94 +40,88 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) =>
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
   }, []);
 
-  const addMessage = useCallback((newMessage: Message) => {
-    setCurrentSession((prevSession) => {
-      if (prevSession) {
-        const updatedSession = {
-          ...prevSession,
-          messages: [...prevSession.messages, newMessage]
-        };
-        saveSessionToStorage(updatedSession);
-        return updatedSession;
-      }
-      return prevSession;
-    });
-  }, [saveSessionToStorage]);
+  const handleSendMessage = async (message: string) => {
+    if (!threadId || !message.trim()) return;
 
-  const generateBotResponse = useCallback(async (userMessage: string) => {
     setIsLoading(true);
     try {
-      const botResponseText = await generateResponse(userMessage);
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: botResponseText,
-        sender: 'bot',
+      // Add user message to the UI immediately
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text: message,
+        sender: 'user',
       };
-      addMessage(botResponse);
+
+      // Send message to API
+      await sendMessage(threadId, message);
+      
+      // Run the assistant
+      await runAssistant(threadId);
+      
+      // Fetch updated messages
+      const messages = await getThreadMessages(threadId);
+      
+      // Update the session with all messages
+      setCurrentSession(prev => ({
+        ...prev!,
+        messages: messages.map((m: any) => ({
+          id: m.id,
+          text: m.content,
+          sender: m.role === 'user' ? 'user' : 'bot'
+        }))
+      }));
+
+      // Clear input
+      setInputMessage("");
     } catch (error) {
-      console.error('Error generating bot response:', error);
+      console.error('Error sending message:', error);
       // Optionally, add an error message to the chat
     } finally {
       setIsLoading(false);
     }
-  }, [addMessage]);
+  };
 
-  const initializeSession = useCallback(() => {
+  const initializeSession = useCallback(async () => {
     if (sessionInitialized.current) return;
 
-    if (params.sessionId) {
+    let thread;
+    if (sessionId) {
       // Load existing session
       const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const session = sessions.find((s: ChatSession) => s.id === params.sessionId);
+      const session = sessions.find((s: ChatSession) => s.id === sessionId);
       if (session) {
         setCurrentSession(session);
+        setThreadId(session.threadId);
+        thread = { id: session.threadId };
       } else {
         console.error('Session not found');
         // Handle error - maybe navigate back to history or create a new session
       }
     } else {
       // Create a new chat session
+      const userId = 'user-id'; // Replace with actual user ID
+      const assistantId = 'assistant-id'; // Replace with your assistant ID
+      thread = await createThread(userId, assistantId);
       const newSession: ChatSession = {
         id: Date.now().toString(),
+        threadId: thread.id,
         messages: []
       };
-
-      if (params.firstMessage) {
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          text: params.firstMessage.toString(),
-          sender: 'user',
-        };
-        newSession.messages.push(userMessage);
-      }
-
       setCurrentSession(newSession);
+      setThreadId(thread.id);
       saveSessionToStorage(newSession);
+    }
 
-      if (params.firstMessage) {
-        generateBotResponse(params.firstMessage.toString());
-      }
+    if (firstMessage && thread) {
+      await handleSendMessage(firstMessage);
     }
 
     sessionInitialized.current = true;
-  }, [params.sessionId, params.firstMessage, saveSessionToStorage, generateBotResponse]);
+  }, [sessionId, firstMessage, saveSessionToStorage, handleSendMessage]);
 
   useEffect(() => {
     initializeSession();
   }, [initializeSession]);
-
-  const handleSendMessage = () => {
-    if (inputMessage.trim()) {
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: inputMessage.trim(),
-        sender: 'user',
-      };
-      addMessage(newMessage);
-      setInputMessage("");
-      generateBotResponse(inputMessage.trim());
-    }
-  };
 
   const handleEndChat = () => {
     setShowEndChatModal(true);
@@ -143,7 +134,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) =>
 
   const handleFeedbackClose = () => {
     setShowFeedbackPopover(false);
-    navigateTo('history');
+    router.push('/history');
   };
 
   useEffect(() => {
@@ -181,14 +172,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) =>
               placeholder="Start typing ..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputMessage)}
             />
           </div>
           <button 
-            onClick={handleSendMessage} 
+            onClick={() => handleSendMessage(inputMessage)} 
             className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
             aria-label="Send message"
-            disabled={!inputMessage.trim()} // Disable the button when input is empty
           >
             <Mic size={18} />
           </button>
@@ -237,5 +227,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ navigateTo, params }) =>
         />
       )}
     </Layout>
+  );
+};
+
+export const ChatScreen: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading chat...</div>}>
+      <ChatScreenContent />
+    </Suspense>
   );
 };

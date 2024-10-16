@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { ChatSession } from '../types';
+import { ChatSession } from '../types/chat';
 
 export const downloadChatHistory = (chatSessions: ChatSession[]) => {
   let textContent = "Chat History:\n\n";

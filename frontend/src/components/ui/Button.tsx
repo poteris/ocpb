@@ -20,6 +20,7 @@ export const Button = ({
   text,
   onClick,
   icon,
+  size = "md",
 }: Props): JSX.Element => {
   const baseClasses = "inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium";
   
@@ -30,9 +31,15 @@ export const Button = ({
     progress: "bg-pcsprimary-02 text-white",
   };
 
+  const sizeClasses = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
+  };
+
   return (
     <button
-      className={`${baseClasses} ${variantClasses[variant]} ${className || ''}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className || ''}`}
       onClick={onClick}
     >
       {text}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/react"
 import "./globals.css";
 
 const robotoSlab = localFont({
@@ -21,9 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${robotoSlab.variable} antialiased bg-white font-roboto-slab`}
+        className={`${robotoSlab.variable} antialiased bg-white`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

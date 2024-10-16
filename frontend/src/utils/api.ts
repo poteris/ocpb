@@ -1,22 +1,35 @@
-export const generateResponse = async (message: string): Promise<string> => {
-  try {
+import { createClient } from '@supabase/supabase-js'
 
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message }),
-    });
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-    if (!response.ok) {
-      throw new Error('Failed to generate response');
-    }
+export async function createThread(userId: string, assistantId: string) {
+  const { data, error } = await supabase.functions.invoke('chat-api', {
+    body: JSON.stringify({ action: 'createThread', userId, assistantId })
+  })
+  if (error) throw error
+  return data
+}
 
-    const data = await response.json();
-    return data.response;
-  } catch (error) {
-    console.error('Error in generateResponse:', error);
-    throw error;
-  }
-};
+export async function sendMessage(threadId: string, content: string) {
+  const { data, error } = await supabase.functions.invoke('chat-api', {
+    body: JSON.stringify({ action: 'sendMessage', threadId, content })
+  })
+  if (error) throw error
+  return data
+}
+
+export async function runAssistant(threadId: string) {
+  const { data, error } = await supabase.functions.invoke('chat-api', {
+    body: JSON.stringify({ action: 'runAssistant', threadId })
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getThreadMessages(threadId: string) {
+  const { data, error } = await supabase.functions.invoke('chat-api', {
+    body: JSON.stringify({ action: 'getThreadMessages', threadId })
+  })
+  if (error) throw error
+  return data
+}

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui';
@@ -10,13 +12,12 @@ const scenarios = [
   'Union Leadership',
 ];
 
-type Screen = 'welcome' | 'scenario-setup' | 'initiate-chat' | 'chat' | 'history';
-
 interface WelcomeProps {
-  navigateTo: (screen: Screen) => void;
+  onScenarioSelect: () => void;
+  // onCreateAccount: () => void;
 }
 
-export const Welcome: React.FC<WelcomeProps> = ({ navigateTo }) => {
+export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => { //, onCreateAccount 
   return (
     <Layout headerType="alt">
       <div className="flex flex-col h-full">
@@ -31,7 +32,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ navigateTo }) => {
                 <Button
                   variant="options"
                   text={scenario}
-                  onClick={() => navigateTo('scenario-setup')}
+                  onClick={onScenarioSelect}
                   className="w-full"
                 />
               </li>
@@ -43,7 +44,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ navigateTo }) => {
             <Button
               variant="progress"
               text="Create an Account"
-              onClick={() => console.log('Create account clicked')}
+              onClick={() => {}} //onCreateAccount
               className="w-full"
             />
           </div>
