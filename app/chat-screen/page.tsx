@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import { ChatScreen } from '@/components/screens/ChatScreen';
 
 export default function ChatScreenPage() {
-  return <ChatScreen />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ChatScreen />
+    </Suspense>
+  );
 }

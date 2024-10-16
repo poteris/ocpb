@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { Layout } from '@/components/Layout';
 import { InfoPopover, Modal } from '@/components/ui';
 import { MessageList } from "./ChatMessageList";
@@ -14,7 +14,7 @@ import analysisData from './analysis.json';
 
 const STORAGE_KEY = 'chatSessions';
 
-export const ChatScreen: React.FC = () => {
+const ChatScreenContent: React.FC = () => {
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -231,5 +231,13 @@ export const ChatScreen: React.FC = () => {
         />
       )}
     </Layout>
+  );
+};
+
+export const ChatScreen: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading chat...</div>}>
+      <ChatScreenContent />
+    </Suspense>
   );
 };
