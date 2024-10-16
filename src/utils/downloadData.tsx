@@ -23,7 +23,15 @@ export const downloadChatHistory = (chatSessions: ChatSession[]) => {
   URL.revokeObjectURL(url);
 };
 
-export const downloadFeedbackAsPDF = (analysisData: any) => {
+interface AnalysisData {
+  summary: string;
+  areas_for_improvement: Array<{
+    title: string;
+    description: string;
+  }>;
+}
+
+export const downloadFeedbackAsPDF = (analysisData: AnalysisData) => {
   const doc = new jsPDF();
   let yOffset = 10;
 
@@ -39,7 +47,7 @@ export const downloadFeedbackAsPDF = (analysisData: any) => {
   doc.text("Areas for Improvement", 10, yOffset);
   yOffset += 10;
 
-  analysisData.areas_for_improvement.forEach((area: any, index: number) => {
+  analysisData.areas_for_improvement.forEach((area, index) => {
     doc.setFontSize(12);
     doc.text(`${index + 1}. ${area.title}`, 10, yOffset);
     yOffset += 5;

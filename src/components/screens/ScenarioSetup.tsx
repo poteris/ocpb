@@ -1,10 +1,16 @@
+'use client';
+
 import React from 'react';
 import { Layout } from '../Layout';
 import { Button } from '../ui';
-import { useRouter } from '@/utils/router';
+import { useRouter } from 'next/navigation';
 
 export const ScenarioSetup: React.FC = () => {
-  const { navigateTo } = useRouter();
+  const router = useRouter();
+
+  const navigateTo = (screen: string) => {
+    router.push(`/${screen}`);
+  };
 
   return (
     <Layout>
@@ -15,7 +21,7 @@ export const ScenarioSetup: React.FC = () => {
           <section className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Scenario Description</h2>
             <p>
-              In this scenario, you'll practice handling a grievance from a union member
+              In this scenario, you&apos;ll practice handling a grievance from a union member
               regarding unfair treatment in the workplace.
             </p>
           </section>
@@ -23,7 +29,7 @@ export const ScenarioSetup: React.FC = () => {
           <section className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Your Role</h2>
             <p>
-              You are a union representative tasked with listening to the member's
+              You are a union representative tasked with listening to the member&apos;s
               complaint and determining the best course of action.
             </p>
           </section>
@@ -49,7 +55,7 @@ export const ScenarioSetup: React.FC = () => {
             <Button
               variant="progress"
               text="Start Chat"
-              onClick={() => navigateTo('initiateChat')}
+              onClick={() => navigateTo('initiate-chat')}
               className="flex-1"
             />
           </div>
