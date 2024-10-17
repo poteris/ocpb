@@ -27,6 +27,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Add this near the top of the file
+const ASSISTANT_ID = 'asst_RxXjFSaqQuMvn5WIbdNZ88Tr'; // Store this in an environment variable
+
 export async function POST(req: Request) {
   const { action, ...params } = await req.json()
 
@@ -58,12 +61,12 @@ async function createAssistant({ name, description, model }: { name: string; des
   return { assistant_id: assistant.id, name, description, model }
 }
 
-async function createThread({ assistantId, userId, initialMessage }: { assistantId: string; userId: string; initialMessage?: string }) {
+async function createThread({ userId, initialMessage }: { userId: string; initialMessage?: string }) {
   try {
-    console.log('Received createThread request with assistantId:', assistantId);
+    console.log('Received createThread request');
 
-    if (!assistantId || !userId) {
-      throw new Error('Missing assistantId or userId');
+    if (!userId) {
+      throw new Error('Missing userId');
     }
 
     let threadOptions: any = {};
@@ -78,22 +81,18 @@ async function createThread({ assistantId, userId, initialMessage }: { assistant
 
     const thread = await openai.beta.threads.create(threadOptions);
     
-    const { data, error } = await supabase
+    // Store only essential information in the database
+    const { error } = await supabase
       .from('threads')
-      .insert({ thread_id: thread.id, assistant_id: assistantId, user_id: userId })
-      .select();
+      .insert({ thread_id: thread.id, user_id: userId, assistant_id: ASSISTANT_ID });
 
     if (error) {
       console.error('Supabase error:', error);
       throw error;
     }
 
-    if (!data) {
-      throw new Error('No data returned from Supabase');
-    }
-
-    console.log('Thread created and stored:', data);
-    return { id: thread.id, assistant_id: assistantId };
+    console.log('Thread created:', thread.id);
+    return { id: thread.id };
   } catch (error) {
     console.error('Error in createThread:', error);
     throw error;
@@ -101,17 +100,6 @@ async function createThread({ assistantId, userId, initialMessage }: { assistant
 }
 
 async function sendMessage({ threadId, content }: { threadId: string; content: string }) {
-  const { data: threadData, error } = await supabase
-    .from('threads')
-    .select('thread_id, assistant_id')
-    .eq('thread_id', threadId)
-    .single();
-
-  if (error || !threadData) {
-    console.error('Error fetching thread:', error);
-    throw new Error('Thread not found');
-  }
-
   // Send the user message
   const userMessage = await openai.beta.threads.messages.create(threadId, {
     role: 'user',
@@ -120,39 +108,12 @@ async function sendMessage({ threadId, content }: { threadId: string; content: s
   console.log('User message created:', userMessage);
 
   // Run the assistant and get the response
-  const result = await runAssistant({ threadId });
-  console.log('Assistant response:', result);
-
-  // Save the assistant's response to the database
-  const { data, error: insertError } = await supabase
-    .from('messages')
-    .insert({ message_id: result.id, thread_id: threadId, role: 'assistant', content: result.content })
-    .select()
-    .single();
-
-  if (insertError) throw insertError;
-
-  return data;
-}
-
-async function runAssistant({ threadId }: { threadId: string }) {
-  const { data: threadData, error } = await supabase
-    .from('threads')
-    .select('thread_id, assistant_id')
-    .eq('thread_id', threadId)
-    .single();
-
-  if (error || !threadData) {
-    console.error('Error fetching thread:', error);
-    throw new Error('Thread not found');
-  }
-
-  const run = await openai.beta.threads.runs.createAndPoll(threadId, {
-    assistant_id: threadData.assistant_id,
+  const run = await openai.beta.threads.runs.create(threadId, {
+    assistant_id: ASSISTANT_ID,
     instructions: 'Provide a casual response within 50 words.'
   });
 
-  // Poll for completion
+  // Wait for completion (consider implementing a more efficient waiting mechanism)
   let runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
   while (runStatus.status !== 'completed') {
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -160,7 +121,7 @@ async function runAssistant({ threadId }: { threadId: string }) {
   }
 
   // Fetch the assistant's response
-  const messages = await openai.beta.threads.messages.list(threadId);
+  const messages = await openai.beta.threads.messages.list(threadId, { limit: 1 });
   const latestMessage = messages.data[0];
 
   // Extract the content safely
@@ -179,14 +140,12 @@ async function runAssistant({ threadId }: { threadId: string }) {
 }
 
 async function getThreadMessages({ threadId }: { threadId: string }) {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('thread_id', threadId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return data;
+  const messages = await openai.beta.threads.messages.list(threadId);
+  return messages.data.map(msg => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content[0].type === 'text' ? msg.content[0].text.value : ''
+  }));
 }
 
 serve(async (req) => {

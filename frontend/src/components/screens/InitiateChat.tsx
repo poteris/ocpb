@@ -6,15 +6,7 @@ import { Button, InfoPopover } from '../ui';
 import { Info } from 'react-feather';
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-
-const promptMap = {
-  "Grievance handling": "I'm a new union rep and I've just received a grievance from a member about unfair treatment. How should I approach this?",
-  "Collective bargaining": "We're preparing for our first round of collective bargaining. What key points should I keep in mind?",
-  "Health and safety": "A member has reported unsafe working conditions. What steps should I take to address this issue?",
-  "Member recruitment": "I want to increase union membership in my workplace. What strategies can I use to recruit new members?",
-  "Representing members": "I need to represent a member in a disciplinary hearing. How can I best prepare for this?",
-  "Union organizing": "We're trying to organize a non-union workplace. What are the first steps I should take?",
-};
+import { promptMap } from '@/utils/promptMap';
 
 export const InitiateChat: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
@@ -22,13 +14,12 @@ export const InitiateChat: React.FC = () => {
   const router = useRouter();
 
   const handlePromptSelect = (shortPrompt: string) => {
-    const fullPrompt = promptMap[shortPrompt as keyof typeof promptMap];
-    router.push(`/chat-screen?firstMessage=${fullPrompt}`);
+    router.push(`/chat-screen?shortPrompt=${encodeURIComponent(shortPrompt)}`);
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      router.push(`/chat-screen?firstMessage=${inputMessage.trim()}`);
+      router.push(`/chat-screen?firstMessage=${encodeURIComponent(inputMessage.trim())}`);
     }
   };
 
