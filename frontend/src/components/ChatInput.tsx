@@ -16,31 +16,42 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   onEndChat,
   isLoading
-}) => (
-  <div className="bg-pcsprimary02-light p-2 sm:p-4 flex items-center sticky bottom-0 z-10">
-    <div className="flex-grow mr-2 flex items-center">
-      <input
-        className="w-full bg-white text-pcsprimary-05 text-xs sm:text-sm p-2 rounded-full border border-pcsprimary-05 focus:outline-none"
-        placeholder="Start typing ..."
-        value={inputMessage}
-        onChange={(e) => setInputMessage(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && onSendMessage()}
-        disabled={isLoading}
+}) => {
+  const handleSendMessage = () => {
+    onSendMessage();
+    setInputMessage(''); // Clear the input after sending
+  };
+
+  return (
+    <div className="bg-pcsprimary02-light p-2 sm:p-4 flex items-center sticky bottom-0 z-10">
+      <div className="flex-grow mr-2 flex items-center">
+        <input
+          className="w-full bg-white text-pcsprimary-05 text-xs sm:text-sm p-2 rounded-full border border-pcsprimary-05 focus:outline-none"
+          placeholder="Start typing ..."
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isLoading) {
+              handleSendMessage();
+            }
+          }}
+          disabled={isLoading}
+        />
+        <button 
+          onClick={handleSendMessage} 
+          className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors ml-2"
+          aria-label="Send message"
+          disabled={isLoading}
+        >
+          <Mic size={18} />
+        </button>
+      </div>
+      <Button
+        variant="destructive"
+        text="End Chat"
+        onClick={onEndChat}
+        className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2"
       />
-      <button 
-        onClick={onSendMessage} 
-        className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors ml-2"
-        aria-label="Send message"
-        disabled={isLoading}
-      >
-        <Mic size={18} />
-      </button>
     </div>
-    <Button
-      variant="destructive"
-      text="End Chat"
-      onClick={onEndChat}
-      className="text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2"
-    />
-  </div>
-);
+  );
+};
