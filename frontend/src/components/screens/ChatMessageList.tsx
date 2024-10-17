@@ -10,14 +10,30 @@ interface Message {
 interface ActiveChatProps {
   messages: Message[];
   isLoading: boolean;
+  firstMessage?: string | null;
 }
 
-export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading }) => {
+export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading, firstMessage }) => {
   return (
     <div className="flex-grow overflow-y-auto p-4">
+      {firstMessage && (
+        <div key="first-message" className="flex justify-end mb-4">
+          <div className="relative">
+            <div className="relative max-w-xs px-4 py-2 rounded-lg bg-pcsprimary-02 text-white">
+              {firstMessage}
+              <div className="absolute w-3 h-3 -bottom-1.5 right-0 overflow-hidden">
+                <div
+                  className="absolute transform rotate-45 origin-bottom-left w-4 h-4 bg-pcsprimary-02"
+                  style={{ bottom: '50%', left: '50%' }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {messages.map((message) => (
         <div
-          key={message.id}
+          key={`message-${message.id}`}
           className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`}
         >
           <div className={`relative ${message.sender === 'bot' ? 'pl-2' : ''}`}>
@@ -60,7 +76,7 @@ export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading }) 
         </div>
       ))}
       {isLoading && (
-        <div className="flex justify-start mb-4">
+        <div key="loading-indicator" className="flex justify-start mb-4">
           <Image
             width={16}
             height={16}

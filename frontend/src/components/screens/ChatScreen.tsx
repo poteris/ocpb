@@ -41,8 +41,12 @@ const ChatScreenContent: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
   }, []);
 
-  const handleSendMessage = async (message: string) => {
-    if (!threadId || !message.trim()) return;
+  const handleSendMessage = async (message: string, threadId: string) => {
+    console.log('handleSendMessage called with threadId:', threadId, 'and message:', message);
+    if (!threadId || !message.trim()) {
+      console.error('ThreadId is missing or message is empty');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -52,31 +56,45 @@ const ChatScreenContent: React.FC = () => {
         text: message,
         sender: 'user',
       };
-
-      // Send message to API
-      await sendMessage(threadId, message);
-      
-      // Run the assistant
-      await runAssistant(threadId);
-      
-      // Fetch updated messages
-      const messages = await getThreadMessages(threadId);
-      
-      // Update the session with all messages
       setCurrentSession(prev => ({
         ...prev!,
-        messages: messages.map((m: any) => ({
-          id: m.id,
-          text: m.content,
-          sender: m.role === 'user' ? 'user' : 'bot'
-        }))
+        messages: [...(prev?.messages || []), userMessage]
       }));
+
+      // Send message to API and get the response
+      const response = await sendMessage(threadId, message);
+      
+      if (response && response.result) {
+        // Update the session with the assistant's response
+        setCurrentSession(prev => ({
+          ...prev!,
+          messages: [
+            ...(prev?.messages || []),
+            {
+              id: response.result.id,
+              text: response.result.content,
+              sender: 'bot'
+            }
+          ]
+        }));
+      } else {
+        console.error('Unexpected response format:', response);
+        // Handle the error appropriately, maybe set an error state
+      }
 
       // Clear input
       setInputMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       // Optionally, add an error message to the chat
+      setCurrentSession(prev => ({
+        ...prev!,
+        messages: [...(prev?.messages || []), {
+          id: Date.now().toString(),
+          text: "An error occurred. Please try again.",
+          sender: 'bot'
+        }]
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -100,33 +118,65 @@ const ChatScreenContent: React.FC = () => {
         // Handle error - maybe navigate back to history or create a new session
       }
     } else {
-      // Create a new assistant and chat session
       try {
-        const assistant = await createAssistant('My Assistant', 'A helpful assistant', 'gpt-3.5-turbo');
-        setAssistantId(assistant.assistant_id);
+        const assistant = await createAssistant('My Assistant', 'A colleague who isn\'t a member of the Union', 'gpt-4o-mini');
+        const assistantId = assistant.result.assistant_id;
+        setAssistantId(assistantId);
         
-        thread = await createThread(assistant.assistant_id);
+        const threadResponse = await createThread(assistantId, firstMessage || undefined);
+        if (!threadResponse || !threadResponse.id) {
+          throw new Error('Failed to create thread');
+        }
+        const threadId = threadResponse.id;
+        setThreadId(threadId);
         const newSession: ChatSession = {
           id: Date.now().toString(),
-          threadId: thread.id,
-          assistantId: assistant.assistant_id,
-          messages: []
+          threadId: threadId,
+          assistantId: assistantId,
+          messages: firstMessage ? [{ id: `first-${Date.now()}`, text: firstMessage, sender: 'user' }] : []
         };
         setCurrentSession(newSession);
-        setThreadId(thread.id);
         saveSessionToStorage(newSession);
+
+        if (firstMessage) {
+          await handleInitialMessage(threadId, firstMessage);
+        }
       } catch (error) {
         console.error('Error creating assistant or thread:', error);
-        // Handle error - maybe show an error message to the user
+        // Handle the error appropriately, maybe set an error state
       }
     }
 
-    if (firstMessage && thread) {
-      await handleSendMessage(firstMessage);
-    }
-
     sessionInitialized.current = true;
-  }, [sessionId, firstMessage, saveSessionToStorage, handleSendMessage]);
+  }, [sessionId, firstMessage, saveSessionToStorage]);
+
+  const handleInitialMessage = async (threadId: string, message: string) => {
+    setIsLoading(true);
+    try {
+      const response = await sendMessage(threadId, message);
+      
+      if (response && response.result) {
+        setCurrentSession(prevSession => {
+          if (!prevSession) return null;
+          const newMessage: Message = {
+            id: response.result.id,
+            text: response.result.content,
+            sender: 'bot'
+          };
+          return {
+            ...prevSession,
+            messages: [...prevSession.messages, newMessage]
+          };
+        });
+      } else {
+        console.error('Unexpected response format:', response);
+      }
+    } catch (error) {
+      console.error('Error sending initial message:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     initializeSession();
@@ -169,7 +219,11 @@ const ChatScreenContent: React.FC = () => {
 
         {/* Chat Message List */}
         <div className="flex-grow overflow-y-auto">
-          <MessageList messages={currentSession?.messages || []} isLoading={isLoading} />
+          <MessageList 
+            messages={currentSession?.messages || []} 
+            isLoading={isLoading} 
+            firstMessage={firstMessage}
+          />
           <div ref={messagesEndRef} />
         </div>
 
@@ -181,11 +235,11 @@ const ChatScreenContent: React.FC = () => {
               placeholder="Start typing ..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputMessage)}
+              onKeyDown={(e) => e.key === 'Enter' && threadId && handleSendMessage(inputMessage, threadId)}
             />
           </div>
           <button 
-            onClick={() => handleSendMessage(inputMessage)} 
+            onClick={() => threadId && handleSendMessage(inputMessage, threadId)} 
             className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
             aria-label="Send message"
           >

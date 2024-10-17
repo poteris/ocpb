@@ -15,8 +15,8 @@ CREATE TABLE public.assistants (
 CREATE TABLE public.threads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   thread_id TEXT UNIQUE NOT NULL,
-  user_id TEXT NOT NULL,  -- Changed from UUID to TEXT
-  assistant_id UUID NOT NULL REFERENCES public.assistants(id),
+  user_id TEXT NOT NULL,
+  assistant_id TEXT NOT NULL REFERENCES public.assistants(assistant_id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_message_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -25,7 +25,7 @@ CREATE TABLE public.threads (
 CREATE TABLE public.messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   message_id TEXT UNIQUE NOT NULL,
-  thread_id UUID NOT NULL REFERENCES public.threads(id),
+  thread_id TEXT NOT NULL REFERENCES public.threads(thread_id),
   role TEXT NOT NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

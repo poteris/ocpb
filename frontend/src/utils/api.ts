@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { v4 as uuidv4 } from 'uuid'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
@@ -44,13 +45,15 @@ export async function createAssistant(name: string, description: string, model: 
   return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
 }
 
-export async function createThread(assistantId: string) {
-  console.log('Creating thread with assistantId:', assistantId);
-  return invokeFunction('assistant', { action: 'createThread', assistantId })
+export async function createThread(assistantId: string, initialMessage?: string) {
+  const userId = await getUserId();
+  const response = await invokeFunction('assistant', { action: 'createThread', assistantId, userId, initialMessage });
+  return response.result;
 }
 
 export async function sendMessage(threadId: string, content: string) {
-  return invokeFunction('assistant', { action: 'sendMessage', threadId, content })
+  const response = await invokeFunction('assistant', { action: 'sendMessage', threadId, content });
+  return response; // This should now return the entire response object
 }
 
 export async function runAssistant(threadId: string) {
@@ -59,4 +62,27 @@ export async function runAssistant(threadId: string) {
 
 export async function getThreadMessages(threadId: string) {
   return invokeFunction('assistant', { action: 'getThreadMessages', threadId })
+}
+
+// Implement this function to get the current user's ID
+async function getUserId() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user?.id) {
+    return user.id;
+  } else {
+    // Generate or retrieve a temporary userID for unauthenticated users
+    return getOrCreateTemporaryUserId();
+  }
+}
+
+function getOrCreateTemporaryUserId() {
+  const storageKey = 'temporaryUserId';
+  let temporaryUserId = localStorage.getItem(storageKey);
+  
+  if (!temporaryUserId) {
+    temporaryUserId = `temp_${uuidv4()}`;
+    localStorage.setItem(storageKey, temporaryUserId);
+  }
+  
+  return temporaryUserId;
 }
