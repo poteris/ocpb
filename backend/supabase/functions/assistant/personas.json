@@ -1,0 +1,46 @@
+{
+    "personas": [
+      {
+        "id": "single-mum-of-three",
+        "characterType": "Single mum of three",
+        "mood": "Frustrated",
+        "ageRange": "25-40",
+        "context": "Struggling to balance work and childcare responsibilities. Feels undervalued at work and is considering joining the union to advocate for better working conditions and family-friendly policies."
+      },
+      {
+        "id": "veteran-factory-worker",
+        "characterType": "Veteran factory worker",
+        "mood": "Concerned",
+        "ageRange": "50-65",
+        "context": "Has worked in the same factory for 30 years and is worried about job security due to automation. Wants to ensure the union is fighting to protect long-term employees and provide retraining opportunities."
+      },
+      {
+        "id": "recent-college-graduate",
+        "characterType": "Recent college graduate",
+        "mood": "Enthusiastic",
+        "ageRange": "22-28",
+        "context": "Just started their first job in a tech company and is excited about the potential for growth. Curious about the benefits of union membership but unsure if it's necessary in their industry."
+      },
+      {
+        "id": "immigrant-healthcare-worker",
+        "characterType": "Immigrant healthcare worker",
+        "mood": "Determined",
+        "ageRange": "30-45",
+        "context": "Working long hours as a nurse and facing discrimination. Wants to join the union to fight for equal treatment and better working conditions for all healthcare workers, regardless of their background."
+      },
+      {
+        "id": "part-time-retail-employee",
+        "characterType": "Part-time retail employee",
+        "mood": "Anxious",
+        "ageRange": "18-35",
+        "context": "Juggling multiple part-time jobs to make ends meet. Interested in union representation to push for more consistent schedules, better pay, and access to benefits typically reserved for full-time employees."
+      },
+      {
+        "id": "mid-career-teacher",
+        "characterType": "Mid-career teacher",
+        "mood": "Passionate",
+        "ageRange": "35-50",
+        "context": "Dedicated educator feeling burnt out due to increasing workloads and shrinking resources. Looking to the union to advocate for smaller class sizes, better pay, and more support for teachers' mental health."
+      }
+    ]
+  }

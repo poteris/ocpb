@@ -4,6 +4,7 @@ project_id = "ocpb"
 
 [functions.assistant]
 timeout = 120
+verify_jwt = false
 
 [api]
 enabled = true
