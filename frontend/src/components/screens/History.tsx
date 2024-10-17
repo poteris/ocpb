@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout } from '../Layout';
+import { Header } from '../Header';
 import { Button, Modal } from '../ui';
 import { Download, Info, Trash2, Plus } from 'react-feather';
 import { useRouter } from 'next/navigation';
@@ -42,7 +42,7 @@ export const History: React.FC = () => {
   };
 
   return (
-    <Layout headerType="alt">
+    <div className="flex flex-col h-full">
       <div className="flex flex-col h-full max-w-md mx-auto bg-gray-100">
         {/* Scrollable main area */}
         <div className="flex-grow overflow-y-auto">
@@ -177,6 +177,6 @@ export const History: React.FC = () => {
           </div>
         </Modal>
       )}
-    </Layout>
+    </div>
   );
 };

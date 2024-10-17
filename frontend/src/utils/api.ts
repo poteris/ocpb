@@ -45,9 +45,9 @@ export async function createAssistant(name: string, description: string, model: 
   return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
 }
 
-export async function createThread(assistantId: string, initialMessage?: string) {
+export async function createThread(initialMessage: string, personaId: string) {
   const userId = await getUserId();
-  const response = await invokeFunction('assistant', { action: 'createThread', assistantId, userId, initialMessage });
+  const response = await invokeFunction('assistant', { action: 'createThread', userId, initialMessage, personaId });
   return response.result;
 }
 

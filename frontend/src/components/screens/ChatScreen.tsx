@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
-import { Layout } from '@/components/Layout';
+import { Header } from '@/components/Header';
 import { InfoPopover, Modal } from '@/components/ui';
 import { MessageList } from "./ChatMessageList";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui';
 import { ChatSession, Message } from '@/types/chat';
 import { FeedbackPopover } from './FeedbackScreen';
 import analysisData from './analysis.json';
-import { createAssistant, createThread, sendMessage } from '@/utils/api';
+import { createThread, sendMessage } from '@/utils/api';
 import { promptMap } from '@/utils/promptMap';
 import { debounce } from 'lodash';
 
@@ -32,6 +32,7 @@ const ChatScreenContent: React.FC = () => {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [assistantId, setAssistantId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [personaId, setPersonaId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -109,10 +110,11 @@ const ChatScreenContent: React.FC = () => {
       setIsInitializing(true);
 
       try {
-        let thread;
         const shortPrompt = searchParams.get('shortPrompt');
         const firstMessageParam = searchParams.get('firstMessage');
         const initialMessage = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
+        const personaIdParam = searchParams.get('personaId');
+        setPersonaId(personaIdParam);
 
         if (sessionId) {
           // Load existing session
@@ -121,44 +123,32 @@ const ChatScreenContent: React.FC = () => {
           if (session) {
             setCurrentSession(session);
             setThreadId(session.threadId);
-            setAssistantId(session.assistantId);
-            thread = { id: session.threadId };
           } else {
             console.error('Session not found');
             // Handle error - maybe navigate back to history or create a new session
           }
         } else {
           try {
-            const assistant = await createAssistant('My Assistant', 'A colleague who isn\'t a member of the Union', 'gpt-4o-mini');
-            const assistantId = assistant.result.assistant_id;
-            setAssistantId(assistantId);
-            
-            const existingThread = currentSession?.threadId;
-            let threadId = existingThread;
-
-            if (!existingThread) {
-              const threadResponse = await createThread(assistantId, firstMessageParam || undefined);
-              if (!threadResponse || !threadResponse.id) {
-                throw new Error('Failed to create thread');
-              }
-              threadId = threadResponse.id;
+            const threadResponse = await createThread(initialMessage || '', personaIdParam || '');
+            if (!threadResponse || !threadResponse.id) {
+              throw new Error('Failed to create thread');
             }
+            const threadId = threadResponse.id;
 
-            setThreadId(threadId || null);
+            setThreadId(threadId);
             const newSession: ChatSession = {
               id: Date.now().toString(),
-              threadId: threadId || '',
-              assistantId: assistantId,
+              threadId: threadId,
               messages: initialMessage ? [{ id: `first-${Date.now()}`, text: initialMessage, sender: 'user' }] : []
             };
             setCurrentSession(newSession);
             saveSessionToStorage(newSession);
 
-            if (initialMessage && !existingThread) {
-              await handleInitialMessage(threadId || '', initialMessage);
+            if (initialMessage) {
+              await handleInitialMessage(threadId, initialMessage);
             }
           } catch (error) {
-            console.error('Error creating assistant or thread:', error);
+            console.error('Error creating thread:', error);
             // Handle the error appropriately, maybe set an error state
           }
         }
@@ -171,7 +161,7 @@ const ChatScreenContent: React.FC = () => {
         setIsInitializing(false);
       }
     }, 300),
-    [sessionId, searchParams, saveSessionToStorage, currentSession]
+    [sessionId, searchParams, saveSessionToStorage]
   );
 
   const handleInitialMessage = async (threadId: string, message: string) => {
@@ -217,7 +207,7 @@ const ChatScreenContent: React.FC = () => {
 
   const handleFeedbackClose = () => {
     setShowFeedbackPopover(false);
-    router.push('/history');
+    router.push('/');
   };
 
   useEffect(() => {
@@ -225,7 +215,8 @@ const ChatScreenContent: React.FC = () => {
   }, [currentSession?.messages]);
 
   return (
-    <Layout>
+    <div className="flex flex-col h-full">
+      <Header title="Scenario: Grievance Handling" variant="default" />
       <div className="bg-white flex flex-col h-full max-w-md mx-auto">
         {/* Header */}
         <div className="p-4 flex items-center">
@@ -313,7 +304,7 @@ const ChatScreenContent: React.FC = () => {
           analysisData={analysisData}
         />
       )}
-    </Layout>
+    </div>
   );
 };
 
