@@ -1,14 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+const supabaseUrl = 'https://fgtbrxevozlpcqrjvqvk.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 function getFunctionUrl(functionName: string) {
   return isDevelopment
     ? `http://127.0.0.1:54321/functions/v1/${functionName}`
-    : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${functionName}`
+    : `${supabaseUrl}/functions/v1/${functionName}`
 }
 
 async function invokeFunction(functionName: string, body: any) {
@@ -45,15 +48,20 @@ export async function createAssistant(name: string, description: string, model: 
   return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
 }
 
-export async function createThread(initialMessage: string, personaId: string) {
+export async function createConversation(initialMessage: string, scenarioId: string, personaId: string) {
   const userId = await getUserId();
-  const response = await invokeFunction('assistant', { action: 'createThread', userId, initialMessage, personaId });
+  const response = await invokeFunction('assistant', { action: 'createConversation', userId, initialMessage, scenarioId, personaId });
   return response.result;
 }
 
-export async function sendMessage(threadId: string, content: string) {
-  const response = await invokeFunction('assistant', { action: 'sendMessage', threadId, content });
-  return response; // This should now return the entire response object
+export async function sendMessage(conversationId: string, content: string) {
+  const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content });
+  if (response && response.result && response.result.content) {
+    return response.result;
+  } else {
+    console.error('Unexpected response format:', response);
+    throw new Error('Unexpected response format from server');
+  }
 }
 
 export async function runAssistant(threadId: string) {

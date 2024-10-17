@@ -10,7 +10,7 @@ import { Button } from '@/components/ui';
 import { ChatSession, Message } from '@/types/chat';
 import { FeedbackPopover } from './FeedbackScreen';
 import analysisData from './analysis.json';
-import { createThread, sendMessage } from '@/utils/api';
+import { createConversation, sendMessage } from '@/utils/api';
 import { promptMap } from '@/utils/promptMap';
 import { debounce } from 'lodash';
 
@@ -29,10 +29,9 @@ const ChatScreenContent: React.FC = () => {
   const [showEndChatModal, setShowEndChatModal] = useState(false);
   const sessionInitialized = useRef(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const [assistantId, setAssistantId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [personaId, setPersonaId] = useState<string | null>(null);
+  const [initialMessageSent, setInitialMessageSent] = useState(false);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -45,10 +44,10 @@ const ChatScreenContent: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
   }, []);
 
-  const handleSendMessage = async (message: string, threadId: string) => {
-    console.log('handleSendMessage called with threadId:', threadId, 'and message:', message);
-    if (!threadId || !message.trim()) {
-      console.error('ThreadId is missing or message is empty');
+  const handleSendMessage = async (message: string, conversationId: string) => {
+    console.log('handleSendMessage called with conversationId:', conversationId, 'and message:', message);
+    if (!conversationId || !message.trim()) {
+      console.error('ConversationId is missing or message is empty');
       return;
     }
 
@@ -66,17 +65,17 @@ const ChatScreenContent: React.FC = () => {
       }));
 
       // Send message to API and get the response
-      const response = await sendMessage(threadId, message);
+      const response = await sendMessage(conversationId, message);
       
-      if (response && response.result) {
+      if (response && response.content) {
         // Update the session with the assistant's response
         setCurrentSession(prev => ({
           ...prev!,
           messages: [
             ...(prev?.messages || []),
             {
-              id: response.result.id,
-              text: response.result.content,
+              id: Date.now().toString(),
+              text: response.content,
               sender: 'bot'
             }
           ]
@@ -113,8 +112,8 @@ const ChatScreenContent: React.FC = () => {
         const shortPrompt = searchParams.get('shortPrompt');
         const firstMessageParam = searchParams.get('firstMessage');
         const initialMessage = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
-        const personaIdParam = searchParams.get('personaId');
-        setPersonaId(personaIdParam);
+        const scenarioId = searchParams.get('scenarioId');
+        const personaId = searchParams.get('personaId');
 
         if (sessionId) {
           // Load existing session
@@ -122,33 +121,43 @@ const ChatScreenContent: React.FC = () => {
           const session = sessions.find((s: ChatSession) => s.id === sessionId);
           if (session) {
             setCurrentSession(session);
-            setThreadId(session.threadId);
+            setConversationId(session.conversationId);
           } else {
             console.error('Session not found');
             // Handle error - maybe navigate back to history or create a new session
           }
         } else {
           try {
-            const threadResponse = await createThread(initialMessage || '', personaIdParam || '');
-            if (!threadResponse || !threadResponse.id) {
-              throw new Error('Failed to create thread');
-            }
-            const threadId = threadResponse.id;
-
-            setThreadId(threadId);
             const newSession: ChatSession = {
               id: Date.now().toString(),
-              threadId: threadId,
+              conversationId: '',
               messages: initialMessage ? [{ id: `first-${Date.now()}`, text: initialMessage, sender: 'user' }] : []
             };
             setCurrentSession(newSession);
+            setInitialMessageSent(true);
+
+            const conversationResponse = await createConversation(initialMessage || '', scenarioId || '', personaId || '');
+            if (!conversationResponse || !conversationResponse.id) {
+              throw new Error('Failed to create conversation');
+            }
+            const conversationId = conversationResponse.id;
+
+            setConversationId(conversationId);
+            newSession.conversationId = conversationId;
             saveSessionToStorage(newSession);
 
-            if (initialMessage) {
-              await handleInitialMessage(threadId, initialMessage);
+            if (initialMessage && conversationResponse.aiResponse) {
+              setCurrentSession(prevSession => ({
+                ...prevSession!,
+                messages: [
+                  ...prevSession!.messages,
+                  { id: Date.now().toString(), text: conversationResponse.aiResponse, sender: 'bot' }
+                ]
+              }));
             }
+            setInitialMessageSent(false);
           } catch (error) {
-            console.error('Error creating thread:', error);
+            console.error('Error creating conversation:', error);
             // Handle the error appropriately, maybe set an error state
           }
         }
@@ -163,34 +172,6 @@ const ChatScreenContent: React.FC = () => {
     }, 300),
     [sessionId, searchParams, saveSessionToStorage]
   );
-
-  const handleInitialMessage = async (threadId: string, message: string) => {
-    setIsLoading(true);
-    try {
-      const response = await sendMessage(threadId, message);
-      
-      if (response && response.result) {
-        setCurrentSession(prevSession => {
-          if (!prevSession) return null;
-          const newMessage: Message = {
-            id: response.result.id,
-            text: response.result.content,
-            sender: 'bot'
-          };
-          return {
-            ...prevSession,
-            messages: [...prevSession.messages, newMessage]
-          };
-        });
-      } else {
-        console.error('Unexpected response format:', response);
-      }
-    } catch (error) {
-      console.error('Error sending initial message:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
     initializeSession();
@@ -216,28 +197,18 @@ const ChatScreenContent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <Header title="Scenario: Grievance Handling" variant="default" />
+      <Header 
+        title="Scenario: Grievance Handling" 
+        variant="default" 
+        showInfoIcon={true}
+        onInfoClick={() => setShowInfoPopover(true)}
+      />
       <div className="bg-white flex flex-col h-full max-w-md mx-auto">
-        {/* Header */}
-        <div className="p-4 flex items-center">
-          <div className="ml-4">
-            <p className="text-pcsprimary-04 text-xs">Scenario: Grievance Handling</p>
-          </div>
-          <button 
-            onClick={() => setShowInfoPopover(true)} 
-            className="ml-auto bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
-            aria-label="Show information"
-          >
-            <Info size={18} />
-          </button>
-        </div>
-
         {/* Chat Message List */}
         <div className="flex-grow overflow-y-auto">
           <MessageList 
             messages={currentSession?.messages || []} 
-            isLoading={isLoading} 
-            firstMessage={firstMessage}
+            isLoading={isLoading || initialMessageSent}
           />
           <div ref={messagesEndRef} />
         </div>
@@ -250,11 +221,11 @@ const ChatScreenContent: React.FC = () => {
               placeholder="Start typing ..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && threadId && handleSendMessage(inputMessage, threadId)}
+              onKeyDown={(e) => e.key === 'Enter' && conversationId && handleSendMessage(inputMessage, conversationId)}
             />
           </div>
           <button 
-            onClick={() => threadId && handleSendMessage(inputMessage, threadId)} 
+            onClick={() => conversationId && handleSendMessage(inputMessage, conversationId)} 
             className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
             aria-label="Send message"
           >
