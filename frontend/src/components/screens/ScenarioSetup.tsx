@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui';
 import { useRouter } from 'next/navigation';
 import scenarioData from '@/lib/scenarios.json';
 import personaData from '@/lib/personas.json';
 import { Header } from '../Header';
+import { useScenario } from '@/context/ScenarioContext';
 
 interface ScenarioSetupProps {
   scenarioId: string;
@@ -22,25 +23,37 @@ interface Persona {
 
 export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack }) => {
   const router = useRouter();
+  const { setScenarioInfo, setPersonaInfo } = useScenario();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
 
   const scenario = scenarioData.scenarios.find((s) => s.id === scenarioId);
 
-  const selectRandomPersona = () => {
+  const selectRandomPersona = useCallback(() => {
     const randomIndex = Math.floor(Math.random() * personaData.personas.length);
-    setCurrentPersona(personaData.personas[randomIndex]);
-  };
+    const selectedPersona = personaData.personas[randomIndex];
+    setPersonaInfo(selectedPersona);
+    setCurrentPersona(selectedPersona);
+  }, [setPersonaInfo, setCurrentPersona]);
 
   useEffect(() => {
+    if (scenario) {
+      setScenarioInfo({
+        id: scenario.id,
+        title: scenario.title,
+        description: scenario.description,
+        objectives: scenario.objectives,
+        prompts: scenario.prompts
+      });
+    }
     selectRandomPersona();
-  }, []);
+  }, [scenario, setScenarioInfo, setPersonaInfo, selectRandomPersona]);
 
   if (!scenario) {
     return <div>Scenario not found</div>;
   }
 
   const navigateTo = (screen: string) => {
-    router.push(`/${screen}?scenarioId=${scenarioId}&scenarioTitle=${encodeURIComponent(scenario.title)}&personaId=${currentPersona?.id}`);
+    router.push(`/${screen}?scenarioId=${scenarioId}`);
   };
 
   return (

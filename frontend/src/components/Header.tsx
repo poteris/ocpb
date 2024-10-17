@@ -19,23 +19,23 @@ export const Header: React.FC<HeaderProps> = ({
   const textColor = variant === 'alt' ? 'text-white' : 'text-pcsprimary-03';
 
   return (
-    <header className={`${bgColor} p-4 flex items-center justify-between`}>
-      <div className="flex items-center">
+    <header className={`${bgColor} p-4 flex items-center justify-between sticky top-0 z-10`}>
+      <div className="flex items-center flex-grow">
         <Image
           width={42}
           height={42}
-          className="rounded-full"
+          className="rounded-full w-8 h-8 sm:w-10 sm:h-10"
           alt="Bot Avatar"
           src="/images/bot-avatar.svg"
         />
-        <div className="ml-4">
-          <h1 className={`font-medium ${textColor} text-base`}>{title}</h1>
+        <div className="ml-2 sm:ml-4 flex-grow">
+          <h1 className={`font-medium ${textColor} text-sm sm:text-base truncate`}>{title}</h1>
         </div>
       </div>
       {showInfoIcon && (
         <button 
           onClick={onInfoClick} 
-          className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors"
+          className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors ml-2"
           aria-label="Show information"
         >
           <Info size={18} />

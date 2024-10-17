@@ -6,9 +6,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +46,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
         <div className="px-6 py-4">
           {children}
         </div>
+        {footer && (
+          <div className="border-t border-gray-200 px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

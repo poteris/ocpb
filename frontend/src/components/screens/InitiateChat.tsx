@@ -1,55 +1,33 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, Suspense } from "react";
 import { Header } from '../Header';
-import { Button, InfoPopover } from '../ui';
+import { Button } from '../ui';
 import Image from "next/image";
-import { useRouter, useSearchParams } from 'next/navigation';
-import scenarioData from '@/lib/scenarios.json';
+import { useRouter } from 'next/navigation';
+import { useScenario } from '@/context/ScenarioContext';
+import { ChatModals } from '../ChatModals';
 
-export const InitiateChat: React.FC = () => {
+const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [scenarioTitle, setScenarioTitle] = useState("Union Training Bot");
-  const [scenarioId, setScenarioId] = useState("");
-  const [prompts, setPrompts] = useState<string[]>([]);
-  const [personaId, setPersonaId] = useState("");
-
-  useEffect(() => {
-    const title = searchParams.get('scenarioTitle');
-    const id = searchParams.get('scenarioId');
-    const personaId = searchParams.get('personaId');
-    if (title) {
-      setScenarioTitle(decodeURIComponent(title));
-    }
-    if (id) {
-      setScenarioId(id);
-      const scenario = scenarioData.scenarios.find(s => s.id === id);
-      if (scenario && scenario.prompts) {
-        setPrompts(scenario.prompts);
-      }
-    }
-    if (personaId) {
-      setPersonaId(personaId);
-    }
-  }, [searchParams]);
+  const { scenarioInfo, personaInfo } = useScenario();
 
   const handlePromptSelect = (prompt: string) => {
-    router.push(`/chat-screen?firstMessage=${encodeURIComponent(prompt)}&scenarioTitle=${searchParams.get('scenarioTitle')}&scenarioId=${scenarioId}&personaId=${personaId}`);
+    router.push(`/chat-screen?firstMessage=${encodeURIComponent(prompt)}&scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}`);
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      router.push(`/chat-screen?firstMessage=${encodeURIComponent(inputMessage.trim())}&scenarioTitle=${searchParams.get('scenarioTitle')}&scenarioId=${scenarioId}&personaId=${personaId}`);
+      router.push(`/chat-screen?firstMessage=${encodeURIComponent(inputMessage.trim())}&scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}`);
     }
   };
 
   return (
     <div className="flex flex-col h-full">
       <Header 
-        title={scenarioTitle} 
+        title={scenarioInfo?.title || "Scenario"} 
         variant="default" 
         showInfoIcon={true}
         onInfoClick={() => setShowInfoPopover(true)}
@@ -70,7 +48,7 @@ export const InitiateChat: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col gap-2 mb-4">
-            {prompts.map((prompt, index) => (
+            {scenarioInfo?.prompts?.map((prompt, index) => (
               <Button
                 key={index}
                 variant="options"
@@ -101,9 +79,26 @@ export const InitiateChat: React.FC = () => {
         </div>
       </div>
 
-      {showInfoPopover && (
-        <InfoPopover onClose={() => setShowInfoPopover(false)} />
-      )}
+      <ChatModals
+        showInfoPopover={showInfoPopover}
+        setShowInfoPopover={setShowInfoPopover}
+        scenarioInfo={scenarioInfo}
+        personaInfo={personaInfo}
+        showEndChatModal={false}
+        setShowEndChatModal={() => {}}
+        confirmEndChat={() => {}}
+        showFeedbackPopover={false}
+        setShowFeedbackPopover={() => {}}
+        handleFeedbackClose={() => {}}
+      />
     </div>
+  );
+};
+
+export const InitiateChat: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InitiateChatContent />
+    </Suspense>
   );
 };

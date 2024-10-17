@@ -10,9 +10,9 @@ interface AnalysisData {
 
 interface FeedbackPopoverProps {
   onClose: () => void;
-  onContinueChat: () => void;
+  onContinueChat?: () => void;
   score: number;
-  analysisData: AnalysisData;
+  analysisData?: AnalysisData;
 }
 
 export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
@@ -48,46 +48,54 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-2">Summary</h3>
-            <p className="text-gray-700">{analysisData.summary}</p>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-4">Strengths</h3>
-            {analysisData.strengths.map((strength, index) => (
-              <div key={index} className="mb-4 flex">
-                <CheckCircle className="text-green-500 mr-2 flex-shrink-0" size={20} />
-                <div>
-                  <h4 className="font-semibold mb-1">{strength.title}</h4>
-                  <p className="text-gray-600">{strength.description}</p>
-                </div>
+          {analysisData ? (
+            <>
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-2">Summary</h3>
+                <p className="text-gray-700">{analysisData.summary}</p>
               </div>
-            ))}
-          </div>
 
-          <div>
-            <h3 className="text-lg font-bold mb-4">Areas for Improvement</h3>
-            {analysisData.areas_for_improvement.map((area, index) => (
-              <div key={index} className="mb-4 flex">
-                <AlertCircle className="text-orange-500 mr-2 flex-shrink-0" size={20} />
-                <div>
-                  <h4 className="font-semibold mb-1">{area.title}</h4>
-                  <p className="text-gray-600">{area.description}</p>
-                </div>
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-4">Strengths</h3>
+                {analysisData.strengths.map((strength, index) => (
+                  <div key={index} className="mb-4 flex">
+                    <CheckCircle className="text-green-500 mr-2 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-semibold mb-1">{strength.title}</h4>
+                      <p className="text-gray-600">{strength.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-4">Areas for Improvement</h3>
+                {analysisData.areas_for_improvement.map((area, index) => (
+                  <div key={index} className="mb-4 flex">
+                    <AlertCircle className="text-orange-500 mr-2 flex-shrink-0" size={20} />
+                    <div>
+                      <h4 className="font-semibold mb-1">{area.title}</h4>
+                      <p className="text-gray-600">{area.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-700">Analysis data is not available.</p>
+          )}
         </div>
       </div>
 
       {/* Footer */}
       <div className="p-4 flex justify-between border-t border-gray-200">
-        <Button
-          variant="default"
-          text="Continue Chatting"
-          onClick={onContinueChat}
-        />
+        {onContinueChat && (
+          <Button
+            variant="default"
+            text="Continue Chatting"
+            onClick={onContinueChat}
+          />
+        )}
         <Button
           variant="progress"
           text="Close"

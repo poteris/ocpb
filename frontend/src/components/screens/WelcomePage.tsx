@@ -6,11 +6,16 @@ import { Button } from '@/components/ui';
 import scenarioData from '@/lib/scenarios.json';
 import { ScenarioSetup } from './ScenarioSetup';
 
-export const Welcome: React.FC = () => {
+interface WelcomeProps {
+  onScenarioSelect: (scenarioId: string) => void;
+}
+
+export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
 
-  const onScenarioSelect = (scenarioId: string) => {
+  const handleScenarioSelect = (scenarioId: string) => {
     setSelectedScenarioId(scenarioId);
+    onScenarioSelect(scenarioId);
   };
 
   return (
@@ -37,7 +42,7 @@ export const Welcome: React.FC = () => {
                     <Button
                       variant="progress"
                       text="Start Scenario"
-                      onClick={() => onScenarioSelect(scenario.id)}
+                      onClick={() => handleScenarioSelect(scenario.id)}
                       className="w-full mt-2"
                     />
                   </div>

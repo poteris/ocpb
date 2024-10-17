@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 export default function WelcomePage() {
   const router = useRouter();
 
-  const handleScenarioSelect = () => {
-    // Replace with the actual route you want to navigate to
-    router.push('/scenario-setup');
+  const handleScenarioSelect = (scenarioId: string) => {
+    console.log(`Selected scenario: ${scenarioId}`);
+    router.push(`/scenario-setup?scenarioId=${scenarioId}`);
   };
 
   return <Welcome onScenarioSelect={handleScenarioSelect} />;

@@ -10,9 +10,10 @@ interface Message {
 interface ActiveChatProps {
   messages: Message[];
   isLoading: boolean;
+  isWaitingForInitialResponse: boolean;
 }
 
-export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading }) => {
+export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading, isWaitingForInitialResponse }) => {
   return (
     <div className="flex-grow overflow-y-auto p-4">
       {messages.map((message) => (
@@ -59,7 +60,7 @@ export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading }) 
           </div>
         </div>
       ))}
-      {isLoading && (
+      {(isLoading || isWaitingForInitialResponse) && (
         <div key="loading-indicator" className="flex justify-start mb-4">
           <Image
             width={16}
