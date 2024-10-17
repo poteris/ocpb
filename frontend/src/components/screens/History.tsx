@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Header } from '../Header';
 import { Button, Modal } from '../ui';
 import { Download, Info, Trash2, Plus } from 'react-feather';
 import { useRouter } from 'next/navigation';

@@ -26,14 +26,6 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
 
   const scenario = scenarioData.scenarios.find((s) => s.id === scenarioId);
 
-  if (!scenario) {
-    return <div>Scenario not found</div>;
-  }
-
-  const navigateTo = (screen: string) => {
-    router.push(`/${screen}?scenarioId=${scenarioId}&scenarioTitle=${encodeURIComponent(scenario.title)}&personaId=${currentPersona?.id}`);
-  };
-
   const selectRandomPersona = () => {
     const randomIndex = Math.floor(Math.random() * personaData.personas.length);
     setCurrentPersona(personaData.personas[randomIndex]);
@@ -42,6 +34,14 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
   useEffect(() => {
     selectRandomPersona();
   }, []);
+
+  if (!scenario) {
+    return <div>Scenario not found</div>;
+  }
+
+  const navigateTo = (screen: string) => {
+    router.push(`/${screen}?scenarioId=${scenarioId}&scenarioTitle=${encodeURIComponent(scenario.title)}&personaId=${currentPersona?.id}`);
+  };
 
   return (
     <div className="flex flex-col h-full">

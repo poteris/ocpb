@@ -14,7 +14,13 @@ function getFunctionUrl(functionName: string) {
     : `${supabaseUrl}/functions/v1/${functionName}`
 }
 
-async function invokeFunction(functionName: string, body: any) {
+// Define a type for the function body
+type FunctionBody = {
+  action: string;
+  [key: string]: unknown;
+};
+
+async function invokeFunction(functionName: string, body: FunctionBody) {
   try {
     if (isDevelopment) {
       const response = await fetch(getFunctionUrl(functionName), {

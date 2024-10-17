@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { InfoPopover, Modal } from '@/components/ui';
 import { MessageList } from "./ChatMessageList";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Info, Mic } from 'react-feather';
+import { Mic } from 'react-feather';
 import { Button } from '@/components/ui';
 import { ChatSession, Message } from '@/types/chat';
 import { FeedbackPopover } from './FeedbackScreen';
@@ -21,7 +21,6 @@ const ChatScreenContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
-  const firstMessage = searchParams.get('firstMessage');
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -103,8 +102,8 @@ const ChatScreenContent: React.FC = () => {
     }
   };
 
-  const initializeSession = useCallback(
-    debounce(async () => {
+  const initializeSession = useCallback(() => {
+    const debouncedInitialize = debounce(async () => {
       if (sessionInitialized.current || isInitializing) return;
       setIsInitializing(true);
 
@@ -169,9 +168,10 @@ const ChatScreenContent: React.FC = () => {
       } finally {
         setIsInitializing(false);
       }
-    }, 300),
-    [sessionId, searchParams, saveSessionToStorage]
-  );
+    }, 300);
+
+    debouncedInitialize();
+  }, [searchParams, saveSessionToStorage, isInitializing, sessionId]);
 
   useEffect(() => {
     initializeSession();
