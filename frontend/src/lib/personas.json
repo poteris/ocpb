@@ -15,13 +15,6 @@
         "context": "Has worked in the same factory for 30 years and is worried about job security due to automation. Wants to ensure the union is fighting to protect long-term employees and provide retraining opportunities."
       },
       {
-        "id": "recent-college-graduate",
-        "characterType": "Recent college graduate",
-        "mood": "Enthusiastic",
-        "ageRange": "22-28",
-        "context": "Just started their first job in a tech company and is excited about the potential for growth. Curious about the benefits of union membership but unsure if it's necessary in their industry."
-      },
-      {
         "id": "immigrant-healthcare-worker",
         "characterType": "Immigrant healthcare worker",
         "mood": "Determined",
