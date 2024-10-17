@@ -33,7 +33,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     const selectedPersona = personaData.personas[randomIndex];
     setPersonaInfo(selectedPersona);
     setCurrentPersona(selectedPersona);
-  }, [setPersonaInfo, setCurrentPersona]);
+  }, [setPersonaInfo]);
 
   useEffect(() => {
     if (scenario) {
@@ -46,7 +46,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
       });
     }
     selectRandomPersona();
-  }, [scenario, setScenarioInfo, setPersonaInfo, selectRandomPersona]);
+  }, [scenario, setScenarioInfo, selectRandomPersona]);
 
   if (!scenario) {
     return <div>Scenario not found</div>;
