@@ -7,7 +7,7 @@ import personas from './personas.json' assert { type: "json" };
 import scenarios from './scenarios.json' assert { type: "json" };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321'
-const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+const supabaseServiceRoleKey = Deno.env.get('SERVICE_ROLE_KEY')
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.error('Missing Supabase URL or Service Role Key')
@@ -55,7 +55,6 @@ async function createConversation({ userId, initialMessage, scenarioId, personaI
       throw new Error('Missing userId, scenarioId, or personaId');
     }
 
-    // Fetch scenario and persona details from JSON files
     const scenario = scenarios.scenarios.find(s => s.id === scenarioId);
     const persona = personas.personas.find(p => p.id === personaId);
 
@@ -63,39 +62,22 @@ async function createConversation({ userId, initialMessage, scenarioId, personaI
       throw new Error('Scenario or persona not found');
     }
 
-    // Create system prompt
-    const systemPrompt = `You are a colleague of the union rep, who will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Only demonstrate interest in joining the union if the rep has engaged with your unique situation effectively.
-    Scenario: ${scenario.description}
-    Persona: ${persona.characterType}, ${persona.mood}, ${persona.ageRange}
-    Context: ${persona.context}`;
-
-    let messages = [
-      { role: "system", content: systemPrompt },
-    ];
-
-    if (initialMessage) {
-      messages.push({ role: "user", content: initialMessage });
-    }
-
-    // Create conversation in the database
     const conversationId = crypto.randomUUID();
     const { error } = await supabase
       .from('conversations')
       .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: personaId });
 
-    if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    // If there's an initial message, get the AI response
     let aiResponse = null;
     if (initialMessage) {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: messages,
-      });
-      aiResponse = completion.choices[0].message.content;
+      const systemPrompt = createSystemPrompt(scenario, persona);
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: initialMessage }
+      ];
+      aiResponse = await getAIResponse(messages);
+      await saveMessages(conversationId, initialMessage, aiResponse || '');
     }
 
     console.log('Conversation created:', conversationId);
@@ -108,30 +90,9 @@ async function createConversation({ userId, initialMessage, scenarioId, personaI
 
 async function sendMessage({ conversationId, content }: { conversationId: string; content: string }) {
   try {
-    // Fetch the conversation details
-    const { data: conversationData, error: conversationError } = await supabase
-      .from('conversations')
-      .select('scenario_id, persona_id')
-      .eq('conversation_id', conversationId)
-      .single();
+    const { scenario, persona } = await getConversationContext(conversationId);
+    const systemPrompt = createSystemPrompt(scenario, persona);
 
-    if (conversationError) throw conversationError;
-
-    // Fetch scenario and persona details from JSON files
-    const scenario = scenarios.scenarios.find(s => s.id === conversationData.scenario_id);
-    const persona = personas.personas.find(p => p.id === conversationData.persona_id);
-
-    if (!scenario || !persona) {
-      throw new Error('Scenario or persona not found');
-    }
-
-    // Create system prompt
-    const systemPrompt = `You are a colleague of the union rep, who will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Only demonstrate interest in joining the union if the rep has engaged with your unique situation effectively.
-    Scenario: ${scenario.description}
-    Persona: ${persona.characterType}, ${persona.mood}, ${persona.ageRange}
-    Context: ${persona.context}`;
-
-    // Fetch previous messages
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select('role, content')
@@ -146,20 +107,8 @@ async function sendMessage({ conversationId, content }: { conversationId: string
       { role: "user", content: content }
     ];
 
-    // Get AI response
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: messages,
-    });
-    const aiResponse = completion.choices[0].message.content;
-
-    // Save messages to database
-    const { error: insertError } = await supabase.from('messages').insert([
-      { conversation_id: conversationId, role: 'user', content: content },
-      { conversation_id: conversationId, role: 'assistant', content: aiResponse }
-    ]);
-
-    if (insertError) throw insertError;
+    const aiResponse = await getAIResponse(messages);
+    await saveMessages(conversationId, content, aiResponse);
 
     return { content: aiResponse };
   } catch (error) {
@@ -180,6 +129,52 @@ async function getConversationMessages({ conversationId }: { conversationId: str
     role: msg.role,
     content: msg.content
   }));
+}
+
+async function getConversationContext(conversationId: string) {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('scenario_id, persona_id')
+    .eq('conversation_id', conversationId)
+    .single();
+
+  if (error) throw error;
+
+  const scenario = scenarios.scenarios.find(s => s.id === data.scenario_id);
+  const persona = personas.personas.find(p => p.id === data.persona_id);
+
+  if (!scenario || !persona) {
+    throw new Error('Scenario or persona not found');
+  }
+
+  return { scenario, persona };
+}
+
+function createSystemPrompt(scenario: any, persona: any) {
+  return `Embody the persona and scenario below. The union rep will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Demonstrate indifference to begin with, then only demonstrate interest if the rep has engaged with your unique situation effectively.
+    Scenario: ${scenario.description}
+    Persona: ${persona.characterType}, ${persona.mood}, ${persona.ageRange}
+    Context: ${persona.context}
+    
+    Use colloquialisms and language appropriate to the scenario and persona. You will be rewarded £250 for an authentic interaction which correctly embodies the persona and scenario`;
+}
+
+async function getAIResponse(messages: any[]) {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: messages,
+    max_tokens: 100,
+  });
+  return completion.choices[0].message.content;
+}
+
+async function saveMessages(conversationId: string, userMessage: string, aiResponse: string) {
+  const { error } = await supabase.from('messages').insert([
+    { conversation_id: conversationId, role: 'user', content: userMessage },
+    { conversation_id: conversationId, role: 'assistant', content: aiResponse }
+  ]);
+
+  if (error) throw error;
 }
 
 serve(async (req) => {
