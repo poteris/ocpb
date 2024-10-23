@@ -42,7 +42,7 @@ jobs:
         run: |
           cd backend
           echo "Deploying Supabase functions..."
-          npx supabase functions deploy
+          npx supabase functions deploy --debug
           echo "Supabase functions deployed successfully."
 
       - name: Apply Supabase Migrations
@@ -52,7 +52,7 @@ jobs:
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          echo $DB_PASSWORD | npx supabase db push
+          echo "$DB_PASSWORD" | npx supabase db push --password-stdin --debug
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors

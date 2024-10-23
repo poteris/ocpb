@@ -103,7 +103,7 @@ async function sendMessage({ conversationId, content }: { conversationId: string
 
     let messages = [
       { role: "system", content: systemPrompt },
-      ...messagesData.map(msg => ({ role: msg.role, content: msg.content })),
+      ...messagesData.map((msg: any) => ({ role: msg.role, content: msg.content })),
       { role: "user", content: content }
     ];
 
@@ -124,7 +124,7 @@ async function getConversationMessages({ conversationId }: { conversationId: str
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true });
 
-  return messages.data.map(msg => ({
+  return messages.data.map((msg: any) => ({
     id: msg.id,
     role: msg.role,
     content: msg.content
@@ -177,7 +177,27 @@ async function saveMessages(conversationId: string, userMessage: string, aiRespo
   if (error) throw error;
 }
 
-serve(async (req) => {
+function withTimeout(handler: (req: Request) => Promise<Response>, timeoutMs: number) {
+  return async (req: Request): Promise<Response> => {
+    const timeoutPromise = new Promise<Response>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Function timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([handler(req), timeoutPromise]);
+    } catch (error) {
+      console.error('Function execution error:', error);
+      return new Response(JSON.stringify({ error: 'Function execution failed or timed out' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  };
+}
+
+const mainHandler = async (req: Request) => {
   console.log('Received request:', req.method, req.url);
 
   // Handle CORS preflight request
@@ -185,7 +205,7 @@ serve(async (req) => {
     return new Response(null, {
       status: 204,
       headers: corsHeaders,
-    })
+    });
   }
 
   try {
@@ -232,9 +252,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in serve function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-});
+};
+
+const timeoutMs = 120000; // 120 seconds timeout
+serve(withTimeout(mainHandler, timeoutMs));
