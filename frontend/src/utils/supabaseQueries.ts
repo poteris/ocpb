@@ -3,7 +3,7 @@ import { PersonaInfo } from '@/context/ScenarioContext';
 
 const supabaseUrl = process.env.NODE_ENV === 'development'
   ? 'http://127.0.0.1:54321'
-  : process.env.SUPABASE_URL;
+  : process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SERVICE_ROLE_KEY || '';
 
 if (!supabaseUrl || !supabaseServiceKey) {
