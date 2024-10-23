@@ -5,5 +5,9 @@
   "license": "MIT",
   "devDependencies": {
     "supabase": "^1.204.3"
+  },
+  "scripts": {
+    "deploy:functions": "supabase functions deploy",
+    "db:push": "supabase db push"
   }
 }
