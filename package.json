@@ -10,7 +10,7 @@
     "dev:frontend": "yarn workspace frontend dev",
     "dev:backend": "yarn workspace backend supabase start",
     "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
-    "build": "yarn workspace frontend build",
+    "build": "cd frontend && yarn build",
     "start": "yarn workspace frontend start",
     "lint": "yarn workspace frontend lint",
     "db:pull": "yarn workspace backend supabase db pull",
