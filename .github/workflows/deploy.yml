@@ -7,6 +7,7 @@ on:
       - develop
     paths:
       - 'backend/**'  # Only trigger on changes in backend directory
+      - '.github/workflows/**'
 
 jobs:
   deploy:
