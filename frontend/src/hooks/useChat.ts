@@ -123,7 +123,7 @@ export const useChat = () => {
           setCurrentSession(newSession);
 
           if (!newSession.conversationId) {
-            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId, systemPromptIdParam || undefined);
+            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId, systemPromptIdParam || '1');
             if (!conversationResponse || !conversationResponse.id) {
               throw new Error('Failed to create conversation');
             }
