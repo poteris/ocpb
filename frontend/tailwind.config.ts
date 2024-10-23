@@ -30,5 +30,6 @@ const config: Config = {
     },
   },
   plugins: [],
+  darkMode: 'media', // This enables dark mode based on system preferences
 };
 export default config;

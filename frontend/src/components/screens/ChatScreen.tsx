@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { MessageList } from "./ChatMessageList";
 import { useChat } from '@/hooks/useChat';
@@ -23,28 +23,16 @@ const ChatScreenContent: React.FC = () => {
   } = useChat();
 
   const { scenarioInfo, personaInfo } = useScenario();
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showEndChatModal, setShowEndChatModal] = useState(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const firstMessage = searchParams.get('firstMessage');
-    if (firstMessage) {
-      const decodedMessage = decodeURIComponent(firstMessage);
-      initializeSession(decodedMessage);
-      // Remove the firstMessage from the URL
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      newSearchParams.delete('firstMessage');
-      router.replace(`/chat-screen?${newSearchParams.toString()}`, { scroll: false });
-    } else {
-      // Redirect to the welcome screen if there's no firstMessage
-      router.replace('/');
-    }
-  }, [initializeSession, searchParams, router]);
+    initializeSession();
+  }, [initializeSession]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
