@@ -4,7 +4,7 @@ import { PersonaInfo } from '@/context/ScenarioContext';
 const supabaseUrl = process.env.NODE_ENV === 'development'
   ? 'http://127.0.0.1:54321'
   : process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseAnonKey = process.env.ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
