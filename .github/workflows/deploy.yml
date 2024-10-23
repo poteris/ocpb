@@ -57,7 +57,7 @@ jobs:
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          npx supabase db push --password "$DB_PASSWORD" --debug
+          npx supabase db push --password "$DB_PASSWORD" --debug 2>&1 | sed 's/\(user=\)[^ ]*/\1***/' | sed 's/\(password=\)[^ ]*/\1***/'
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors
@@ -65,3 +65,17 @@ jobs:
         run: |
           echo "Deployment failed. Please check the logs for more information."
           exit 1
+
+      - name: Debug Connection Details
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          DB_HOST: ${{ secrets.SUPABASE_DB_HOST }}
+          DB_NAME: ${{ secrets.SUPABASE_DB_NAME }}
+          DB_PORT: ${{ secrets.SUPABASE_DB_PORT }}
+          DB_USER: ${{ secrets.SUPABASE_DB_USER }}
+        run: |
+          echo "DB_HOST: ${DB_HOST:0:5}...${DB_HOST: -5}"
+          echo "DB_NAME: ${DB_NAME:0:2}...${DB_NAME: -2}"
+          echo "DB_PORT: $DB_PORT"
+          echo "DB_USER: ${DB_USER:0:3}...${DB_USER: -3}"
+          echo "DB_PASSWORD: ${DB_PASSWORD:0:1}...${DB_PASSWORD: -1} (${#DB_PASSWORD} characters)"
