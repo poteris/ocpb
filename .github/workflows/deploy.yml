@@ -36,6 +36,11 @@ jobs:
           npx supabase link --project-ref $SUPABASE_PROJECT_ID
           echo "Supabase project linked successfully."
 
+      - name: Update Supabase CLI
+        run: |
+          cd backend
+          npm install @supabase/cli@latest
+
       - name: Deploy Supabase Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -52,7 +57,7 @@ jobs:
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          echo "$DB_PASSWORD" | npx supabase db push --password-stdin --debug
+          echo "$DB_PASSWORD" | npx supabase db push
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors
