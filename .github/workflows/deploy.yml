@@ -19,14 +19,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Supabase CLI
-        run: npm install -g supabase@latest
+      - name: Install dependencies and Supabase CLI
+        run: |
+          cd backend
+          npm ci
+          npm install supabase@latest --save-dev
 
       - name: Validate Supabase Configuration
         run: |
           cd backend
-          supabase init
-          supabase validate
+          npx supabase init
+          npx supabase validate
 
       - name: Deploy Supabase Functions
         env:
@@ -34,7 +37,7 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           cd backend
-          supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
+          npx supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
         continue-on-error: true
 
       - name: Apply Supabase Migrations
@@ -43,4 +46,11 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           cd backend
-          supabase db push --project-ref $SUPABASE_PROJECT_ID
+          npx supabase db push --project-ref $SUPABASE_PROJECT_ID
+        continue-on-error: true
+
+      - name: Check for Deployment Errors
+        if: ${{ failure() }}
+        run: |
+          echo "Deployment failed. Please check the logs for more information."
+          exit 1
