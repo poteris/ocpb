@@ -37,22 +37,25 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <Header 
-        title={scenarioInfo?.title || "Scenario"} 
-        variant="default" 
-        showInfoIcon={true}
-        onInfoClick={() => setShowInfoPopover(true)}
-      />
-      {defaultSystemPromptId && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-          <p className="font-bold">Using custom system prompt</p>
-          <p>System Prompt ID: {defaultSystemPromptId}</p>
-        </div>
-      )}
-      <div className="flex flex-col h-full max-w-md mx-auto">
-        <div className="flex-grow flex flex-col justify-between p-4">
-          <div className="flex flex-col items-center">
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+      <div className="flex-shrink-0">
+        <Header 
+          title={scenarioInfo?.title || "Scenario"} 
+          variant="default" 
+          showInfoIcon={true}
+          onInfoClick={() => setShowInfoPopover(true)}
+        />
+        {defaultSystemPromptId && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+            <p className="font-bold">Using custom system prompt</p>
+            <p>System Prompt ID: {defaultSystemPromptId}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-grow overflow-y-auto">
+        <div className="max-w-md mx-auto p-4">
+          <div className="flex flex-col items-center mb-4">
             <Image
               width={150}
               height={150}
@@ -77,7 +80,6 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
             ))}
           </div>
           
-          {/* Advanced options moved here */}
           <div className="mt-4">
             <div className="flex items-center justify-between text-xs text-pcsprimary-04 dark:text-pcsprimary-02">
               <button 
@@ -104,8 +106,10 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
             )}
           </div>
         </div>
+      </div>
 
-        <div className="bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4 flex flex-col">
+      <div className="flex-shrink-0 bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4">
+        <div className="max-w-md mx-auto">
           <div className="flex items-center mb-2">
             <div className="flex-grow mr-2">
               <input
