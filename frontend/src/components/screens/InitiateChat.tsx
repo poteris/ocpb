@@ -4,23 +4,37 @@ import React, { useState, Suspense } from "react";
 import { Header } from '../Header';
 import { Button } from '../ui';
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
 import { ChatModals } from '../ChatModals';
 
-const InitiateChatContent: React.FC = () => {
+interface InitiateChatContentProps {
+  systemPromptId?: string;
+}
+
+const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptId }) => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
   const { scenarioInfo, personaInfo } = useScenario();
 
   const handlePromptSelect = (prompt: string) => {
-    router.push(`/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(prompt)}`);
+    const url = `/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(prompt)}`;
+    if (systemPromptId) {
+      router.push(`${url}&systemPromptId=${systemPromptId}`);
+    } else {
+      router.push(url);
+    }
   };
 
   const handleStartChat = () => {
     if (inputMessage.trim()) {
-      router.push(`/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(inputMessage.trim())}`);
+      const url = `/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
+      if (systemPromptId) {
+        router.push(`${url}&systemPromptId=${systemPromptId}`);
+      } else {
+        router.push(url);
+      }
     }
   };
 
@@ -32,6 +46,12 @@ const InitiateChatContent: React.FC = () => {
         showInfoIcon={true}
         onInfoClick={() => setShowInfoPopover(true)}
       />
+      {systemPromptId && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+          <p className="font-bold">Using custom system prompt</p>
+          <p>System Prompt ID: {systemPromptId}</p>
+        </div>
+      )}
       <div className="flex flex-col h-full max-w-md mx-auto">
         <div className="flex-grow flex flex-col justify-between p-4">
           <div className="flex flex-col items-center">
@@ -96,9 +116,12 @@ const InitiateChatContent: React.FC = () => {
 };
 
 export const InitiateChat: React.FC = () => {
+  const searchParams = useSearchParams();
+  const systemPromptId = searchParams.get('systemPromptId');
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <InitiateChatContent />
+      <InitiateChatContent systemPromptId={systemPromptId || undefined} />
     </Suspense>
   );
 };

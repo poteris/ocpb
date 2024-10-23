@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui';
-import scenarioData from '@/lib/scenarios.json';
 import { ScenarioSetup } from './ScenarioSetup';
+import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 
 interface WelcomeProps {
   onScenarioSelect: (scenarioId: string) => void;
@@ -12,6 +12,15 @@ interface WelcomeProps {
 
 export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+
+  useEffect(() => {
+    async function fetchScenarios() {
+      const fetchedScenarios = await getScenarios();
+      setScenarios(fetchedScenarios);
+    }
+    fetchScenarios();
+  }, []);
 
   const handleScenarioSelect = (scenarioId: string) => {
     setSelectedScenarioId(scenarioId);
@@ -35,7 +44,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
                 Select a training scenario to begin your interactive learning experience:
               </p>
               <div className="space-y-4">
-                {scenarioData.scenarios.map((scenario) => (
+                {scenarios.map((scenario) => (
                   <div key={scenario.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                     <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{scenario.title}</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{scenario.description}</p>

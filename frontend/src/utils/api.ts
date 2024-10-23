@@ -57,14 +57,15 @@ export async function createAssistant(name: string, description: string, model: 
   return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
 }
 
-export async function createConversation(initialMessage: string, scenarioId: string, personaId: string) {
+export async function createConversation(initialMessage: string, scenarioId: string, personaId: string, systemPromptId?: string) {
   const userId = await getUserId();
   const response = await invokeFunction('assistant', { 
     action: 'createConversation', 
     userId, 
     initialMessage, 
     scenarioId, 
-    personaId 
+    personaId,
+    systemPromptId
   });
   return response.result;
 }

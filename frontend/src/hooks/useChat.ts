@@ -18,6 +18,7 @@ export const useChat = () => {
   const sessionId = searchParams.get('sessionId');
   const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] = useState(false);
   const { scenarioInfo } = useScenario();
+  const [systemPromptId, setSystemPromptId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -94,9 +95,14 @@ export const useChat = () => {
         const messageToUse = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
         const scenarioId = searchParams.get('scenarioId') || scenarioInfo?.id;
         const personaId = searchParams.get('personaId');
+        const systemPromptIdParam = searchParams.get('systemPromptId');
 
         if (!scenarioId || !personaId) {
           throw new Error('Missing scenarioId or personaId');
+        }
+
+        if (systemPromptIdParam) {
+          setSystemPromptId(systemPromptIdParam);
         }
 
         if (sessionId) {
@@ -117,7 +123,7 @@ export const useChat = () => {
           setCurrentSession(newSession);
 
           if (!newSession.conversationId) {
-            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId);
+            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId, systemPromptIdParam || undefined);
             if (!conversationResponse || !conversationResponse.id) {
               throw new Error('Failed to create conversation');
             }
@@ -159,5 +165,6 @@ export const useChat = () => {
     handleSendMessage,
     initializeSession,
     isWaitingForInitialResponse,
+    systemPromptId,
   };
 };

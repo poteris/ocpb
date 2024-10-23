@@ -3,53 +3,45 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui';
 import { useRouter } from 'next/navigation';
-import scenarioData from '@/lib/scenarios.json';
-import personaData from '@/lib/personas.json';
 import { Header } from '../Header';
-import { useScenario } from '@/context/ScenarioContext';
+import { useScenario, PersonaInfo } from '@/context/ScenarioContext';
+import { getScenarios, getRandomPersona, Scenario } from '@/utils/supabaseQueries';
 
 interface ScenarioSetupProps {
   scenarioId: string;
   onBack: () => void;
 }
 
-interface Persona {
-  id: string;
-  characterType: string;
-  mood: string;
-  ageRange: string;
-  context: string;
-}
-
 export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack }) => {
   const router = useRouter();
   const { setScenarioInfo, setPersonaInfo } = useScenario();
-  const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
+  const [currentPersona, setCurrentPersona] = useState<PersonaInfo | null>(null);
+  const [scenario, setScenario] = useState<Scenario | null>(null);
 
-  const scenario = scenarioData.scenarios.find((s) => s.id === scenarioId);
+  const fetchScenario = useCallback(async () => {
+    const scenarios = await getScenarios();
+    const foundScenario = scenarios.find(s => s.id === scenarioId);
+    setScenario(foundScenario || null);
+    if (foundScenario) {
+      setScenarioInfo(foundScenario);
+    }
+  }, [scenarioId, setScenarioInfo]);
 
-  const selectRandomPersona = useCallback(() => {
-    const randomIndex = Math.floor(Math.random() * personaData.personas.length);
-    const selectedPersona = personaData.personas[randomIndex];
-    setPersonaInfo(selectedPersona);
-    setCurrentPersona(selectedPersona);
+  const selectRandomPersona = useCallback(async () => {
+    const selectedPersona = await getRandomPersona();
+    if (selectedPersona) {
+      setPersonaInfo(selectedPersona);
+      setCurrentPersona(selectedPersona);
+    }
   }, [setPersonaInfo]);
 
   useEffect(() => {
-    if (scenario) {
-      setScenarioInfo({
-        id: scenario.id,
-        title: scenario.title,
-        description: scenario.description,
-        objectives: scenario.objectives,
-        prompts: scenario.prompts
-      });
-    }
+    fetchScenario();
     selectRandomPersona();
-  }, [scenario, setScenarioInfo, selectRandomPersona]);
+  }, [fetchScenario, selectRandomPersona]);
 
   if (!scenario) {
-    return <div>Scenario not found</div>;
+    return <div>Loading...</div>;
   }
 
   const navigateTo = (screen: string) => {
