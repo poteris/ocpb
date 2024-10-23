@@ -1,24 +1,39 @@
-name: Deploy Function
+name: Deploy Supabase Functions and Migrations
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # or your default branch
+      - develop
+    paths:
+      - 'backend/**'  # Only trigger on changes in backend directory
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-
     steps:
       - uses: actions/checkout@v3
 
-      - uses: supabase/setup-cli@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          version: latest
+          node-version: '18'
 
-      - run: supabase functions deploy --project-ref $PROJECT_ID
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
+      - name: Deploy Supabase Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          cd backend
+          supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
+
+      - name: Apply Supabase Migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          cd backend
+          supabase db push --project-ref $SUPABASE_PROJECT_ID
