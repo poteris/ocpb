@@ -19,7 +19,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       {!selectedScenarioId && <Header title="Union Training Bot" variant="alt" />}
       <div className="flex flex-col h-full">
         {selectedScenarioId ? (
@@ -30,15 +30,15 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
         ) : (
           <>
             <div className="flex-grow max-w-md mx-auto p-6 overflow-y-auto">
-              <h1 className="text-3xl font-bold mb-4">Welcome to Union Training Bot</h1>
-              <p className="mb-6">
+              <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Welcome to Union Training Bot</h1>
+              <p className="mb-6 text-gray-700 dark:text-gray-300">
                 Select a training scenario to begin your interactive learning experience:
               </p>
               <div className="space-y-4">
                 {scenarioData.scenarios.map((scenario) => (
-                  <div key={scenario.id} className="bg-white p-4 rounded-lg shadow">
-                    <h2 className="text-lg font-semibold mb-2">{scenario.title}</h2>
-                    <p className="text-sm text-gray-600 mb-2">{scenario.description}</p>
+                  <div key={scenario.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{scenario.title}</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{scenario.description}</p>
                     <Button
                       variant="progress"
                       text="Start Scenario"
@@ -49,7 +49,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
                 ))}
               </div>
             </div>
-            <footer className="bg-pcsprimary02-light p-4">
+            <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4">
               <div className="max-w-md mx-auto">
                 <Button
                   variant="progress"

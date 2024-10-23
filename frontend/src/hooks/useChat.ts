@@ -82,7 +82,7 @@ export const useChat = () => {
     }
   };
 
-  const initializeSession = useCallback(() => {
+  const initializeSession = useCallback((initialMessage?: string) => {
     const debouncedInitialize = debounce(async () => {
       if (sessionInitialized.current) return;
       sessionInitialized.current = true;
@@ -90,8 +90,8 @@ export const useChat = () => {
 
       try {
         const shortPrompt = searchParams.get('shortPrompt');
-        const firstMessageParam = searchParams.get('firstMessage');
-        const initialMessage = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
+        const firstMessageParam = initialMessage || searchParams.get('firstMessage');
+        const messageToUse = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
         const scenarioId = searchParams.get('scenarioId') || scenarioInfo?.id;
         const personaId = searchParams.get('personaId');
 
@@ -112,12 +112,12 @@ export const useChat = () => {
           const newSession: ChatSession = {
             id: Date.now().toString(),
             conversationId: '',
-            messages: initialMessage ? [{ id: `first-${Date.now()}`, text: initialMessage, sender: 'user' }] : []
+            messages: messageToUse ? [{ id: `first-${Date.now()}`, text: messageToUse, sender: 'user' }] : []
           };
           setCurrentSession(newSession);
 
           if (!newSession.conversationId) {
-            const conversationResponse = await createConversation(initialMessage || '', scenarioId, personaId);
+            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId);
             if (!conversationResponse || !conversationResponse.id) {
               throw new Error('Failed to create conversation');
             }
@@ -127,7 +127,7 @@ export const useChat = () => {
             newSession.conversationId = conversationId;
             saveSessionToStorage(newSession);
 
-            if (initialMessage && conversationResponse.aiResponse) {
+            if (messageToUse && conversationResponse.aiResponse) {
               setCurrentSession(prevSession => ({
                 ...prevSession!,
                 messages: [

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, Suspense } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { MessageList } from "./ChatMessageList";
 import { useChat } from '@/hooks/useChat';
@@ -23,16 +23,28 @@ const ChatScreenContent: React.FC = () => {
   } = useChat();
 
   const { scenarioInfo, personaInfo } = useScenario();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showEndChatModal, setShowEndChatModal] = useState(false);
   const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
+    const firstMessage = searchParams.get('firstMessage');
+    if (firstMessage) {
+      const decodedMessage = decodeURIComponent(firstMessage);
+      initializeSession(decodedMessage);
+      // Remove the firstMessage from the URL
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.delete('firstMessage');
+      router.replace(`/chat-screen?${newSearchParams.toString()}`, { scroll: false });
+    } else {
+      // Redirect to the welcome screen if there's no firstMessage
+      router.replace('/');
+    }
+  }, [initializeSession, searchParams, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,7 +63,7 @@ const ChatScreenContent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
       <Header 
         title={scenarioInfo?.title || "Chat"} 
         variant="default" 
@@ -59,8 +71,8 @@ const ChatScreenContent: React.FC = () => {
         onInfoClick={() => setShowInfoPopover(true)}
       />
       <div className="flex-grow overflow-y-auto">
-        <div className="bg-white flex flex-col h-full max-w-2xl mx-auto px-4">
-          <ErrorBoundary fallback={<div>An error occurred in the chat. Please refresh the page and try again.</div>}>
+        <div className="bg-white dark:bg-gray-900 flex flex-col h-full max-w-2xl mx-auto px-4">
+          <ErrorBoundary fallback={<div className="text-red-500 dark:text-red-400">An error occurred in the chat. Please refresh the page and try again.</div>}>
             <MessageList 
               messages={currentSession?.messages || []} 
               isLoading={isLoading}

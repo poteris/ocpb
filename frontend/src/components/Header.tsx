@@ -15,8 +15,8 @@ export const Header: React.FC<HeaderProps> = ({
   showInfoIcon = false,
   onInfoClick
 }) => {
-  const bgColor = variant === 'alt' ? 'bg-pcsprimary-02' : 'bg-pcsprimary01-light';
-  const textColor = variant === 'alt' ? 'text-white' : 'text-pcsprimary-03';
+  const bgColor = variant === 'alt' ? 'bg-pcsprimary-02 dark:bg-pcsprimary-04' : 'bg-pcsprimary01-light dark:bg-pcsprimary-03';
+  const textColor = variant === 'alt' ? 'text-white' : 'text-pcsprimary-03 dark:text-pcsprimary-01';
 
   return (
     <header className={`${bgColor} p-4 flex items-center justify-between sticky top-0 z-10`}>
@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
       {showInfoIcon && (
         <button 
           onClick={onInfoClick} 
-          className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors ml-2"
+          className="bg-transparent border-none cursor-pointer text-pcsprimary-03 dark:text-pcsprimary-01 hover:text-pcsprimary-02 dark:hover:text-pcsprimary-02 transition-colors ml-2"
           aria-label="Show information"
         >
           <Info size={18} />
