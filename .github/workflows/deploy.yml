@@ -47,7 +47,7 @@ jobs:
         run: |
           cd backend
           echo "Deploying Supabase functions..."
-          npx supabase functions deploy
+          npx supabase functions deploy --debug
           echo "Supabase functions deployed successfully."
 
       - name: Apply Supabase Migrations
@@ -57,7 +57,7 @@ jobs:
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          npx supabase db push --password "$DB_PASSWORD"
+          npx supabase db push --password "$DB_PASSWORD" --debug 2>&1 | sed 's/\(user=\)[^ ]*/\1***/' | sed 's/\(password=\)[^ ]*/\1***/'
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors
