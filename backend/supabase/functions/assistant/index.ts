@@ -3,8 +3,6 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.44.2'
 import { OpenAI } from 'https://deno.land/x/openai@v4.67.3/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import personas from './personas.json' assert { type: "json" };
-import scenarios from './scenarios.json' assert { type: "json" };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321'
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -33,7 +31,6 @@ try {
 
 const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") })
 
-// Add this near the top of the file
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -55,36 +52,50 @@ export async function POST(req: Request) {
   }
 }
 
-async function createConversation({ userId, initialMessage, scenarioId, personaId }: { userId: string; initialMessage?: string; scenarioId: string; personaId: string }) {
+async function createConversation({ userId, initialMessage, scenarioId, personaId, systemPromptId = '1' }: { userId: string; initialMessage?: string; scenarioId: string; personaId: string; systemPromptId?: string }) {
   try {
-    console.log('Received createConversation request');
+    console.log('Received createConversation request', { userId, initialMessage, scenarioId, personaId, systemPromptId });
 
     if (!userId || !scenarioId || !personaId) {
       throw new Error('Missing userId, scenarioId, or personaId');
     }
 
-    const scenario = scenarios.scenarios.find(s => s.id === scenarioId);
-    const persona = personas.personas.find(p => p.id === personaId);
+    const scenario = await getScenario(scenarioId);
+    console.log('Scenario:', scenario);
+
+    const persona = await getPersona(personaId);
+    console.log('Persona:', persona);
 
     if (!scenario || !persona) {
       throw new Error('Scenario or persona not found');
     }
 
     const conversationId = crypto.randomUUID();
+    console.log('Generated conversationId:', conversationId);
+
     const { error } = await supabase
       .from('conversations')
-      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: personaId });
+      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: personaId, system_prompt_id: systemPromptId });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error inserting conversation:', error);
+      throw error;
+    }
 
     let aiResponse = null;
     if (initialMessage) {
-      const systemPrompt = createSystemPrompt(scenario, persona);
+      const systemPrompt = await getSystemPromptById(systemPromptId);
+      console.log('System prompt:', systemPrompt);
+
       const messages = [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: createSystemPrompt(scenario, persona, systemPrompt) },
         { role: "user", content: initialMessage }
       ];
-      aiResponse = await getAIResponse(messages);
+      console.log('Messages for AI:', messages);
+
+      aiResponse = await getAIResponse(messages, scenario, persona);
+      console.log('AI Response:', aiResponse);
+
       await saveMessages(conversationId, initialMessage, aiResponse || '');
     }
 
@@ -98,8 +109,7 @@ async function createConversation({ userId, initialMessage, scenarioId, personaI
 
 async function sendMessage({ conversationId, content }: { conversationId: string; content: string }) {
   try {
-    const { scenario, persona } = await getConversationContext(conversationId);
-    const systemPrompt = createSystemPrompt(scenario, persona);
+    const { scenario, persona, systemPromptId } = await getConversationContext(conversationId);
 
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
@@ -109,13 +119,14 @@ async function sendMessage({ conversationId, content }: { conversationId: string
 
     if (messagesError) throw messagesError;
 
+    const systemPrompt = await getSystemPromptById(systemPromptId);
     let messages = [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: createSystemPrompt(scenario, persona, systemPrompt) },
       ...messagesData.map((msg: any) => ({ role: msg.role, content: msg.content })),
       { role: "user", content: content }
     ];
 
-    const aiResponse = await getAIResponse(messages);
+    const aiResponse = await getAIResponse(messages, scenario, persona);
     await saveMessages(conversationId, content, aiResponse);
 
     return { content: aiResponse };
@@ -142,36 +153,91 @@ async function getConversationMessages({ conversationId }: { conversationId: str
 async function getConversationContext(conversationId: string) {
   const { data, error } = await supabase
     .from('conversations')
-    .select('scenario_id, persona_id')
+    .select('scenario_id, persona_id, system_prompt_id')
     .eq('conversation_id', conversationId)
     .single();
 
   if (error) throw error;
 
-  const scenario = scenarios.scenarios.find(s => s.id === data.scenario_id);
-  const persona = personas.personas.find(p => p.id === data.persona_id);
+  const scenario = await getScenario(data.scenario_id);
+  const persona = await getPersona(data.persona_id);
 
   if (!scenario || !persona) {
     throw new Error('Scenario or persona not found');
   }
 
-  return { scenario, persona };
+  return { scenario, persona, systemPromptId: data.system_prompt_id || '1' };
 }
 
-function createSystemPrompt(scenario: any, persona: any) {
-  return `Embody the persona and scenario below. The union rep will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Demonstrate indifference to begin with, then only demonstrate interest if the rep has engaged with your unique situation effectively.
+async function getScenario(scenarioId: string) {
+  const { data, error } = await supabase
+    .from('scenarios')
+    .select(`
+      id,
+      title,
+      description,
+      scenario_objectives (objective),
+      scenario_prompts (prompt)
+    `)
+    .eq('id', scenarioId)
+    .single();
+
+  if (error) throw error;
+
+  return {
+    ...data,
+    objectives: data.scenario_objectives.map((obj: any) => obj.objective),
+    prompts: data.scenario_prompts.map((prompt: any) => prompt.prompt)
+  };
+}
+
+async function getPersona(personaId: string) {
+  const { data, error } = await supabase
+    .from('personas')
+    .select('*')
+    .eq('id', personaId)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+async function getSystemPromptById(id: string) {
+  console.log('Fetching system prompt for id:', id);
+  const { data, error } = await supabase
+    .from('system_prompts')
+    .select('content')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching system prompt:', error);
+    return "You are an AI assistant. Respond to the user's messages appropriately.";
+  }
+
+  console.log('Retrieved system prompt:', data);
+  return data.content;
+}
+
+function createSystemPrompt(scenario: any, persona: any, systemPromptContent: string): string {
+  return `${systemPromptContent}
+    
     Scenario: ${scenario.description}
-    Persona: ${persona.characterType}, ${persona.mood}, ${persona.ageRange}
+    Persona: ${persona.character_type}, ${persona.mood}, ${persona.age_range}
     Context: ${persona.context}
     
-    Use colloquialisms and language appropriate to the scenario and persona. You will be rewarded £250 for an authentic interaction which correctly embodies the persona and scenario`;
+    Provide a concise response in 2-3 sentences.`;
 }
 
-async function getAIResponse(messages: any[]) {
+async function getAIResponse(messages: any[], scenario: any, persona: any) {
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: messages,
-    max_tokens: 100,
+    max_tokens: 150,
+    temperature: 0.7,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.6,
   });
   return completion.choices[0].message.content;
 }
@@ -208,7 +274,6 @@ function withTimeout(handler: (req: Request) => Promise<Response>, timeoutMs: nu
 const mainHandler = async (req: Request) => {
   console.log('Received request:', req.method, req.url);
 
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -218,6 +283,7 @@ const mainHandler = async (req: Request) => {
 
   try {
     const body = await req.text();
+    console.log('Request body:', body);
     let params: any = {};
     
     if (body) {
