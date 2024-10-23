@@ -83,7 +83,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Chatbot Persona</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-4">
-            The chatbot will assume the following persona during your chat. You can change this persona if you'd like to practice with a different character.
+            The chatbot will assume the following persona during your chat. You can change this persona if you&apos;d like to practice with a different character.
           </p>
           {currentPersona && (
             <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
