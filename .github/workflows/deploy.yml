@@ -39,7 +39,7 @@ jobs:
       - name: Update Supabase CLI
         run: |
           cd backend
-          npm install @supabase/cli@latest
+          npm install supabase@latest
 
       - name: Deploy Supabase Functions
         env:
