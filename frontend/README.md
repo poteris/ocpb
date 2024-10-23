@@ -17,5 +17,6 @@
 
 #Build Notes
 - Uses .github/workflows/deploy.yml
-- Create the supabase project then
-- add secrets in github actions
+
+1. Create the supabase project then
+2. Add secrets in github actions

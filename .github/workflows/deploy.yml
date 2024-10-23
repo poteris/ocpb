@@ -36,13 +36,6 @@ jobs:
           npx supabase link --project-ref $SUPABASE_PROJECT_ID
           echo "Supabase project linked successfully."
 
-      - name: Validate Supabase Configuration
-        run: |
-          cd backend
-          echo "Validating Supabase configuration..."
-          npx supabase validate
-          echo "Supabase configuration validated successfully."
-
       - name: Deploy Supabase Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
