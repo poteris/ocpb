@@ -1,15 +1,6 @@
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Messages table
-CREATE TABLE public.messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  conversation_id TEXT NOT NULL REFERENCES public.conversations(conversation_id),
-  role TEXT NOT NULL,
-  content TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Conversations table
 CREATE TABLE public.conversations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -19,6 +10,15 @@ CREATE TABLE public.conversations (
   persona_id TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_message_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Messages table
+CREATE TABLE public.messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id TEXT NOT NULL REFERENCES public.conversations(conversation_id),
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Enable Row Level Security
