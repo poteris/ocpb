@@ -57,7 +57,7 @@ jobs:
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          echo "$DB_PASSWORD" | npx supabase db push
+          npx supabase db push --password "$DB_PASSWORD" --debug
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors
