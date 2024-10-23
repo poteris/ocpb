@@ -1,28 +1,36 @@
 /// <reference types="https://deno.land/x/deno@v1.37.0/mod.ts" />
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.2'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.44.2'
 import { OpenAI } from 'https://deno.land/x/openai@v4.67.3/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import personas from './personas.json' assert { type: "json" };
 import scenarios from './scenarios.json' assert { type: "json" };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321'
-const supabaseServiceRoleKey = Deno.env.get('SERVICE_ROLE')
+const supabaseServiceRoleKey = Deno.env.get('SERVICE_ROLE_KEY')
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   console.error('Missing Supabase URL or Service Role Key')
   Deno.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  },
-  db: {
-    schema: 'public'
-  }
-})
+let supabase: SupabaseClient;
+try {
+  supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    }
+  })
+  console.log('Supabase client initialized successfully')
+} catch (error) {
+  console.error('Error initializing Supabase client:', error)
+  Deno.exit(1)
+}
+
 const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") })
 
 // Add this near the top of the file
