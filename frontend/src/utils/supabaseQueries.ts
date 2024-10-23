@@ -4,17 +4,16 @@ import { PersonaInfo } from '@/context/ScenarioContext';
 const supabaseUrl = process.env.NODE_ENV === 'development'
   ? 'http://127.0.0.1:54321'
   : process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SERVICE_ROLE_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
 console.log('supabaseUrl', supabaseUrl);
-// Don't log the service key for security reasons
-// console.log('supabaseServiceKey', supabaseServiceKey);
+console.log('supabaseAnonKey', supabaseAnonKey);
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface Scenario {
   id: string;
