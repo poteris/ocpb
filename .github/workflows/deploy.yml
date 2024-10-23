@@ -3,10 +3,10 @@ name: Deploy Supabase Functions and Migrations
 on:
   push:
     branches:
-      - main  # or your default branch
+      - main 
       - develop
     paths:
-      - 'backend/**'  # Only trigger on changes in backend directory
+      - 'backend/**'  
       - '.github/workflows/**'
 
 jobs:
@@ -48,10 +48,11 @@ jobs:
       - name: Apply Supabase Migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           cd backend
           echo "Applying Supabase migrations..."
-          npx supabase db push
+          echo $DB_PASSWORD | npx supabase db push
           echo "Supabase migrations applied successfully."
 
       - name: Check for Deployment Errors
