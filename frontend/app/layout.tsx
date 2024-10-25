@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react"
 import { ScenarioProvider } from "@/context/ScenarioContext";
+import { robotoSlab } from './fonts';
 import "./globals.css";
-
-const robotoSlab = localFont({
-  src: "./fonts/Roboto_Slab/RobotoSlab-VariableFont_wght.ttf",
-  variable: "--font-roboto-slab",
-  weight: "100 900",
-});
 
 export const metadata: Metadata = {
   title: "Union Training Bot",
@@ -21,10 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${robotoSlab.variable} antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}
-      >
+    <html lang="en" className={`${robotoSlab.variable} font-sans`}>
+      <body className="antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <ScenarioProvider>
           {children}
           <Analytics />

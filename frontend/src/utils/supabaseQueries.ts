@@ -17,7 +17,7 @@ export interface Scenario {
   objectives: string[];
 }
 
-export interface SystemPrompt {
+export interface Prompt {
   id: number;
   content: string;
 }
@@ -71,66 +71,79 @@ export async function storePersona(persona: Persona) {
   return data;
 }
 
-export async function getSystemPrompts(): Promise<SystemPrompt[]> {
-  const { data: prompts, error } = await supabase
-    .from('system_prompts')
+export async function getScenarioPrompts(): Promise<Prompt[]> {
+  const { data, error } = await supabase
+    .from('scenario_prompts')
     .select('*')
     .order('id');
 
   if (error) {
-    console.error('Error fetching system prompts:', error);
+    console.error('Error fetching scenario prompts:', error);
     return [];
   }
 
-  return prompts;
+  return data;
 }
 
-export async function updateSystemPrompt(id: number, content: string): Promise<void> {
+export async function getPersonaPrompts(): Promise<Prompt[]> {
+  const { data, error } = await supabase
+    .from('persona_prompts')
+    .select('*')
+    .order('id');
+
+  if (error) {
+    console.error('Error fetching persona prompts:', error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function getFeedbackPrompts(): Promise<Prompt[]> {
+  const { data, error } = await supabase
+    .from('feedback_prompts')
+    .select('*')
+    .order('id');
+
+  if (error) {
+    console.error('Error fetching feedback prompts:', error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function updatePrompt(type: 'scenario' | 'persona' | 'feedback', id: number, content: string): Promise<void> {
   const { error } = await supabase
-    .from('system_prompts')
+    .from(`${type}_prompts`)
     .update({ content })
     .eq('id', id);
 
   if (error) {
-    console.error('Error updating system prompt:', error);
+    console.error(`Error updating ${type} prompt:`, error);
     throw error;
   }
 }
 
-export async function createSystemPrompt(content: string): Promise<void> {
+export async function createPrompt(type: 'scenario' | 'persona' | 'feedback', content: string): Promise<void> {
   const { error } = await supabase
-    .from('system_prompts')
+    .from(`${type}_prompts`)
     .insert({ content });
 
   if (error) {
-    console.error('Error creating system prompt:', error);
+    console.error(`Error creating ${type} prompt:`, error);
     throw error;
   }
 }
 
-export async function deleteSystemPrompt(id: number): Promise<void> {
+export async function deletePrompt(type: 'scenario' | 'persona' | 'feedback', id: number): Promise<void> {
   const { error } = await supabase
-    .from('system_prompts')
+    .from(`${type}_prompts`)
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting system prompt:', error);
+    console.error(`Error deleting ${type} prompt:`, error);
     throw error;
   }
-}
-
-export async function getSystemPromptById(id: number): Promise<SystemPrompt | null> {
-  const { data, error } = await supabase
-    .from('system_prompts')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    console.error('Error fetching system prompt:', error);
-    return null;
-  }
-
-  return data;
 }

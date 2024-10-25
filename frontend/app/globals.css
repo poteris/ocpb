@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  --font-roboto-slab: var(--font-roboto-slab);
   --pcsprimary-01: rgba(28, 155, 174, 1);
   --pcsprimary-02: rgba(23, 66, 144, 1);
   --pcsprimary-03: rgba(57, 57, 57, 1);
@@ -39,7 +40,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-roboto-slab);
+  font-family: var(--font-roboto-slab), serif;
 }
 
 @layer utilities {
