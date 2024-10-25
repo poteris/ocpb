@@ -25,10 +25,19 @@ CREATE TABLE scenario_prompts (
     id SERIAL PRIMARY KEY,
     scenario_id VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    type TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (scenario_id) REFERENCES scenarios(id)
+);
+
+-- Persona prompts table
+CREATE TABLE persona_prompts (
+    id SERIAL PRIMARY KEY,
+    persona_id VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (persona_id) REFERENCES personas(id)
 );
 
 -- Personas table
@@ -51,9 +60,11 @@ CREATE TABLE personas (
 -- Feedback prompts table
 CREATE TABLE feedback_prompts (
     id SERIAL PRIMARY KEY,
+    feedback_id VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (feedback_id) REFERENCES feedbacks(id)
 );
 
 -- Conversations table
@@ -63,12 +74,12 @@ CREATE TABLE public.conversations (
   user_id TEXT NOT NULL,
   scenario_id VARCHAR(255) NOT NULL,
   persona_id VARCHAR(255) NOT NULL,
-  feedback_prompt_id INTEGER NOT NULL,
+  feedback_id INTEGER NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_message_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (scenario_id) REFERENCES scenarios(id),
   FOREIGN KEY (persona_id) REFERENCES personas(id),
-  FOREIGN KEY (feedback_prompt_id) REFERENCES feedback_prompts(id)
+  FOREIGN KEY (feedback_id) REFERENCES feedback_prompts(id)
 );
 
 -- Messages table

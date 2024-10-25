@@ -3,6 +3,7 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.44.2'
 import { OpenAI } from 'https://deno.land/x/openai@v4.67.3/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { HandlebarsJS } from "https://deno.land/x/handlebars@v0.10.0/mod.ts";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321'
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -81,49 +82,51 @@ UK Party Affiliation: ${partyAffiliation}
 Busyness Level: ${busynessLevel}
 Workplace: ${workplace}
 
-Return a single JSON object like this:
-
-{
-  "name": "{Name}",
-  "segment": "${segment}",
-  "age": ${age},
-  "gender": "${gender}",
-  "family_status": "${familyStatus}",
-  "job": "{Job}",
-  "major_issues_in_workplace": "{Major Issues in Workplace}",
-  "uk_party_affiliation": "${partyAffiliation}",
-  "personality_traits": "{Personality Traits}",
-  "emotional_conditions_for_supporting_the_union": "{Emotional Conditions for Supporting the Union}",
-  "busyness_level": "${busynessLevel}",
-  "workplace": "${workplace}"
-}
-
-Fill in the remaining placeholders with appropriate, realistic details. Do not include any additional text, markdown formatting, or explanation - just the JSON object.`;
+Fill in the remaining details to create a realistic persona.`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [{ role: "user", content: prompt }],
+    functions: [
+      {
+        name: "generate_persona",
+        description: "Generate a persona for a workplace conversation",
+        parameters: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            segment: { type: "string" },
+            age: { type: "number" },
+            gender: { type: "string" },
+            family_status: { type: "string" },
+            job: { type: "string" },
+            major_issues_in_workplace: { type: "string" },
+            uk_party_affiliation: { type: "string" },
+            personality_traits: { type: "string" },
+            emotional_conditions_for_supporting_the_union: { type: "string" },
+            busyness_level: { type: "string" },
+            workplace: { type: "string" }
+          },
+          required: ["name", "segment", "age", "gender", "family_status", "job", "major_issues_in_workplace", "uk_party_affiliation", "personality_traits", "emotional_conditions_for_supporting_the_union", "busyness_level", "workplace"]
+        }
+      }
+    ],
+    function_call: { name: "generate_persona" },
     max_tokens: 300,
     temperature: 0.7,
   });
 
-  let content = completion.choices[0].message.content || '{}';
-  
-  // Remove any markdown formatting if present
-  content = content.replace(/```json\n?/, '').replace(/\n?```$/, '');
-
-  try {
-    const generatedPersona = JSON.parse(content);
-
-    return {
-      id: `${generatedPersona.job.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.name.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.age}-${generatedPersona.gender.toLowerCase()}`,
-      ...generatedPersona,
-    };
-  } catch (error) {
-    console.error('Error parsing generated persona:', error);
-    console.error('Raw content:', content);
-    throw new Error('Failed to generate valid persona data');
+  const functionCall = completion.choices[0].message.function_call;
+  if (!functionCall || !functionCall.arguments) {
+    throw new Error('No function call or arguments received from OpenAI');
   }
+
+  const generatedPersona = JSON.parse(functionCall.arguments);
+
+  return {
+    id: `${generatedPersona.job.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.name.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.age}-${generatedPersona.gender.toLowerCase()}`,
+    ...generatedPersona,
+  };
 }
 
 // Add this new function to handle feedback generation
@@ -296,9 +299,10 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
     let aiResponse = null;
     if (initialMessage) {
       const systemPrompt = await getInstructionPrompt(scenarioId);
+      const completePrompt = await createCompletePrompt(persona, systemPrompt);
 
       const messages = [
-        { role: "system", content: createCompletePrompt(persona, systemPrompt) },
+        { role: "system", content: completePrompt },
         { role: "user", content: initialMessage }
       ];
 
@@ -411,13 +415,14 @@ async function retrievePersona(personaId: string) {
   return personas;
 }
 
+// Update the getInstructionPrompt function
 async function getInstructionPrompt(id: string) {
-  let query = supabase.from('scenarios').select('*');
+  let query = supabase.from('scenarios').select('*, scenario_prompts(content)');
 
   if (id) {
     query = query.eq('id', id).single();
   } else {
-    query = query.order('random()').limit(1);
+    query = query.eq('id', '1');
   }
 
   const { data, error } = await query;
@@ -427,35 +432,50 @@ async function getInstructionPrompt(id: string) {
     return "You are an AI assistant. Respond to the user's messages appropriately.";
   }
 
-  return `Role play to help users to ${data.description}. The user is a trade union representative speaking to you about ${data.title}. Respond as their workplace colleague in the character below.
-
-    This is an informal interaction. Keep your responses brief. Emphasise your character's feelings about joining a union. It should be a challenge for the user to persuade you.
-
-    It's VITAL that the user has a REALISTIC experience of being in a workplace to adequately prepare them for what they might encounter. Failure to train them for the difficult interactions they will face in real life will be harmful for them.
-`
+  const template = HandlebarsJS.compile(data.scenario_prompts[0].content);
+  return template(data);
 }
 
-function createCompletePrompt(persona: any, systemPromptContent: string): string {
+// Update the createCompletePrompt function
+async function createCompletePrompt(persona: any, systemPromptContent: string): Promise<string> {
+  let { data: personaPromptData, error: personaPromptError } = await supabase
+    .from('persona_prompts')
+    .select('content')
+    .eq('persona_id', persona.id)
+    .single();
+
+  if (personaPromptError || !personaPromptData) {
+    console.log('Specific persona prompt not found, using default prompt');
+    ({ data: personaPromptData, error: personaPromptError } = await supabase
+      .from('persona_prompts')
+      .select('content')
+      .eq('persona_id', 'default')
+      .single());
+  }
+
+  if (personaPromptError) {
+    console.error('Error fetching persona prompt:', personaPromptError);
+    return systemPromptContent;
+  }
+
+  const template = HandlebarsJS.compile(personaPromptData.content);
+  const personaPrompt = template(persona);
+
   return `${systemPromptContent}
     
-    ${systemPromptContent}
-    Act as ${persona.name}, a ${persona.age} year old ${persona.job} in an office in the department of work and pensions.
-
-    - You will only agree to join the union if: ${persona.emotional_conditions_for_supporting_the_union}
-    - Your major workplace issues are: ${persona.major_issues_in_workplace}
-    - Your personality traits are: ${persona.personality_traits}
-
-    More details about you:
-    - You are a ${persona.segment} affiliated with the ${persona.uk_party_affiliation} party.
-    - Your family status is ${persona.family_status}
-    
-    Provide a concise response in 2-3 sentences, staying true to your character.`;
+    ${personaPrompt}`;
 }
 
 async function getAIResponse(messages: any[]) {
+  // Ensure that each message's content is a string
+  const formattedMessages = messages.map(msg => ({
+    role: msg.role,
+    content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+  }));
+
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
-    messages: messages,
+    messages: formattedMessages,
     max_tokens: 150,
     temperature: 0.7,
     presence_penalty: 0.6,
