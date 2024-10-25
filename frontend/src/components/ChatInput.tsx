@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send } from 'react-feather';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Loader } from 'react-feather';
 import { Button } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,63 +19,75 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   isLoading
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      const newHeight = Math.min(inputRef.current.scrollHeight, 100); // Max height of 100px
+      inputRef.current.style.height = `${newHeight}px`;
+    }
+  }, [inputMessage]);
 
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       onSendMessage();
-      setInputMessage(''); // Clear the input after sending
+      setInputMessage('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
   return (
-    <div className="bg-pcsprimary02-light dark:bg-pcsprimary-05 p-3 sm:p-4 sticky bottom-0 z-10 shadow-lg">
-      <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-        <div className="flex-grow w-full sm:w-auto relative">
-          <motion.div
-            initial={false}
-            animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            <input
-              className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base p-3 pr-24 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200"
-              placeholder="Type your message..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !isLoading) {
-                  handleSendMessage();
-                }
-              }}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              disabled={isLoading}
-            />
-          </motion.div>
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-            <AnimatePresence>
-              {inputMessage.trim() && (
-                <motion.button 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  onClick={handleSendMessage} 
-                  className="bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-2 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
-                  aria-label="Send message"
-                  disabled={isLoading}
-                >
-                  <Send size={20} />
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-        <Button
-          variant="destructive"
-          text="End Chat"
-          onClick={onEndChat}
-          className="text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-3 w-full sm:w-auto"
-        />
+    <div className="flex items-center space-x-2 sm:space-x-4">
+      <div className="relative flex-grow">
+        <motion.div
+          initial={false}
+          animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
+          transition={{ duration: 0.2 }}
+          className="relative"
+        >
+          <textarea
+            ref={inputRef}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={isLoading}
+            placeholder="Type your message..."
+            className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base py-2 px-4 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200 resize-none overflow-hidden min-h-[40px] max-h-[100px]"
+            rows={1}
+          />
+          <AnimatePresence>
+            {(inputMessage.trim() || isLoading) && (
+              <motion.button 
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                onClick={handleSendMessage} 
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-1.5 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
+                aria-label="Send message"
+                disabled={isLoading || !inputMessage.trim()}
+              >
+                {isLoading ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
+      <Button
+        variant="destructive"
+        onClick={onEndChat}
+        className="text-sm sm:text-base px-3 sm:px-4 py-2 rounded-full h-[40px] whitespace-nowrap flex-shrink-0"
+      >
+        End Chat
+      </Button>
     </div>
   );
 };

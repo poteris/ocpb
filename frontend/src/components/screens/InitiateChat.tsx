@@ -104,7 +104,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
       </div>
 
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-        <div className="max-w-3xl mx-auto py-12 sm:py-20 flex-grow">
+        <div className="max-w-3xl mx-auto pt-12 sm:py-20 flex-grow">
           <motion.div 
             className="flex flex-col items-center mb-12"
             initial={{ opacity: 0, y: 20 }}
@@ -151,21 +151,19 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <div className="flex items-center space-x-2">
-              <div className="flex-grow">
-                <Input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-lg p-4 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:ring-2 focus:ring-pcsprimary-04 dark:focus:ring-pcsprimary-02 transition-all duration-200"
-                  placeholder="Start the conversation..."
-                />
-              </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base p-3 pr-16 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200"
+                placeholder="Start training..."
+              />
               <Button
                 variant="progress"
                 text="Start"
                 onClick={handleStartChat}
-                className="text-lg py-4 px-6 h-14 rounded-full flex-shrink-0"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
                 disabled={!inputMessage.trim()}
               />
             </div>

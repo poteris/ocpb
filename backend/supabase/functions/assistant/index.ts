@@ -289,11 +289,15 @@ async function retrievePersona(personaId: string) {
 }
 
 async function getInstructionPrompt(id: string) {
-  const { data, error } = await supabase
-    .from('scenarios')
-    .select('*')
-    .eq('id', id)
-    .single();
+  let query = supabase.from('scenarios').select('*');
+
+  if (id) {
+    query = query.eq('id', id).single();
+  } else {
+    query = query.order('random()').limit(1);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching system prompt:', error);
