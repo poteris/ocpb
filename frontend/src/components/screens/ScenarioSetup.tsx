@@ -56,7 +56,10 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     }
   }, []);
 
-  const debouncedGenerateNewPersona = useDebounce(generateNewPersona, 300);
+  const debouncedGenerateNewPersona = useCallback(
+    useDebounce(generateNewPersona, 300),
+    [generateNewPersona]
+  );
 
   const navigatePersona = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' 
