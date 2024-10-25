@@ -289,7 +289,7 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
 
     const { error } = await supabase
       .from('conversations')
-      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, feedback_prompt_id: 1 });
+      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, feedback_id: 1 });
 
     if (error) {
       console.error('Error inserting conversation:', error);
