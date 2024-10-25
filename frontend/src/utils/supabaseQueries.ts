@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { PersonaInfo } from '@/context/ScenarioContext';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -8,9 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-console.log('supabaseUrl', supabaseUrl);
-console.log('supabaseAnonKey', supabaseAnonKey);
-
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface Scenario {
@@ -18,15 +14,6 @@ export interface Scenario {
   title: string;
   description: string;
   objectives: string[];
-  prompts: string[];
-}
-
-export interface Persona {
-  id: string;
-  character_type: string;
-  mood: string;
-  age_range: string;
-  context: string;
 }
 
 export interface SystemPrompt {
@@ -41,8 +28,7 @@ export async function getScenarios(): Promise<Scenario[]> {
       id,
       title,
       description,
-      scenario_objectives (objective),
-      scenario_prompts (prompt)
+      scenario_objectives (objective)
     `);
 
   if (error) {
@@ -52,51 +38,36 @@ export async function getScenarios(): Promise<Scenario[]> {
 
   return scenarios.map(scenario => ({
     ...scenario,
-    objectives: scenario.scenario_objectives.map(obj => obj.objective),
-    prompts: scenario.scenario_prompts.map(prompt => prompt.prompt)
+    objectives: scenario.scenario_objectives.map(obj => obj.objective)
   }));
 }
 
-export async function getPersonas(): Promise<Persona[]> {
-  const { data: personas, error } = await supabase
+// Add this function to store the generated persona
+export async function storePersona(persona: any) {
+  const { data, error } = await supabase
     .from('personas')
-    .select('*');
+    .insert({
+      id: persona.id,
+      name: persona.name,
+      segment: persona.segment,
+      age: persona.age,
+      gender: persona.gender,
+      family_status: persona.family_status,
+      job: persona.job,
+      major_issues_in_workplace: persona.major_issues_in_workplace,
+      uk_party_affiliation: persona.uk_party_affiliation,
+      personality_traits: persona.personality_traits,
+      emotional_conditions_for_supporting_the_union: persona.emotional_conditions_for_supporting_the_union,
+      busyness_level: persona.busyness_level,
+      workplace: persona.workplace
+    });
 
   if (error) {
-    console.error('Error fetching personas:', error);
-    return [];
+    console.error('Error storing persona:', error);
+    throw error;
   }
 
-  return personas;
-}
-
-export function convertToPersonaInfo(persona: Persona): PersonaInfo {
-  return {
-    id: persona.id,
-    characterType: persona.character_type,
-    mood: persona.mood,
-    ageRange: persona.age_range,
-    context: persona.context
-  };
-}
-
-export async function getRandomPersona(): Promise<PersonaInfo | null> {
-  const { data: personas, error } = await supabase
-    .from('personas')
-    .select('*');
-
-  if (error) {
-    console.error('Error fetching personas:', error);
-    return null;
-  }
-
-  if (personas && personas.length > 0) {
-    const randomIndex = Math.floor(Math.random() * personas.length);
-    const randomPersona = personas[randomIndex];
-    return convertToPersonaInfo(randomPersona);
-  }
-
-  return null;
+  return data;
 }
 
 export async function getSystemPrompts(): Promise<SystemPrompt[]> {

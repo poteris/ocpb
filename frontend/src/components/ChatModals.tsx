@@ -3,7 +3,8 @@
 import React from 'react';
 import { Modal, InfoPopover, Button } from '@/components/ui';
 import { FeedbackPopover } from './screens/FeedbackScreen';
-import { ScenarioInfo, PersonaInfo } from '@/context/ScenarioContext';
+import { ScenarioInfo } from '@/context/ScenarioContext';
+import { Persona } from '@/utils/api';
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -15,7 +16,7 @@ interface ChatModalsProps {
   setShowFeedbackPopover: (show: boolean) => void;
   handleFeedbackClose: () => void;
   scenarioInfo: ScenarioInfo | null;
-  personaInfo: PersonaInfo | null;
+  persona: Persona | null;
 }
 
 export const ChatModals: React.FC<ChatModalsProps> = ({
@@ -27,7 +28,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   showFeedbackPopover,
   setShowFeedbackPopover,
   scenarioInfo,
-  personaInfo
+  persona
 }) => (
   <>
     <Modal
@@ -54,13 +55,22 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
             <li key={index}>{objective}</li>
           ))}
         </ul>
-        {personaInfo && (
+        {persona && (
           <>
             <h3 className="text-pcsprimary-03 dark:text-pcsprimary-02 text-lg font-medium mb-2">Bot Persona:</h3>
-            <p className="text-pcsprimary-04 dark:text-gray-300"><strong>Character Type:</strong> {personaInfo.characterType}</p>
-            <p className="text-pcsprimary-04 dark:text-gray-300"><strong>Mood:</strong> {personaInfo.mood}</p>
-            <p className="text-pcsprimary-04 dark:text-gray-300"><strong>Age Range:</strong> {personaInfo.ageRange}</p>
-            <p className="text-pcsprimary-04 dark:text-gray-300"><strong>Context:</strong> {personaInfo.context}</p>
+            <ul className="text-pcsprimary-04 dark:text-gray-300 space-y-1">
+              <li><strong>Name:</strong> {persona.name}</li>
+              <li><strong>Age:</strong> {persona.age}</li>
+              <li><strong>Gender:</strong> {persona.gender}</li>
+              <li><strong>Job:</strong> {persona.job}</li>
+              <li><strong>Workplace:</strong> {persona.workplace}</li>
+              <li><strong>Busyness Level:</strong> {persona.busyness_level}</li>
+              <li><strong>Family Status:</strong> {persona.family_status}</li>
+              <li><strong>Political Leanings:</strong> {persona.uk_party_affiliation}</li>
+              <li><strong>Union Support:</strong> {persona.emotional_conditions_for_supporting_the_union}</li>
+              <li><strong>Personality Traits:</strong> {persona.personality_traits}</li>
+              <li><strong>Major Workplace Issues:</strong> {persona.major_issues_in_workplace}</li>
+            </ul>
           </>
         )}
       </InfoPopover>

@@ -27,10 +27,18 @@ CREATE TABLE scenario_prompts (
 -- Personas table
 CREATE TABLE personas (
     id VARCHAR(255) PRIMARY KEY,
-    character_type VARCHAR(255) NOT NULL,
-    mood VARCHAR(255) NOT NULL,
-    age_range VARCHAR(255) NOT NULL,
-    context TEXT NOT NULL
+    name VARCHAR(255) NOT NULL,
+    segment VARCHAR(255) NOT NULL,
+    age INTEGER NOT NULL,
+    gender VARCHAR(50) NOT NULL,
+    family_status VARCHAR(255) NOT NULL,
+    job VARCHAR(255) NOT NULL,
+    major_issues_in_workplace TEXT NOT NULL,
+    uk_party_affiliation VARCHAR(255) NOT NULL,
+    personality_traits TEXT NOT NULL,
+    emotional_conditions_for_supporting_the_union TEXT NOT NULL,
+    busyness_level VARCHAR(50) NOT NULL,
+    workplace VARCHAR(255) NOT NULL
 );
 
 -- Conversations table

@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import { Header } from '../Header';
 import { Button } from '../ui';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
 import { ChatModals } from '../ChatModals';
+import { storePersona, createConversation } from '@/utils/api';
+import { Persona } from '@/utils/api';  // Import the Persona type
 
 interface InitiateChatContentProps {
   systemPromptId?: string;
@@ -18,21 +20,62 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [customSystemPromptId, setCustomSystemPromptId] = useState(defaultSystemPromptId || "1");
   const router = useRouter();
-  const { scenarioInfo, personaInfo } = useScenario();
+  const { scenarioInfo, persona, setPersona } = useScenario();
 
-  const handlePromptSelect = (prompt: string) => {
-    const url = `/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(prompt)}`;
-    const finalSystemPromptId = customSystemPromptId || defaultSystemPromptId || "1";
-    router.push(`${url}&systemPromptId=${finalSystemPromptId}`);
-    console.log('Pushed system prompt id:', finalSystemPromptId);
+  // New array of fixed prompts
+  const fixedPrompts = [
+    "Hi, can I interrupt you for a sec?",
+    "Hey, how are you doing?",
+    "Hey mate, sorry to bother you - how's it going?",
+    "What are you up to?",
+    "Hi!",
+    "Heya mate - what's new?"
+  ];
+
+  // Function to randomly select 3 prompts
+  const getRandomPrompts = () => {
+    const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
   };
 
-  const handleStartChat = () => {
-    if (inputMessage.trim()) {
-      const url = `/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
-      const finalSystemPromptId = customSystemPromptId || defaultSystemPromptId || "1";
-      router.push(`${url}&systemPromptId=${finalSystemPromptId}`);
-      console.log('Pushed system prompt id:', finalSystemPromptId);
+  // State to store the randomly selected prompts
+  const [selectedPrompts] = useState(getRandomPrompts());
+
+  useEffect(() => {
+    const storedPersona = localStorage.getItem('selectedPersona');
+    if (storedPersona) {
+      const parsedPersona: Persona = JSON.parse(storedPersona);
+      setPersona(parsedPersona);
+    }
+  }, [setPersona]);
+
+  const handlePromptSelect = async (prompt: string) => {
+    console.log('Starting chat with inputMessage:', inputMessage.trim());
+    if (persona) {
+      try {
+        console.log('Prompt, persona, scenarioId, customSystemPromptId:', prompt, persona, scenarioInfo?.id, customSystemPromptId);
+        const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, customSystemPromptId);
+        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
+        router.push(url);
+      } catch (error) {
+        console.error('Error starting conversation:', error);
+      }
+    }
+  };
+
+  const handleStartChat = async () => {
+
+    if (inputMessage.trim() && persona) {
+      try {
+        const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, customSystemPromptId);
+        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
+        router.push(url);
+
+        // Clear the stored persona from localStorage
+        localStorage.removeItem('selectedPersona');
+      } catch (error) {
+        console.error('Error starting conversation:', error);
+      }
     }
   };
 
@@ -69,7 +112,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
             </p>
           </div>
           <div className="flex flex-col gap-2 mb-4">
-            {scenarioInfo?.prompts?.map((prompt, index) => (
+            {selectedPrompts.map((prompt, index) => (
               <Button
                 key={index}
                 variant="options"
@@ -134,7 +177,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         showInfoPopover={showInfoPopover}
         setShowInfoPopover={setShowInfoPopover}
         scenarioInfo={scenarioInfo}
-        personaInfo={personaInfo}
+        persona={persona}
         showEndChatModal={false}
         setShowEndChatModal={() => {}}
         confirmEndChat={() => {}}
