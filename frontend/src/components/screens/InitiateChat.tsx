@@ -80,7 +80,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
       <div className="flex-shrink-0">
         <Header 
           title={scenarioInfo?.title || "Scenario"} 
@@ -96,35 +96,35 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         )}
       </div>
 
-      <div className="flex-grow overflow-y-auto">
-        <div className="max-w-md mx-auto p-4">
-          <div className="flex flex-col items-center mb-4">
+      <div className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+        <div className="max-w-2xl mx-auto py-12">
+          <div className="flex flex-col items-center mb-8">
             <Image
-              width={150}
-              height={150}
+              width={200}
+              height={200}
               alt="Union Training Bot"
               src="/images/chat-bot.svg"
-              className="mb-4"
+              className="mb-6"
             />
-            <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-xl mb-2">Start Training</h2>
-            <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-sm mb-4">
+            <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-3xl mb-4">Start Training</h2>
+            <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-lg mb-6">
               Choose a prompt below or write your own to start your union training session
             </p>
           </div>
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
             {selectedPrompts.map((prompt, index) => (
               <Button
                 key={index}
                 variant="options"
                 text={prompt}
                 onClick={() => handlePromptSelect(prompt)}
-                className="text-sm py-2 px-4 text-left"
+                className="text-sm py-3 px-4 text-left h-full"
               />
             ))}
           </div>
           
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-xs text-pcsprimary-04 dark:text-pcsprimary-02">
+          <div className="mt-8">
+            <div className="flex items-center justify-between text-sm text-pcsprimary-04 dark:text-pcsprimary-02">
               <button 
                 onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
                 className="underline focus:outline-none"
@@ -134,15 +134,15 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
             </div>
             
             {showAdvancedOptions && (
-              <div className="mt-2">
-                <label className="block text-xs text-pcsprimary-04 dark:text-pcsprimary-02 mb-1">
+              <div className="mt-4">
+                <label className="block text-sm text-pcsprimary-04 dark:text-pcsprimary-02 mb-2">
                   System Prompt ID:
                 </label>
                 <input
                   type="text"
                   value={customSystemPromptId}
                   onChange={(e) => setCustomSystemPromptId(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-xs p-2 rounded border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
+                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-sm p-3 rounded border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
                   placeholder="Enter system prompt ID (default: 1)"
                 />
               </div>
@@ -151,24 +151,26 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         </div>
       </div>
 
-      <div className="flex-shrink-0 bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center mb-2">
-            <div className="flex-grow mr-2">
-              <input
-                className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-xs p-2 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
-                placeholder="Or type your own union-related question..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
+      <div className="flex-shrink-0 bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center">
+              <div className="flex-grow mr-4">
+                <input
+                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-sm p-3 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
+                  placeholder="Or type your own union-related question..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
+                />
+              </div>
+              <Button
+                variant="progress"
+                text="Start Training"
+                onClick={handleStartChat}
+                className="text-sm py-3 px-6"
               />
             </div>
-            <Button
-              variant="progress"
-              text="Start Training"
-              onClick={handleStartChat}
-              className="ml-2 text-sm py-1 px-2"
-            />
           </div>
         </div>
       </div>

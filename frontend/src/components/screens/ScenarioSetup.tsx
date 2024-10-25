@@ -9,6 +9,8 @@ import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 import { generatePersona, Persona } from '@/utils/api';
 import { Loader, ChevronLeft, ChevronRight, RefreshCw } from 'react-feather';
 import { useDebounce } from '@/hooks/useDebounce';
+import ReactMarkdown from 'react-markdown';
+import { markdownStyles } from '@/utils/markdownStyles';
 
 interface ScenarioSetupProps {
   scenarioId: string;
@@ -32,15 +34,6 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
       setScenarioInfo(foundScenario);
     }
   }, [scenarioId, setScenarioInfo]);
-
-  const selectRandomPersona = useCallback(async () => {
-    const selectedPersona = await generatePersona();
-    console.log('Generated Persona:', selectedPersona);
-    if (selectedPersona) {
-      setPersona(selectedPersona);
-      setCurrentPersona(selectedPersona);
-    }
-  }, [setPersona]);
 
   const generateNewPersona = useCallback(async () => {
     setIsGeneratingPersona(true);
@@ -85,95 +78,112 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     router.push(`/${screen}?scenarioId=${scenarioId}`);
   };
 
-  return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <Header title={scenario.title} variant="default" />
-      <div className="flex-grow max-w-md mx-auto p-6 overflow-y-auto">
-        <Button
-          variant="options"
-          onClick={onBack}
-          className="mb-4"
-        >
-          Back to Scenarios
-        </Button>
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Scenario Description</h2>
-          <p className="text-gray-700 dark:text-gray-300">{scenario.description}</p>
-        </section>
-        
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Objectives</h2>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-            {scenario.objectives.map((objective, index) => (
-              <li key={index}>{objective}</li>
-            ))}
-          </ul>
-        </section>
+  const renderPersonaDetails = (persona: Persona) => {
+    return `
+${persona.name} is a **${persona.age}-year-old ${persona.gender.toLowerCase()}** who works as a **${persona.job}** at **${persona.workplace}**. They currently have a **${persona.busyness_level.toLowerCase()}** level of busyness.
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Chatbot Persona</h2>
-          {currentPersona ? (
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4">
-              <div className="flex justify-between items-center mb-4">
-                <Button 
-                  variant="options"
-                  onClick={() => navigatePersona('prev')} 
-                  disabled={generatedPersonas.length <= 1}
-                  className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
-                >
-                  <ChevronLeft size={20} />
-                </Button>
-                <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                  {currentPersona.name}
-                </h3>
-                <Button 
-                  variant="options"
-                  onClick={() => navigatePersona('next')} 
-                  disabled={generatedPersonas.length <= 1}
-                  className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
-                >
-                  <ChevronRight size={20} />
-                </Button>
-              </div>
-              <ul className="text-gray-700 dark:text-gray-300 space-y-2">
-                <li><strong>Age:</strong> {currentPersona.age}</li>
-                <li><strong>Gender:</strong> {currentPersona.gender}</li>
-                <li><strong>Job:</strong> {currentPersona.job}</li>
-                <li><strong>Workplace:</strong> {currentPersona.workplace}</li>
-                <li><strong>Busyness Level:</strong> {currentPersona.busyness_level}</li>
-                <li><strong>Family Status:</strong> {currentPersona.family_status}</li>
-                <li><strong>Political Leanings:</strong> {currentPersona.uk_party_affiliation}</li>
-                <li><strong>Union Support:</strong> {currentPersona.emotional_conditions_for_supporting_the_union}</li>
-                <li><strong>Personality Traits:</strong> {currentPersona.personality_traits}</li>
-                <li><strong>Major Workplace Issues:</strong> {currentPersona.major_issues_in_workplace}</li>
-              </ul>
-            </div>
-          ) : (
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4 text-center">
-              <Loader className="animate-spin inline-block mb-2" size={24} />
-              <p className="text-gray-700 dark:text-gray-300">Generating persona...</p>
-            </div>
-          )}
+They're **${persona.family_status.toLowerCase()}**, politically lean towards **${persona.uk_party_affiliation}**, and when it comes to union support, they feel **${persona.emotional_conditions_for_supporting_the_union.toLowerCase()}**.
+
+${persona.name}'s personality can be characterised as **${persona.personality_traits.toLowerCase()}**. 
+
+At work, the major issues they face include **${persona.major_issues_in_workplace.toLowerCase()}**.
+    `.trim();
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+      <Header title={scenario.title} variant="default" />
+      <div className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+        <div className="max-w-3xl mx-auto py-12">
           <Button
             variant="options"
-            onClick={debouncedGenerateNewPersona}
-            className="w-full"
-            disabled={isGeneratingPersona}
+            onClick={onBack}
+            className="mb-6"
           >
-            <RefreshCw className={`mr-2 ${isGeneratingPersona ? 'animate-spin' : ''}`} size={20} />
-            {isGeneratingPersona ? "Generating..." : "Generate New Persona"}
+            Back to Scenarios
           </Button>
-        </section>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div>
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Scenario Description</h2>
+                <p className="text-gray-700 dark:text-gray-300">{scenario.description}</p>
+              </section>
+              
+              <section className="mb-8">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Objectives</h2>
+                <div className="text-gray-700 dark:text-gray-300 space-y-4">
+                  {scenario.objectives.map((objective, index) => (
+                    <div key={index} className="mb-4">
+                      <ReactMarkdown components={markdownStyles}>
+                        {objective}
+                      </ReactMarkdown>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Chatbot Persona</h2>
+              {currentPersona ? (
+                <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <Button 
+                      variant="options"
+                      onClick={() => navigatePersona('prev')} 
+                      disabled={generatedPersonas.length <= 1}
+                      className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+                    >
+                      <ChevronLeft size={20} />
+                    </Button>
+                    <h3 className="font-semibold text-xl text-gray-900 dark:text-gray-100">
+                      {currentPersona.name}
+                    </h3>
+                    <Button 
+                      variant="options"
+                      onClick={() => navigatePersona('next')} 
+                      disabled={generatedPersonas.length <= 1}
+                      className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+                    >
+                      <ChevronRight size={20} />
+                    </Button>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-300">
+                    <ReactMarkdown components={markdownStyles}>
+                      {renderPersonaDetails(currentPersona)}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg mb-6 text-center">
+                  <Loader className="animate-spin inline-block mb-2" size={24} />
+                  <p className="text-gray-700 dark:text-gray-300">Generating persona...</p>
+                </div>
+              )}
+              <Button
+                variant="options"
+                onClick={debouncedGenerateNewPersona}
+                className="w-full"
+                disabled={isGeneratingPersona}
+              >
+                <RefreshCw className={`mr-2 ${isGeneratingPersona ? 'animate-spin' : ''}`} size={20} />
+                {isGeneratingPersona ? "Generating..." : "Generate New Persona"}
+              </Button>
+            </section>
+          </div>
+        </div>
       </div>
-      <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4">
-        <div className="max-w-md mx-auto">
-          <Button
-            variant="progress"
-            onClick={() => navigateTo('initiate-chat')}
-            className="w-full"
-          >
-            Start Chat with Current Persona
-          </Button>
+      <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+          <div className="max-w-md mx-auto">
+            <Button
+              variant="progress"
+              onClick={() => navigateTo('initiate-chat')}
+              className="w-full"
+            >
+              Start Chat with Current Persona
+            </Button>
+          </div>
         </div>
       </footer>
     </div>

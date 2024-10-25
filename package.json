@@ -17,5 +17,8 @@
     "db:reset": "yarn workspace backend supabase db reset",
     "functions:serve": "yarn workspace backend supabase functions serve",
     "functions:deploy": "yarn workspace backend supabase functions deploy"
+  },
+  "dependencies": {
+    "react-markdown": "^9.0.1"
   }
 }
