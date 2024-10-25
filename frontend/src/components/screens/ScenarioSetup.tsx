@@ -28,6 +28,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
   const [personaIndex, setPersonaIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const fetchScenario = useCallback(async () => {
     const scenarios = await getScenarios();
@@ -116,12 +117,34 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
     </div>
   );
 
-  const navigateTo = (screen: string) => {
-    if (currentPersona) {
+  const navigateTo = async (screen: string) => {
+    if (!currentPersona) return;
+    
+    setIsNavigating(true);
+    try {
       localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
+      router.push(`/${screen}?scenarioId=${scenarioId}`);
+    } catch (error) {
+      console.error('Error navigating:', error);
+      setIsNavigating(false);
     }
-    router.push(`/${screen}?scenarioId=${scenarioId}`);
   };
+
+  const renderPersonaSkeleton = () => (
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-8 w-1/3" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+      </div>
+      <Skeleton className="h-4 w-full mb-2" />
+      <Skeleton className="h-4 w-5/6 mb-2" />
+      <Skeleton className="h-4 w-4/5 mb-2" />
+      <Skeleton className="h-4 w-full mb-2" />
+      <Skeleton className="h-4 w-5/6 mb-2" />
+      <Skeleton className="h-4 w-4/5" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
@@ -174,7 +197,9 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
                 <h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Chatbot Persona</h2>
-                {currentPersona ? (
+                {isGeneratingPersona ? (
+                  renderPersonaSkeleton()
+                ) : currentPersona ? (
                   <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
                     <div className="flex justify-between items-center mb-6">
                       <Button 
@@ -211,7 +236,7 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
                 )}
                 <Button
                   variant="options"
-                  onClick={debouncedGenerateNewPersona}
+                  onClick={generateNewPersona}
                   className="w-full text-lg py-3"
                   disabled={isGeneratingPersona}
                 >
@@ -230,9 +255,16 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
               variant="progress"
               onClick={() => navigateTo('initiate-chat')}
               className="w-full text-lg py-3"
-              disabled={isLoading}
+              disabled={isLoading || !currentPersona || isNavigating}
             >
-              Start Chat with Current Persona
+              {isNavigating ? (
+                <>
+                  <Loader className="animate-spin mr-2" size={20} />
+                  Preparing Chat...
+                </>
+              ) : (
+                "Start Chat with Current Persona"
+              )}
             </Button>
           </div>
         </div>
