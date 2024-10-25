@@ -2,13 +2,14 @@
 
 import React, { useState, Suspense, useEffect } from "react";
 import { Header } from '../Header';
-import { Button } from '../ui';
+import { Button, Input } from '@/components/ui';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
 import { ChatModals } from '../ChatModals';
-import { storePersona, createConversation } from '@/utils/api';
+import { createConversation, storePersona } from '@/utils/api';
 import { Persona } from '@/utils/api';  // Import the Persona type
+import { motion } from 'framer-motion';
 
 interface InitiateChatContentProps {
   systemPromptId?: string;
@@ -50,13 +51,17 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   }, [setPersona]);
 
   const handlePromptSelect = async (prompt: string) => {
-    console.log('Starting chat with inputMessage:', inputMessage.trim());
     if (persona) {
       try {
-        console.log('Prompt, persona, scenarioId, customSystemPromptId:', prompt, persona, scenarioInfo?.id, customSystemPromptId);
+        // Store the persona
+        await storePersona(persona);
+
         const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, customSystemPromptId);
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
         router.push(url);
+
+        // Clear the stored persona from localStorage
+        localStorage.removeItem('selectedPersona');
       } catch (error) {
         console.error('Error starting conversation:', error);
       }
@@ -64,9 +69,11 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   };
 
   const handleStartChat = async () => {
-
     if (inputMessage.trim() && persona) {
       try {
+        // Store the persona
+        await storePersona(persona);
+
         const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, customSystemPromptId);
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
         router.push(url);
@@ -80,7 +87,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="flex-shrink-0">
         <Header 
           title={scenarioInfo?.title || "Scenario"} 
@@ -96,84 +103,75 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         )}
       </div>
 
-      <div className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-        <div className="max-w-2xl mx-auto py-12">
-          <div className="flex flex-col items-center mb-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
+        <div className="max-w-3xl mx-auto py-12 sm:py-20 flex-grow">
+          <motion.div 
+            className="flex flex-col items-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <Image
-              width={200}
-              height={200}
+              width={250}
+              height={250}
               alt="Union Training Bot"
               src="/images/chat-bot.svg"
-              className="mb-6"
+              className="mb-8"
             />
-            <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-3xl mb-4">Start Training</h2>
-            <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-lg mb-6">
+            <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
+            <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
               Choose a prompt below or write your own to start your union training session
             </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          </motion.div>
+          <motion.div 
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             {selectedPrompts.map((prompt, index) => (
-              <Button
+              <motion.div
                 key={index}
-                variant="options"
-                text={prompt}
-                onClick={() => handlePromptSelect(prompt)}
-                className="text-sm py-3 px-4 text-left h-full"
-              />
-            ))}
-          </div>
-          
-          <div className="mt-8">
-            <div className="flex items-center justify-between text-sm text-pcsprimary-04 dark:text-pcsprimary-02">
-              <button 
-                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                className="underline focus:outline-none"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {showAdvancedOptions ? "Hide Advanced Options" : "Show Advanced Options"}
-              </button>
-            </div>
-            
-            {showAdvancedOptions && (
-              <div className="mt-4">
-                <label className="block text-sm text-pcsprimary-04 dark:text-pcsprimary-02 mb-2">
-                  System Prompt ID:
-                </label>
-                <input
-                  type="text"
-                  value={customSystemPromptId}
-                  onChange={(e) => setCustomSystemPromptId(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-sm p-3 rounded border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
-                  placeholder="Enter system prompt ID (default: 1)"
+                <Button
+                  variant="options"
+                  text={prompt}
+                  onClick={() => handlePromptSelect(prompt)}
+                  className="text-lg py-4 px-6 text-left h-full w-full"
                 />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-shrink-0 bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center">
-              <div className="flex-grow mr-4">
-                <input
-                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-sm p-3 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
-                  placeholder="Or type your own union-related question..."
+              </motion.div>
+            ))}
+          </motion.div>
+          
+          <motion.div 
+            className="mt-12 sticky bottom-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <div className="flex items-center space-x-2">
+              <div className="flex-grow">
+                <Input
+                  type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
+                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-lg p-4 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:ring-2 focus:ring-pcsprimary-04 dark:focus:ring-pcsprimary-02 transition-all duration-200"
+                  placeholder="Start the conversation..."
                 />
               </div>
               <Button
                 variant="progress"
-                text="Start Training"
+                text="Start"
                 onClick={handleStartChat}
-                className="text-sm py-3 px-6"
+                className="text-lg py-4 px-6 h-14 rounded-full flex-shrink-0"
+                disabled={!inputMessage.trim()}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </main>
 
       <ChatModals
         showInfoPopover={showInfoPopover}

@@ -34,7 +34,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
 }) => {
   const renderPersonaDetails = (persona: Persona) => {
     return `
-### Their Persona:
+### Persona Details
 
 - **Name:** ${persona.name}
 - **Age:** ${persona.age}
@@ -51,7 +51,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   };
 
   const formatObjectives = (objectives: string[]) => {
-    return objectives.map(objective => `${objective}`).join('\n\n');
+    return objectives.map(objective => `- ${objective}`).join('\n');
   };
 
   return (
@@ -61,19 +61,20 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         onClose={() => setShowEndChatModal(false)}
         title="End Chat"
         footer={
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-4">
             <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
             <Button variant="destructive" text="End Chat" onClick={confirmEndChat} />
           </div>
         }
       >
-        <p className="text-gray-700 dark:text-gray-500">Are you sure you want to end this chat?</p>
+        <p className="text-lg text-gray-700 dark:text-gray-300">Are you sure you want to end this chat?</p>
       </Modal>
 
       {showInfoPopover && scenarioInfo && (
         <InfoPopover onClose={() => setShowInfoPopover(false)}>
-          <ReactMarkdown components={markdownStyles}>
-            {`
+          <div className="max-w-2xl mx-auto">
+            <ReactMarkdown components={markdownStyles}>
+              {`
 # ${scenarioInfo.title}
 
 ${scenarioInfo.description}
@@ -83,8 +84,9 @@ ${scenarioInfo.description}
 ${formatObjectives(scenarioInfo.objectives)}
 
 ${persona ? renderPersonaDetails(persona) : ''}
-            `.trim()}
-          </ReactMarkdown>
+              `.trim()}
+            </ReactMarkdown>
+          </div>
         </InfoPopover>
       )}
 

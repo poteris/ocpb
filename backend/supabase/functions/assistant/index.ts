@@ -23,7 +23,6 @@ try {
       schema: 'public'
     }
   })
-  console.log('Supabase client initialized successfully')
 } catch (error) {
   console.error('Error initializing Supabase client:', error)
   Deno.exit(1)
@@ -115,7 +114,6 @@ Fill in the remaining placeholders with appropriate, realistic details. Do not i
 
   try {
     const generatedPersona = JSON.parse(content);
-    console.log('Generated Persona:', generatedPersona);
 
     return {
       id: `${generatedPersona.job.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.name.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.age}-${generatedPersona.gender.toLowerCase()}`,
@@ -148,9 +146,8 @@ export async function POST(req: Request) {
   }
 }
 
-async function createConversation({ userId, initialMessage, scenarioId, persona, systemPromptId = '1' }: { userId: string; initialMessage?: string; scenarioId: string; persona: Persona; systemPromptId?: string }) {
+async function createConversation({ userId, initialMessage, scenarioId, persona, systemPromptId = '1' }: { userId: string; initialMessage?: string; scenarioId: string; persona: any; systemPromptId?: string }) {
   try {
-    console.log('Received createConversation request', { userId, initialMessage, scenarioId, persona, systemPromptId });
 
     if (!userId || !scenarioId || !persona) {
       throw new Error('Missing userId, scenarioId, or persona');
@@ -163,7 +160,6 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
     }
 
     const conversationId = crypto.randomUUID();
-    console.log('Generated conversationId:', conversationId);
 
     const { error } = await supabase
       .from('conversations')
@@ -177,21 +173,17 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
     let aiResponse = null;
     if (initialMessage) {
       const systemPrompt = await getInstructionPrompt(scenarioId);
-      console.log('System prompt:', systemPrompt);
 
       const messages = [
         { role: "system", content: createCompletePrompt(persona, systemPrompt) },
         { role: "user", content: initialMessage }
       ];
-      console.log('Messages for AI:', messages);
 
       aiResponse = await getAIResponse(messages);
-      console.log('AI Response:', aiResponse);
 
       await saveMessages(conversationId, initialMessage, aiResponse || '');
     }
 
-    console.log('Conversation created:', conversationId);
     return { id: conversationId, aiResponse };
   } catch (error) {
     console.error('Error in createConversation:', error);
@@ -297,7 +289,6 @@ async function retrievePersona(personaId: string) {
 }
 
 async function getInstructionPrompt(id: string) {
-  console.log('Getting instruction prompt for id:', id);
   const { data, error } = await supabase
     .from('scenarios')
     .select('*')
@@ -309,7 +300,6 @@ async function getInstructionPrompt(id: string) {
     return "You are an AI assistant. Respond to the user's messages appropriately.";
   }
 
-  console.log('Retrieved system prompt:', data);
   return `Role play to help users to ${data.description}. The user is a trade union representative speaking to you about ${data.title}. Respond as their workplace colleague in the character below.
     
     YOU ARE NOT A TRADE UNION REP.
@@ -379,7 +369,6 @@ function withTimeout(handler: (req: Request) => Promise<Response>, timeoutMs: nu
 }
 
 const mainHandler = async (req: Request) => {
-  console.log('Received request:', req.method, req.url);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -390,7 +379,6 @@ const mainHandler = async (req: Request) => {
 
   try {
     const body = await req.text();
-    console.log('Request body:', body);
     let params: any = {};
     
     if (body) {
@@ -406,8 +394,6 @@ const mainHandler = async (req: Request) => {
     }
 
     const { action, ...otherParams } = params;
-    console.log('Action:', action, 'Params:', otherParams);
-
     let result;
 
     switch (action) {

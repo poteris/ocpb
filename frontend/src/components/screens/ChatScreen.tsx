@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ChatInput } from '@/components/ChatInput';
 import { ChatModals } from '@/components/ChatModals';
 import { useScenario } from '@/context/ScenarioContext';
+import { motion } from 'framer-motion';
 
 const ChatScreenContent: React.FC = () => {
   const {
@@ -51,16 +52,21 @@ const ChatScreenContent: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <Header 
         title={scenarioInfo?.title || "Chat"} 
         variant="default" 
         showInfoIcon={true}
         onInfoClick={() => setShowInfoPopover(true)}
       />
-      <div className="flex-grow overflow-y-auto">
+      <main className="flex-grow overflow-y-auto">
         <div className="bg-white dark:bg-gray-900 flex flex-col h-full container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-          <div className="max-w-3xl mx-auto w-full">
+          <motion.div 
+            className="max-w-3xl mx-auto w-full py-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <ErrorBoundary fallback={<div className="text-red-500 dark:text-red-400">An error occurred in the chat. Please refresh the page and try again.</div>}>
               <MessageList 
                 messages={currentSession?.messages || []} 
@@ -69,13 +75,18 @@ const ChatScreenContent: React.FC = () => {
               />
             </ErrorBoundary>
             <div ref={messagesEndRef} />
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </main>
 
-      <div className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-6">
+      <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-6">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-          <div className="max-w-3xl mx-auto">
+          <motion.div 
+            className="max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <ChatInput
               inputMessage={inputMessage}
               setInputMessage={setInputMessage}
@@ -83,9 +94,9 @@ const ChatScreenContent: React.FC = () => {
               onEndChat={handleEndChat}
               isLoading={isLoading}
             />
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </footer>
 
       <ChatModals
         showEndChatModal={showEndChatModal}

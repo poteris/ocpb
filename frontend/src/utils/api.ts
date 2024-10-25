@@ -71,13 +71,11 @@ export interface Persona {
 
 export async function generatePersona(): Promise<Persona | null> {
   try {
-    console.log('Generating persona');
     const response = await invokeFunction('assistant', {
       action: 'generatePersona',
     });
 
     if (response && response.result) {
-      console.log('Persona generated:', response.result);
       return response.result;
     } else {
       console.error('Unexpected response format:', response);

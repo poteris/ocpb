@@ -80,7 +80,6 @@ export async function getSystemPrompts(): Promise<SystemPrompt[]> {
     console.error('Error fetching system prompts:', error);
     return [];
   }
-  console.log('prompts', prompts);
 
   return prompts;
 }
