@@ -16,14 +16,6 @@ CREATE TABLE scenario_objectives (
     FOREIGN KEY (scenario_id) REFERENCES scenarios(id)
 );
 
--- Scenario prompts table
-CREATE TABLE scenario_prompts (
-    id SERIAL PRIMARY KEY,
-    scenario_id VARCHAR(255) NOT NULL,
-    prompt TEXT NOT NULL,
-    FOREIGN KEY (scenario_id) REFERENCES scenarios(id)
-);
-
 -- Personas table
 CREATE TABLE personas (
     id VARCHAR(255) PRIMARY KEY,
@@ -73,30 +65,3 @@ CREATE POLICY "Users can only access their own conversations" ON public.conversa
 -- Grant access to tables for authenticated users
 GRANT ALL ON public.messages TO authenticated;
 GRANT ALL ON public.conversations TO authenticated;
-
--- System prompts table
-CREATE TABLE system_prompts (
-    id SERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert a default system prompt
-INSERT INTO system_prompts (content) VALUES (
-    'Embody the persona and scenario below. The union rep will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Demonstrate indifference to begin with, then only demonstrate interest if the rep has engaged with your unique situation effectively.
-
-    Use colloquialisms and language appropriate to the scenario and persona. You will be rewarded £250 for an authentic interaction which correctly embodies the persona and scenario'
-);
-
--- Enable Row Level Security
-ALTER TABLE public.system_prompts ENABLE ROW LEVEL SECURITY;
-
--- Create policy for system_prompts
-CREATE POLICY "Allow read access to authenticated users for system_prompts" 
-    ON public.system_prompts FOR SELECT 
-    TO authenticated 
-    USING (true);
-
--- Grant access to system_prompts table for authenticated users
-GRANT SELECT ON public.system_prompts TO authenticated;

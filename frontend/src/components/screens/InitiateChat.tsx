@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
 import { ChatModals } from '../ChatModals';
 import { createConversation, storePersona } from '@/utils/api';
-import { Persona } from '@/utils/api';  // Import the Persona type
+import { Persona } from '@/utils/api';
 import { motion } from 'framer-motion';
 
 interface InitiateChatContentProps {
