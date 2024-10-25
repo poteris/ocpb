@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Persona } from '@/utils/api';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -42,8 +43,8 @@ export async function getScenarios(): Promise<Scenario[]> {
   }));
 }
 
-// Add this function to store the generated persona
-export async function storePersona(persona: any) {
+// Update the function signature
+export async function storePersona(persona: Persona) {
   const { data, error } = await supabase
     .from('personas')
     .insert({

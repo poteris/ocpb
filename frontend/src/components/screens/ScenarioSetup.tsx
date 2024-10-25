@@ -20,7 +20,7 @@ interface ScenarioSetupProps {
 
 export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack }) => {
   const router = useRouter();
-  const { setScenarioInfo, setPersona } = useScenario();
+  const { setScenarioInfo } = useScenario();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [generatedPersonas, setGeneratedPersonas] = useState<Persona[]>([]);

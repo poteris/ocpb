@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense, useEffect } from "react";
 import { Header } from '../Header';
-import { Button, Input } from '@/components/ui';
+import { Button } from '@/components/ui';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
@@ -18,8 +18,6 @@ interface InitiateChatContentProps {
 const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptId: defaultSystemPromptId }) => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
-  const [customSystemPromptId, setCustomSystemPromptId] = useState(defaultSystemPromptId || "1");
   const router = useRouter();
   const { scenarioInfo, persona, setPersona } = useScenario();
 
@@ -56,7 +54,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         // Store the persona
         await storePersona(persona);
 
-        const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, customSystemPromptId);
+        const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, defaultSystemPromptId);
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
         router.push(url);
 
@@ -74,7 +72,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         // Store the persona
         await storePersona(persona);
 
-        const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, customSystemPromptId);
+        const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, defaultSystemPromptId);
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
         router.push(url);
 
@@ -95,12 +93,6 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
           showInfoIcon={true}
           onInfoClick={() => setShowInfoPopover(true)}
         />
-        {defaultSystemPromptId && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-            <p className="font-bold">Using custom system prompt</p>
-            <p>System Prompt ID: {defaultSystemPromptId}</p>
-          </div>
-        )}
       </div>
 
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">

@@ -5,7 +5,6 @@ import { createConversation, sendMessage } from '@/utils/api';
 import { promptMap } from '@/utils/promptMap';
 import { debounce } from 'lodash';
 import { useScenario } from '@/context/ScenarioContext';
-import { Persona } from '@/utils/api';  // Import the Persona type
 
 const STORAGE_KEY = 'chatSessions';
 
@@ -18,7 +17,7 @@ export const useChat = () => {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
   const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] = useState(false);
-  const { scenarioInfo, persona } = useScenario();  // Get persona from useScenario
+  const { scenarioInfo, persona } = useScenario();
   const [systemPromptId, setSystemPromptId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
