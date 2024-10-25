@@ -33,10 +33,10 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
     "Heya mate - what's new?"
   ];
 
-  // Function to randomly select 3 prompts
+  // Function to randomly select prompts
   const getRandomPrompts = () => {
     const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 3);
+    return shuffled.slice(0, 4); // Select 4 prompts instead of 3
   };
 
   // State to store the randomly selected prompts
@@ -104,49 +104,52 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
       </div>
 
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-        <div className="max-w-3xl mx-auto pt-12 sm:py-20 flex-grow">
-          <motion.div 
-            className="flex flex-col items-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Image
-              width={250}
-              height={250}
-              alt="Union Training Bot"
-              src="/images/chat-bot.svg"
-              className="mb-8"
-            />
-            <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
-            <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
-              Choose a prompt below or write your own to start your union training session
-            </p>
-          </motion.div>
-          <motion.div 
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {selectedPrompts.map((prompt, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  variant="options"
-                  text={prompt}
-                  onClick={() => handlePromptSelect(prompt)}
-                  className="text-lg py-4 px-6 text-left h-full w-full"
-                />
-              </motion.div>
-            ))}
-          </motion.div>
+        <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
+          <div>
+            <motion.div 
+              className="flex flex-col items-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Image
+                width={250}
+                height={250}
+                alt="Union Training Bot"
+                src="/images/chat-bot.svg"
+                className="mb-8"
+              />
+              <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
+              <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
+                Choose a prompt below or write your own to start your union training session
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="grid gap-4 sm:grid-cols-2 mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              {selectedPrompts.map((prompt, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button
+                    variant="options"
+                    text={prompt}
+                    onClick={() => handlePromptSelect(prompt)}
+                    className="text-lg py-4 px-6 text-left h-full w-full"
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
           
           <motion.div 
-            className="mt-12 sticky bottom-4"
+            className="mt-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}

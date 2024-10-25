@@ -22,11 +22,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-      const newHeight = Math.min(inputRef.current.scrollHeight, 100); // Max height of 100px
-      inputRef.current.style.height = `${newHeight}px`;
-    }
+    const adjustHeight = () => {
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+        const newHeight = Math.min(inputRef.current.scrollHeight, 100);
+        inputRef.current.style.height = `${newHeight}px`;
+      }
+    };
+
+    adjustHeight();
   }, [inputMessage]);
 
   const handleSendMessage = () => {
