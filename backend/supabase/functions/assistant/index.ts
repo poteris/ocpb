@@ -39,7 +39,7 @@ const corsHeaders = {
 
 // Update the generatePersona function
 async function generatePersona() {
-  const segments = ["Former Member", "Non-member", "Reluctant Worker", "Young Worker"];
+  const segments = ["Former Union Member", "Non-member of the Union", "Reluctant Worker", "Young Worker"];
   const genders = ["Male", "Female"];
   const familyStatuses = ["Divorced", "In a relationship", "Married", "Married with Children", "Single", "Widowed"];
   const ukParties = ["Conservative", "Labour", "Liberal Democrats", "Green", "Reform UK", "Independent"];

@@ -143,7 +143,14 @@ function getOrCreateTemporaryUserId() {
   return temporaryUserId;
 }
 
-export async function getFeedback(conversationId: string) {
+export interface FeedbackData {
+  score: number;
+  strengths: { title: string; description: string; }[];
+  areas_for_improvement: { title: string; description: string; }[];
+  summary: string;
+}
+
+export async function getFeedback(conversationId: string): Promise<FeedbackData> {
   try {
     const response = await invokeFunction('assistant', {
       action: 'getFeedback',

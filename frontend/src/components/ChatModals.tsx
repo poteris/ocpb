@@ -4,10 +4,9 @@ import React, { useState } from 'react';
 import { Modal, InfoPopover, Button } from '@/components/ui';
 import { FeedbackPopover } from './screens/FeedbackScreen';
 import { ScenarioInfo } from '@/context/ScenarioContext';
-import { Persona } from '@/utils/api';
+import { Persona, getFeedback, FeedbackData } from '@/utils/api';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
-import { getFeedback } from '@/utils/api';
 import { Skeleton } from '@/components/ui';
 
 interface ChatModalsProps {
@@ -35,7 +34,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   persona,
   conversationId
 }) => {
-  const [feedbackData, setFeedbackData] = useState<any>(null);
+  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
 
   const renderPersonaDetails = (persona: Persona) => {
@@ -140,7 +139,7 @@ ${persona ? renderPersonaDetails(persona) : ''}
         <FeedbackPopover
           onClose={handleFeedbackClose}
           score={feedbackData?.score || 0}
-          analysisData={feedbackData}
+          analysisData={feedbackData || undefined}
         >
           {isLoadingFeedback ? renderFeedbackSkeleton() : null}
         </FeedbackPopover>
