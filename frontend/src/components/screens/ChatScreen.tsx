@@ -22,7 +22,7 @@ const ChatScreenContent: React.FC = () => {
     isWaitingForInitialResponse,
   } = useChat();
 
-  const { scenarioInfo, personaInfo } = useScenario();
+  const { scenarioInfo, persona } = useScenario();
 
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showEndChatModal, setShowEndChatModal] = useState(false);
@@ -89,7 +89,7 @@ const ChatScreenContent: React.FC = () => {
         setShowFeedbackPopover={setShowFeedbackPopover}
         handleFeedbackClose={handleFeedbackClose}
         scenarioInfo={scenarioInfo}
-        personaInfo={personaInfo}
+        persona={persona}
       />
     </div>
   );

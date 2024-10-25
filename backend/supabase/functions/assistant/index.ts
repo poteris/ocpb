@@ -3,8 +3,6 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.44.2'
 import { OpenAI } from 'https://deno.land/x/openai@v4.67.3/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import personas from './personas.json' assert { type: "json" };
-import scenarios from './scenarios.json' assert { type: "json" };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://127.0.0.1:54321'
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -33,17 +31,112 @@ try {
 
 const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") })
 
-// Add this near the top of the file
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': '*',
 }
 
+// Update the generatePersona function
+async function generatePersona() {
+  const segments = ["Former Member", "Non-member", "Reluctant Worker", "Young Worker"];
+  const genders = ["Male", "Female"];
+  const familyStatuses = ["Divorced", "In a relationship", "Married", "Married with Children", "Single", "Widowed"];
+  const ukParties = ["Conservative", "Labour", "Liberal Democrats", "Green", "Reform UK", "Independent"];
+  const busynessLevels = ["low", "medium", "high"];
+
+  const segment = segments[Math.floor(Math.random() * segments.length)];
+  const gender = genders[Math.floor(Math.random() * genders.length)];
+  let age, familyStatus, partyAffiliation;
+
+  if (segment === "Young Worker") {
+    age = Math.floor(Math.random() * (17 - 15 + 1)) + 15;
+    familyStatus = "Single";
+  } else {
+    age = Math.floor(Math.random() * (62 - 18 + 1)) + 18;
+    familyStatus = familyStatuses[Math.floor(Math.random() * familyStatuses.length)];
+  }
+
+  // Adjust party affiliation probabilities
+  const partyProbabilities = [0.15, 0.4, 0.1, 0.05, 0.25, 0.05]; // Conservative, Labour, Lib Dem, Green, Reform UK, Independent
+  const randomValue = Math.random();
+  let cumulativeProbability = 0;
+  for (let i = 0; i < ukParties.length; i++) {
+    cumulativeProbability += partyProbabilities[i];
+    if (randomValue <= cumulativeProbability) {
+      partyAffiliation = ukParties[i];
+      break;
+    }
+  }
+
+  const busynessLevel = busynessLevels[Math.floor(Math.random() * busynessLevels.length)];
+  const workplace = "an office in the department of work and pensions";
+
+  const prompt = `Generate a persona for a workplace conversation with a trade union representative. Use the following pre-generated traits:
+
+Segment: ${segment}
+Age: ${age}
+Gender: ${gender}
+Family Status: ${familyStatus}
+UK Party Affiliation: ${partyAffiliation}
+Busyness Level: ${busynessLevel}
+Workplace: ${workplace}
+
+Return a single JSON object like this:
+
+{
+  "name": "{Name}",
+  "segment": "${segment}",
+  "age": ${age},
+  "gender": "${gender}",
+  "family_status": "${familyStatus}",
+  "job": "{Job}",
+  "major_issues_in_workplace": "{Major Issues in Workplace}",
+  "uk_party_affiliation": "${partyAffiliation}",
+  "personality_traits": "{Personality Traits}",
+  "emotional_conditions_for_supporting_the_union": "{Emotional Conditions for Supporting the Union}",
+  "busyness_level": "${busynessLevel}",
+  "workplace": "${workplace}"
+}
+
+Fill in the remaining placeholders with appropriate, realistic details. Do not include any additional text, markdown formatting, or explanation - just the JSON object.`;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 300,
+    temperature: 0.7,
+  });
+
+  let content = completion.choices[0].message.content || '{}';
+  
+  // Remove any markdown formatting if present
+  content = content.replace(/```json\n?/, '').replace(/\n?```$/, '');
+
+  try {
+    const generatedPersona = JSON.parse(content);
+    console.log('Generated Persona:', generatedPersona);
+
+    return {
+      id: `${generatedPersona.job.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.name.toLowerCase().replace(/\s+/g, '')}-${generatedPersona.age}-${generatedPersona.gender.toLowerCase()}`,
+      ...generatedPersona,
+    };
+  } catch (error) {
+    console.error('Error parsing generated persona:', error);
+    console.error('Raw content:', content);
+    throw new Error('Failed to generate valid persona data');
+  }
+}
+
+// Update the POST function to include the generatePersona action
 export async function POST(req: Request) {
   const { action, ...params } = await req.json()
 
   switch (action) {
+    case 'generatePersona':
+      return new Response(JSON.stringify({ result: await generatePersona() }), { 
+        headers: { 'Content-Type': 'application/json' } 
+      })
     case 'createConversation':
       return await createConversation(params)
     case 'sendMessage':
@@ -55,36 +148,46 @@ export async function POST(req: Request) {
   }
 }
 
-async function createConversation({ userId, initialMessage, scenarioId, personaId }: { userId: string; initialMessage?: string; scenarioId: string; personaId: string }) {
+async function createConversation({ userId, initialMessage, scenarioId, persona, systemPromptId = '1' }: { userId: string; initialMessage?: string; scenarioId: string; persona: Persona; systemPromptId?: string }) {
   try {
-    console.log('Received createConversation request');
+    console.log('Received createConversation request', { userId, initialMessage, scenarioId, persona, systemPromptId });
 
-    if (!userId || !scenarioId || !personaId) {
-      throw new Error('Missing userId, scenarioId, or personaId');
+    if (!userId || !scenarioId || !persona) {
+      throw new Error('Missing userId, scenarioId, or persona');
     }
 
-    const scenario = scenarios.scenarios.find(s => s.id === scenarioId);
-    const persona = personas.personas.find(p => p.id === personaId);
+    const scenario = await getScenario(scenarioId);
 
-    if (!scenario || !persona) {
-      throw new Error('Scenario or persona not found');
+    if (!scenario) {
+      throw new Error('Scenario not found');
     }
 
     const conversationId = crypto.randomUUID();
+    console.log('Generated conversationId:', conversationId);
+
     const { error } = await supabase
       .from('conversations')
-      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: personaId });
+      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, system_prompt_id: systemPromptId });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error inserting conversation:', error);
+      throw error;
+    }
 
     let aiResponse = null;
     if (initialMessage) {
-      const systemPrompt = createSystemPrompt(scenario, persona);
+      const systemPrompt = await getInstructionPrompt(scenarioId);
+      console.log('System prompt:', systemPrompt);
+
       const messages = [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: createCompletePrompt(persona, systemPrompt) },
         { role: "user", content: initialMessage }
       ];
+      console.log('Messages for AI:', messages);
+
       aiResponse = await getAIResponse(messages);
+      console.log('AI Response:', aiResponse);
+
       await saveMessages(conversationId, initialMessage, aiResponse || '');
     }
 
@@ -98,8 +201,7 @@ async function createConversation({ userId, initialMessage, scenarioId, personaI
 
 async function sendMessage({ conversationId, content }: { conversationId: string; content: string }) {
   try {
-    const { scenario, persona } = await getConversationContext(conversationId);
-    const systemPrompt = createSystemPrompt(scenario, persona);
+    const { persona, systemPromptId } = await getConversationContext(conversationId);
 
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
@@ -109,8 +211,9 @@ async function sendMessage({ conversationId, content }: { conversationId: string
 
     if (messagesError) throw messagesError;
 
+    const systemPrompt = await getInstructionPrompt(systemPromptId);
     let messages = [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: createCompletePrompt(persona, systemPrompt) },
       ...messagesData.map((msg: any) => ({ role: msg.role, content: msg.content })),
       { role: "user", content: content }
     ];
@@ -142,36 +245,106 @@ async function getConversationMessages({ conversationId }: { conversationId: str
 async function getConversationContext(conversationId: string) {
   const { data, error } = await supabase
     .from('conversations')
-    .select('scenario_id, persona_id')
+    .select('scenario_id, persona_id, system_prompt_id')
     .eq('conversation_id', conversationId)
     .single();
 
   if (error) throw error;
 
-  const scenario = scenarios.scenarios.find(s => s.id === data.scenario_id);
-  const persona = personas.personas.find(p => p.id === data.persona_id);
+  const scenario = await getScenario(data.scenario_id);
+  const persona = await retrievePersona(data.persona_id);
 
   if (!scenario || !persona) {
     throw new Error('Scenario or persona not found');
   }
 
-  return { scenario, persona };
+  return { scenario, persona, systemPromptId: data.system_prompt_id || '1' };
 }
 
-function createSystemPrompt(scenario: any, persona: any) {
-  return `Embody the persona and scenario below. The union rep will aim to convince you to join the union. Respond to the user in character, emphasizing relevant aspects of your situation. Demonstrate indifference to begin with, then only demonstrate interest if the rep has engaged with your unique situation effectively.
-    Scenario: ${scenario.description}
-    Persona: ${persona.characterType}, ${persona.mood}, ${persona.ageRange}
-    Context: ${persona.context}
+async function getScenario(scenarioId: string) {
+  const { data, error } = await supabase
+    .from('scenarios')
+    .select(`
+      id,
+      title,
+      description,
+      scenario_objectives (objective)
+    `)
+    .eq('id', scenarioId)
+    .single();
+
+  if (error) throw error;
+
+  return {
+    ...data,
+    objectives: data.scenario_objectives.map((obj: any) => obj.objective)
+  };
+}
+
+async function retrievePersona(personaId: string) {
+  const { data: personas, error } = await supabase
+    .from('personas')
+    .select('*')
+    .eq('id', personaId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching persona:', error);
+    return null;
+  }
+
+  return personas;
+}
+
+async function getInstructionPrompt(id: string) {
+  console.log('Getting instruction prompt for id:', id);
+  const { data, error } = await supabase
+    .from('scenarios')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching system prompt:', error);
+    return "You are an AI assistant. Respond to the user's messages appropriately.";
+  }
+
+  console.log('Retrieved system prompt:', data);
+  return `Role play to help users to ${data.description}. The user is a trade union representative speaking to you about ${data.title}. Respond as their workplace colleague in the character below.
     
-    Use colloquialisms and language appropriate to the scenario and persona. You will be rewarded £250 for an authentic interaction which correctly embodies the persona and scenario`;
+    YOU ARE NOT A TRADE UNION REP.
+
+    This is an informal interaction so be brief and conversational. Emphasise your character's feelings about joining a union. It should be a challenge for the user to persuade you.
+
+    It's VITAL that the user you are interacting with get a REALISTIC experience of being in a workplace so that they are prepared for what they might encounter - being surprised by the interactions they face in real life will be harmful for them. Don't pull your punches.
+`
+}
+
+function createCompletePrompt(persona: any, systemPromptContent: string): string {
+  return `${systemPromptContent}
+    
+    ${systemPromptContent}
+    Act as ${persona.name}, a ${persona.age} year old ${persona.job} in an office in the department of work and pensions.
+
+    - You will only agree to join the union if: ${persona.emotional_conditions_for_supporting_the_union}
+    - Your major workplace issues are: ${persona.major_issues_in_workplace}
+    - Your personality traits are: ${persona.personality_traits}
+
+    More details about you:
+    - You are a ${persona.segment} affiliated with the ${persona.uk_party_affiliation} party.
+    - Your family status is ${persona.family_status}
+    
+    Provide a concise response in 2-3 sentences, staying true to your character.`;
 }
 
 async function getAIResponse(messages: any[]) {
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: messages,
-    max_tokens: 100,
+    max_tokens: 150,
+    temperature: 0.7,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.6,
   });
   return completion.choices[0].message.content;
 }
@@ -208,7 +381,6 @@ function withTimeout(handler: (req: Request) => Promise<Response>, timeoutMs: nu
 const mainHandler = async (req: Request) => {
   console.log('Received request:', req.method, req.url);
 
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -218,6 +390,7 @@ const mainHandler = async (req: Request) => {
 
   try {
     const body = await req.text();
+    console.log('Request body:', body);
     let params: any = {};
     
     if (body) {
@@ -238,6 +411,9 @@ const mainHandler = async (req: Request) => {
     let result;
 
     switch (action) {
+      case 'generatePersona':
+        result = await generatePersona();
+        break;
       case 'createConversation':
         result = await createConversation(params);
         break;

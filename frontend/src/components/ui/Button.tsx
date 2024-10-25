@@ -8,10 +8,12 @@ import React from "react";
 interface Props {
   variant: "default" | "options" | "destructive" | "progress";
   className?: string;
-  text: string;
+  text?: string;
   onClick: () => void;
   icon?: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 export const Button = ({
@@ -21,6 +23,8 @@ export const Button = ({
   onClick,
   icon,
   size = "md",
+  disabled = false,
+  children,
 }: Props): JSX.Element => {
   const baseClasses = "inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium";
   
@@ -41,8 +45,9 @@ export const Button = ({
     <button
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className || ''}`}
       onClick={onClick}
+      disabled={disabled}
     >
-      {text}
+      {children || text}
       {icon}
     </button>
   );

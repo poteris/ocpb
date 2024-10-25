@@ -5,6 +5,7 @@ import { createConversation, sendMessage } from '@/utils/api';
 import { promptMap } from '@/utils/promptMap';
 import { debounce } from 'lodash';
 import { useScenario } from '@/context/ScenarioContext';
+import { Persona } from '@/utils/api';  // Import the Persona type
 
 const STORAGE_KEY = 'chatSessions';
 
@@ -17,7 +18,8 @@ export const useChat = () => {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
   const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] = useState(false);
-  const { scenarioInfo } = useScenario();
+  const { scenarioInfo, persona } = useScenario();  // Get persona from useScenario
+  const [systemPromptId, setSystemPromptId] = useState<string | null>(null);
 
   const saveSessionToStorage = useCallback((session: ChatSession) => {
     const sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -93,10 +95,14 @@ export const useChat = () => {
         const firstMessageParam = initialMessage || searchParams.get('firstMessage');
         const messageToUse = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
         const scenarioId = searchParams.get('scenarioId') || scenarioInfo?.id;
-        const personaId = searchParams.get('personaId');
+        const systemPromptIdParam = searchParams.get('systemPromptId');
 
-        if (!scenarioId || !personaId) {
-          throw new Error('Missing scenarioId or personaId');
+        if (!scenarioId || !persona) {
+          throw new Error('Missing scenarioId or persona');
+        }
+
+        if (systemPromptIdParam) {
+          setSystemPromptId(systemPromptIdParam);
         }
 
         if (sessionId) {
@@ -117,7 +123,7 @@ export const useChat = () => {
           setCurrentSession(newSession);
 
           if (!newSession.conversationId) {
-            const conversationResponse = await createConversation(messageToUse || '', scenarioId, personaId);
+            const conversationResponse = await createConversation(messageToUse || '', scenarioId, persona, systemPromptIdParam || '1');
             if (!conversationResponse || !conversationResponse.id) {
               throw new Error('Failed to create conversation');
             }
@@ -148,7 +154,7 @@ export const useChat = () => {
     }, 300);
 
     debouncedInitialize();
-  }, [searchParams, saveSessionToStorage, sessionId, scenarioInfo]);
+  }, [searchParams, saveSessionToStorage, sessionId, scenarioInfo, persona]);
 
   return {
     currentSession,
@@ -159,5 +165,6 @@ export const useChat = () => {
     handleSendMessage,
     initializeSession,
     isWaitingForInitialResponse,
+    systemPromptId,
   };
 };

@@ -53,18 +53,61 @@ async function invokeFunction(functionName: string, body: FunctionBody) {
   }
 }
 
-export async function createAssistant(name: string, description: string, model: string) {
-  return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
+export interface Persona {
+  id: string;
+  name: string;
+  segment: string;
+  age: string;
+  gender: string;
+  family_status: string;
+  job: string;
+  major_issues_in_workplace: string;
+  uk_party_affiliation: string;
+  personality_traits: string;
+  emotional_conditions_for_supporting_the_union: string;
+  busyness_level: string;
+  workplace: string;
 }
 
-export async function createConversation(initialMessage: string, scenarioId: string, personaId: string) {
+export async function generatePersona(): Promise<Persona | null> {
+  try {
+    console.log('Generating persona');
+    const response = await invokeFunction('assistant', {
+      action: 'generatePersona',
+    });
+
+    if (response && response.result) {
+      console.log('Persona generated:', response.result);
+      return response.result;
+    } else {
+      console.error('Unexpected response format:', response);
+      throw new Error('Unexpected response format from server');
+    }
+  } catch (error) {
+    console.error('Error fetching persona:', error);
+    return null;
+  }
+}
+
+export async function storePersona(persona: Persona): Promise<void> {
+  try {
+    const { error } = await supabase.from('personas').upsert(persona, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error storing persona:', error);
+    throw error;
+  }
+}
+
+export async function createConversation(initialMessage: string, scenarioId: string, persona: Persona, systemPromptId?: string) {
   const userId = await getUserId();
   const response = await invokeFunction('assistant', { 
     action: 'createConversation', 
     userId, 
     initialMessage, 
     scenarioId, 
-    personaId 
+    persona,
+    systemPromptId
   });
   return response.result;
 }
@@ -77,14 +120,6 @@ export async function sendMessage(conversationId: string, content: string) {
     console.error('Unexpected response format:', response);
     throw new Error('Unexpected response format from server');
   }
-}
-
-export async function runAssistant(threadId: string) {
-  return invokeFunction('assistant', { action: 'runAssistant', threadId })
-}
-
-export async function getThreadMessages(threadId: string) {
-  return invokeFunction('assistant', { action: 'getThreadMessages', threadId })
 }
 
 // Implement this function to get the current user's ID

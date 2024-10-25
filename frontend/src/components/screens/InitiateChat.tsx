@@ -1,40 +1,104 @@
 'use client';
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import { Header } from '../Header';
 import { Button } from '../ui';
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useScenario } from '@/context/ScenarioContext';
 import { ChatModals } from '../ChatModals';
+import { storePersona, createConversation } from '@/utils/api';
+import { Persona } from '@/utils/api';  // Import the Persona type
 
-const InitiateChatContent: React.FC = () => {
+interface InitiateChatContentProps {
+  systemPromptId?: string;
+}
+
+const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptId: defaultSystemPromptId }) => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [customSystemPromptId, setCustomSystemPromptId] = useState(defaultSystemPromptId || "1");
   const router = useRouter();
-  const { scenarioInfo, personaInfo } = useScenario();
+  const { scenarioInfo, persona, setPersona } = useScenario();
 
-  const handlePromptSelect = (prompt: string) => {
-    router.push(`/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(prompt)}`);
+  // New array of fixed prompts
+  const fixedPrompts = [
+    "Hi, can I interrupt you for a sec?",
+    "Hey, how are you doing?",
+    "Hey mate, sorry to bother you - how's it going?",
+    "What are you up to?",
+    "Hi!",
+    "Heya mate - what's new?"
+  ];
+
+  // Function to randomly select 3 prompts
+  const getRandomPrompts = () => {
+    const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
   };
 
-  const handleStartChat = () => {
-    if (inputMessage.trim()) {
-      router.push(`/chat-screen?scenarioId=${scenarioInfo?.id || ''}&personaId=${personaInfo?.id || ''}&firstMessage=${encodeURIComponent(inputMessage.trim())}`);
+  // State to store the randomly selected prompts
+  const [selectedPrompts] = useState(getRandomPrompts());
+
+  useEffect(() => {
+    const storedPersona = localStorage.getItem('selectedPersona');
+    if (storedPersona) {
+      const parsedPersona: Persona = JSON.parse(storedPersona);
+      setPersona(parsedPersona);
+    }
+  }, [setPersona]);
+
+  const handlePromptSelect = async (prompt: string) => {
+    console.log('Starting chat with inputMessage:', inputMessage.trim());
+    if (persona) {
+      try {
+        console.log('Prompt, persona, scenarioId, customSystemPromptId:', prompt, persona, scenarioInfo?.id, customSystemPromptId);
+        const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, customSystemPromptId);
+        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
+        router.push(url);
+      } catch (error) {
+        console.error('Error starting conversation:', error);
+      }
+    }
+  };
+
+  const handleStartChat = async () => {
+
+    if (inputMessage.trim() && persona) {
+      try {
+        const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, customSystemPromptId);
+        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
+        router.push(url);
+
+        // Clear the stored persona from localStorage
+        localStorage.removeItem('selectedPersona');
+      } catch (error) {
+        console.error('Error starting conversation:', error);
+      }
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <Header 
-        title={scenarioInfo?.title || "Scenario"} 
-        variant="default" 
-        showInfoIcon={true}
-        onInfoClick={() => setShowInfoPopover(true)}
-      />
-      <div className="flex flex-col h-full max-w-md mx-auto">
-        <div className="flex-grow flex flex-col justify-between p-4">
-          <div className="flex flex-col items-center">
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+      <div className="flex-shrink-0">
+        <Header 
+          title={scenarioInfo?.title || "Scenario"} 
+          variant="default" 
+          showInfoIcon={true}
+          onInfoClick={() => setShowInfoPopover(true)}
+        />
+        {defaultSystemPromptId && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+            <p className="font-bold">Using custom system prompt</p>
+            <p>System Prompt ID: {defaultSystemPromptId}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-grow overflow-y-auto">
+        <div className="max-w-md mx-auto p-4">
+          <div className="flex flex-col items-center mb-4">
             <Image
               width={150}
               height={150}
@@ -48,7 +112,7 @@ const InitiateChatContent: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col gap-2 mb-4">
-            {scenarioInfo?.prompts?.map((prompt, index) => (
+            {selectedPrompts.map((prompt, index) => (
               <Button
                 key={index}
                 variant="options"
@@ -58,24 +122,54 @@ const InitiateChatContent: React.FC = () => {
               />
             ))}
           </div>
+          
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-pcsprimary-04 dark:text-pcsprimary-02">
+              <button 
+                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                className="underline focus:outline-none"
+              >
+                {showAdvancedOptions ? "Hide Advanced Options" : "Show Advanced Options"}
+              </button>
+            </div>
+            
+            {showAdvancedOptions && (
+              <div className="mt-2">
+                <label className="block text-xs text-pcsprimary-04 dark:text-pcsprimary-02 mb-1">
+                  System Prompt ID:
+                </label>
+                <input
+                  type="text"
+                  value={customSystemPromptId}
+                  onChange={(e) => setCustomSystemPromptId(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-xs p-2 rounded border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
+                  placeholder="Enter system prompt ID (default: 1)"
+                />
+              </div>
+            )}
+          </div>
         </div>
+      </div>
 
-        <div className="bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4 flex items-center">
-          <div className="flex-grow mr-2">
-            <input
-              className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-xs p-2 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
-              placeholder="Or type your own union-related question..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
+      <div className="flex-shrink-0 bg-pcsprimary02-light dark:bg-pcsprimary-05 p-4">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center mb-2">
+            <div className="flex-grow mr-2">
+              <input
+                className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-pcsprimary-02 text-xs p-2 rounded-full border border-pcsprimary-05 dark:border-pcsprimary-02 focus:outline-none"
+                placeholder="Or type your own union-related question..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleStartChat()}
+              />
+            </div>
+            <Button
+              variant="progress"
+              text="Start Training"
+              onClick={handleStartChat}
+              className="ml-2 text-sm py-1 px-2"
             />
           </div>
-          <Button
-            variant="progress"
-            text="Start Training"
-            onClick={handleStartChat}
-            className="ml-2 text-sm py-1 px-2"
-          />
         </div>
       </div>
 
@@ -83,7 +177,7 @@ const InitiateChatContent: React.FC = () => {
         showInfoPopover={showInfoPopover}
         setShowInfoPopover={setShowInfoPopover}
         scenarioInfo={scenarioInfo}
-        personaInfo={personaInfo}
+        persona={persona}
         showEndChatModal={false}
         setShowEndChatModal={() => {}}
         confirmEndChat={() => {}}
@@ -96,9 +190,12 @@ const InitiateChatContent: React.FC = () => {
 };
 
 export const InitiateChat: React.FC = () => {
+  const searchParams = useSearchParams();
+  const systemPromptId = searchParams.get('systemPromptId');
+
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <InitiateChatContent />
+      <InitiateChatContent systemPromptId={systemPromptId || undefined} />
     </Suspense>
   );
 };
