@@ -1,4 +1,4 @@
-import { AdminSystemPrompts } from '@/components/screens/AdminSystemPrompts';
+import { AdminSystemPrompts } from '@/components/screens/SiteAdmin';
 
 export default function AdminSystemPromptsPage() {
   return <AdminSystemPrompts />;

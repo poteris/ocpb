@@ -142,3 +142,22 @@ function getOrCreateTemporaryUserId() {
   
   return temporaryUserId;
 }
+
+export async function getFeedback(conversationId: string) {
+  try {
+    const response = await invokeFunction('assistant', {
+      action: 'getFeedback',
+      conversationId,
+    });
+
+    if (response && response.result) {
+      return response.result;
+    } else {
+      console.error('Unexpected response format:', response);
+      throw new Error('Unexpected response format from server');
+    }
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    throw error;
+  }
+}

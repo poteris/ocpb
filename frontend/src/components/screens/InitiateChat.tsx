@@ -174,10 +174,10 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         persona={persona}
         showEndChatModal={false}
         setShowEndChatModal={() => {}}
-        confirmEndChat={() => {}}
         showFeedbackPopover={false}
         setShowFeedbackPopover={() => {}}
         handleFeedbackClose={() => {}}
+        conversationId={''}
       />
     </div>
   );

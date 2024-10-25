@@ -1,17 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, InfoPopover, Button } from '@/components/ui';
 import { FeedbackPopover } from './screens/FeedbackScreen';
 import { ScenarioInfo } from '@/context/ScenarioContext';
 import { Persona } from '@/utils/api';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
+import { getFeedback } from '@/utils/api';
+import { Skeleton } from '@/components/ui';
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
   setShowEndChatModal: (show: boolean) => void;
-  confirmEndChat: () => void;
   showInfoPopover: boolean;
   setShowInfoPopover: (show: boolean) => void;
   showFeedbackPopover: boolean;
@@ -19,19 +20,24 @@ interface ChatModalsProps {
   handleFeedbackClose: () => void;
   scenarioInfo: ScenarioInfo | null;
   persona: Persona | null;
+  conversationId: string | null;
 }
 
 export const ChatModals: React.FC<ChatModalsProps> = ({
   showEndChatModal,
   setShowEndChatModal,
-  confirmEndChat,
   showInfoPopover,
   setShowInfoPopover,
   showFeedbackPopover,
   setShowFeedbackPopover,
+  handleFeedbackClose,
   scenarioInfo,
-  persona
+  persona,
+  conversationId
 }) => {
+  const [feedbackData, setFeedbackData] = useState<any>(null);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+
   const renderPersonaDetails = (persona: Persona) => {
     return `
 ### Persona Details
@@ -54,6 +60,46 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
     return objectives.map(objective => `- ${objective}`).join('\n');
   };
 
+  const handleEndChat = async () => {
+    if (!conversationId) {
+      console.error('No conversation ID available');
+      return;
+    }
+
+    setShowEndChatModal(false);
+    setIsLoadingFeedback(true);
+    setShowFeedbackPopover(true);
+
+    try {
+      const feedback = await getFeedback(conversationId);
+      setFeedbackData(feedback);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      // Handle error (e.g., show an error message to the user)
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  };
+
+  const renderFeedbackSkeleton = () => (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-3/4" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-4 w-4/5" />
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-1/2" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Modal
@@ -63,7 +109,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         footer={
           <div className="flex justify-end space-x-4">
             <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
-            <Button variant="destructive" text="End Chat" onClick={confirmEndChat} />
+            <Button variant="destructive" text="End Chat" onClick={handleEndChat} />
           </div>
         }
       >
@@ -92,9 +138,12 @@ ${persona ? renderPersonaDetails(persona) : ''}
 
       {showFeedbackPopover && (
         <FeedbackPopover
-          onClose={() => setShowFeedbackPopover(false)}
-          score={3}
-        />
+          onClose={handleFeedbackClose}
+          score={feedbackData?.score || 0}
+          analysisData={feedbackData}
+        >
+          {isLoadingFeedback ? renderFeedbackSkeleton() : null}
+        </FeedbackPopover>
       )}
     </>
   );

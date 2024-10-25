@@ -126,6 +126,125 @@ Fill in the remaining placeholders with appropriate, realistic details. Do not i
   }
 }
 
+// Add this new function to handle feedback generation
+async function generateFeedback(conversationId: string) {
+  try {
+    // Fetch the conversation and its related data
+    const { data: conversation, error: conversationError } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        scenario:scenarios(*),
+        persona:personas(*)
+      `)
+      .eq('conversation_id', conversationId)
+      .single();
+
+    if (conversationError) throw conversationError;
+
+    const { data: messages, error: messagesError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) throw messagesError;
+
+    // Fetch the feedback prompt from feedback_prompts
+    const { data: feedbackPromptData, error: feedbackPromptError } = await supabase
+      .from('feedback_prompts')
+      .select('content')
+      .single();
+
+    if (feedbackPromptError) throw feedbackPromptError;
+
+    if (!feedbackPromptData) {
+      throw new Error('Feedback prompt not found in feedback_prompts');
+    }
+
+    // Construct the conversation history
+    const conversationHistory = messages.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n');
+
+    // Construct the prompt for feedback
+    const feedbackPrompt = `
+${feedbackPromptData.content}
+
+Scenario: ${conversation.scenario.title}
+${conversation.scenario.description}
+
+Persona: ${conversation.persona.name}, ${conversation.persona.age} years old, ${conversation.persona.job}
+Personality: ${conversation.persona.personality_traits}
+Union Support Conditions: ${conversation.persona.emotional_conditions_for_supporting_the_union}
+
+Conversation:
+${conversationHistory}
+
+Provide feedback based on the conversation above.
+`;
+
+    // Send the completion request to OpenAI with function calling
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: feedbackPrompt }],
+      functions: [
+        {
+          name: "generate_feedback",
+          description: "Generate feedback for the conversation",
+          parameters: {
+            type: "object",
+            properties: {
+              score: {
+                type: "number",
+                description: "Score between 1 and 5"
+              },
+              summary: {
+                type: "string",
+                description: "Brief summary of overall performance"
+              },
+              strengths: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    description: { type: "string" }
+                  }
+                },
+                description: "List of strengths identified in the conversation"
+              },
+              areas_for_improvement: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    description: { type: "string" }
+                  }
+                },
+                description: "List of areas for improvement identified in the conversation"
+              }
+            },
+            required: ["score", "summary", "strengths", "areas_for_improvement"]
+          }
+        }
+      ],
+      function_call: { name: "generate_feedback" }
+    });
+
+    const functionCall = completion.choices[0].message.function_call;
+    if (!functionCall || !functionCall.arguments) {
+      throw new Error('No function call or arguments received from OpenAI');
+    }
+
+    const feedbackData = JSON.parse(functionCall.arguments);
+
+    return feedbackData;
+  } catch (error) {
+    console.error('Error generating feedback:', error);
+    throw error;
+  }
+}
+
 // Update the POST function to include the generatePersona action
 export async function POST(req: Request) {
   const { action, ...params } = await req.json()
@@ -141,6 +260,10 @@ export async function POST(req: Request) {
       return await sendMessage(params)
     case 'getConversationMessages':
       return await getConversationMessages(params)
+    case 'getFeedback':
+      return new Response(JSON.stringify({ result: await generateFeedback(params.conversationId) }), { 
+        headers: { 'Content-Type': 'application/json' } 
+      })
     default:
       return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 })
   }
@@ -163,7 +286,7 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
 
     const { error } = await supabase
       .from('conversations')
-      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, system_prompt_id: systemPromptId });
+      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, feedback_prompt_id: 1 });
 
     if (error) {
       console.error('Error inserting conversation:', error);
@@ -191,9 +314,9 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
   }
 }
 
-async function sendMessage({ conversationId, content }: { conversationId: string; content: string }) {
+async function sendMessage({ conversationId, content, scenarioId }: { conversationId: string; content: string; scenarioId?: string }) {
   try {
-    const { persona, systemPromptId } = await getConversationContext(conversationId);
+    const { persona } = await getConversationContext(conversationId);
 
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
@@ -203,7 +326,7 @@ async function sendMessage({ conversationId, content }: { conversationId: string
 
     if (messagesError) throw messagesError;
 
-    const systemPrompt = await getInstructionPrompt(systemPromptId);
+    const systemPrompt = await getInstructionPrompt(scenarioId || '1');
     let messages = [
       { role: "system", content: createCompletePrompt(persona, systemPrompt) },
       ...messagesData.map((msg: any) => ({ role: msg.role, content: msg.content })),
@@ -237,7 +360,7 @@ async function getConversationMessages({ conversationId }: { conversationId: str
 async function getConversationContext(conversationId: string) {
   const { data, error } = await supabase
     .from('conversations')
-    .select('scenario_id, persona_id, system_prompt_id')
+    .select('scenario_id, persona_id')
     .eq('conversation_id', conversationId)
     .single();
 
@@ -250,7 +373,7 @@ async function getConversationContext(conversationId: string) {
     throw new Error('Scenario or persona not found');
   }
 
-  return { scenario, persona, systemPromptId: data.system_prompt_id || '1' };
+  return { scenario, persona };
 }
 
 async function getScenario(scenarioId: string) {
@@ -305,12 +428,10 @@ async function getInstructionPrompt(id: string) {
   }
 
   return `Role play to help users to ${data.description}. The user is a trade union representative speaking to you about ${data.title}. Respond as their workplace colleague in the character below.
-    
-    YOU ARE NOT A TRADE UNION REP.
 
-    This is an informal interaction so be brief and conversational. Emphasise your character's feelings about joining a union. It should be a challenge for the user to persuade you.
+    This is an informal interaction. Keep your responses brief. Emphasise your character's feelings about joining a union. It should be a challenge for the user to persuade you.
 
-    It's VITAL that the user you are interacting with get a REALISTIC experience of being in a workplace so that they are prepared for what they might encounter - being surprised by the interactions they face in real life will be harmful for them. Don't pull your punches.
+    It's VITAL that the user has a REALISTIC experience of being in a workplace to adequately prepare them for what they might encounter. Failure to train them for the difficult interactions they will face in real life will be harmful for them.
 `
 }
 
@@ -412,6 +533,9 @@ const mainHandler = async (req: Request) => {
         break;
       case 'getConversationMessages':
         result = await getConversationMessages(params);
+        break;
+      case 'getFeedback':
+        result = await generateFeedback(params.conversationId);
         break;
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {

@@ -41,11 +41,6 @@ const ChatScreenContent: React.FC = () => {
 
   const handleEndChat = () => setShowEndChatModal(true);
 
-  const confirmEndChat = () => {
-    setShowEndChatModal(false);
-    setShowFeedbackPopover(true);
-  };
-
   const handleFeedbackClose = () => {
     setShowFeedbackPopover(false);
     router.push('/');
@@ -101,7 +96,6 @@ const ChatScreenContent: React.FC = () => {
       <ChatModals
         showEndChatModal={showEndChatModal}
         setShowEndChatModal={setShowEndChatModal}
-        confirmEndChat={confirmEndChat}
         showInfoPopover={showInfoPopover}
         setShowInfoPopover={setShowInfoPopover}
         showFeedbackPopover={showFeedbackPopover}
@@ -109,6 +103,7 @@ const ChatScreenContent: React.FC = () => {
         handleFeedbackClose={handleFeedbackClose}
         scenarioInfo={scenarioInfo}
         persona={persona}
+        conversationId={conversationId}
       />
     </div>
   );
