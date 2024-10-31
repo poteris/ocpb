@@ -38,7 +38,8 @@ const AVAILABLE_VARIABLES = {
     { name: 'personality_traits', description: 'Personality traits' },
     { name: 'segment', description: 'Demographic segment' },
     { name: 'uk_party_affiliation', description: 'Political affiliation' },
-    { name: 'family_status', description: 'Family status' }
+    { name: 'family_status', description: 'Family status' },
+    { name: 'busyness_level', description: 'Busyness level' }
   ]
 };
 
@@ -48,20 +49,23 @@ const renderVariableStatus = (content: string, variables: Array<{ name: string, 
     {variables.map(({ name, description }) => {
       const variable = `{{${name}}}`;
       const isUsed = content.includes(variable);
+      const isLongVariable = name.length > 20;
       
       return (
-        <div key={name} className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
+        <div key={name} className={`flex ${isLongVariable ? 'items-start' : 'items-center'} space-x-2`}>
+          <div className={`w-2 h-2 rounded-full ${isLongVariable ? 'mt-1.5' : ''} flex-shrink-0 ${
             isUsed ? 'bg-green-500' : 'bg-gray-300'
           }`} />
-          <code className={`text-sm ${
-            isUsed ? 'text-green-700 dark:text-green-400' : 'text-gray-500'
-          }`}>
-            {variable}
-          </code>
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            - {description}
-          </span>
+          <div className={`${isLongVariable ? 'flex-1 min-w-0' : ''}`}>
+            <code className={`text-sm ${isLongVariable ? 'break-all' : ''} ${
+              isUsed ? 'text-green-700 dark:text-green-400' : 'text-gray-500'
+            }`}>
+              {variable}
+            </code>
+            <span className={`text-sm text-gray-600 dark:text-gray-400 ${isLongVariable ? 'block' : 'ml-2'}`}>
+              - {description}
+            </span>
+          </div>
         </div>
       );
     })}

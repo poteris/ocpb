@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui';
 
@@ -45,6 +45,12 @@ export const MessageListSkeleton: React.FC<MessageListSkeletonProps> = ({ messag
 };
 
 export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading, isWaitingForInitialResponse }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading, isWaitingForInitialResponse]);
+
   if (messages.length === 0 && (isLoading || isWaitingForInitialResponse)) {
     return <MessageListSkeleton />;
   }
@@ -114,6 +120,7 @@ export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading, is
             </div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );

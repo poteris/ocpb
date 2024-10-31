@@ -17,7 +17,7 @@ Did poorly:
 Bad thing one
 Bad thing two
 
-Include specific examples from the provided transcript conversation to better help. You can also give them a score out of 10 stars. The more stars the better. Use emojis.
+Include specific examples from the provided transcript conversation to better help. You can also give them a score out of 5 stars. The more stars the better. Use emojis.
 
 Speak directly to the trainee, using the second person pronoun when providing feedback.
 
