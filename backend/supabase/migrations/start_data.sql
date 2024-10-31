@@ -91,55 +91,48 @@ Rep:  Great. I''ll leave this form for you to complete and I''ll be back in an h
 Provide the feedback in markdown format - this will be processed before being shown to the user. DO NOT INCLUDE ANY EXTRA TEXT - just the feedback in markdown format with NOTHING before or after it.
 ', '2024-10-25 14:29:00.813861+00', '2024-10-25 14:29:00.813861+00');
 
-INSERT INTO "public"."scenarios" ("id", "title", "description", "created_at", "updated_at") VALUES ('member-recruitment', 'Joining the Union', 'Get better at recruiting people in trade union membership in the workplace', '2024-10-23 14:51:56.572437+00', '2024-10-23 14:51:56.572437+00');
+INSERT INTO "public"."scenarios" ("id", "title", "description", "context", "created_at", "updated_at") VALUES ('member-recruitment', 'Joining the Union', 'Get better at recruiting people in trade union membership in the workplace', 'The context should be self-explanatory, comrade.', '2024-10-23 14:51:56.572437+00', '2024-10-23 14:51:56.572437+00');
 
-INSERT INTO "public"."scenario_prompts" ("id", "scenario_id", "content", "created_at", "updated_at") VALUES ('1', 'member-recruitment', 'Role play to help users to {{description}}. The user is a trade union representative speaking to you about {{title}}. Respond as their workplace colleague in the character below.
+INSERT INTO "public"."system_prompts" ("id", "content", "created_at", "updated_at") VALUES ('1', 'Role play to help users to {{description}}. The user is a trade union representative speaking to you about {{title}}. Respond as their workplace colleague in the character below.
 
-    This is an informal interaction. Keep your responses brief. Emphasise your character''s feelings about joining a union. It should be a challenge for the user to persuade you.
+This is an informal interaction. Keep your responses brief. Emphasise your character''s feelings about joining a union. It should be a challenge for the user to persuade you.
 
-    It''s VITAL that the user has a REALISTIC experience of being in a workplace to adequately prepare them for what they might encounter. Failure to train them for the difficult interactions they will face in real life will be harmful for them.', '2024-10-23 14:51:56.572437+00', '2024-10-23 14:51:56.572437+00');
+It''s VITAL that the user has a REALISTIC experience of being in a workplace to adequately prepare them for what they might encounter. Failure to train them for the difficult interactions they will face in real life will be harmful for them.
+
+###Persona###
+Act as {{name}}, a {{age}} year old {{job}} in {{workplace}}.
+
+- Your emotional conditions for supporting the union are: {{emotional_conditions_for_supporting_the_union}}
+- Your major workplace issues are: {{major_issues_in_workplace}}
+- Your personality traits are: {{personality_traits}}
+
+More details about you:
+- You are a {{segment}} affiliated with the {{uk_party_affiliation}} party.
+- Your family status is {{family_status}}
+    
+Provide a concise response in 1-3 short sentences, staying true to your character.', '2024-10-23 14:51:56.572437+00', '2024-10-23 14:51:56.572437+00');
 
 -- First, let's insert a default persona if it doesn't exist
 INSERT INTO "public"."personas" ("id", "name", "segment", "age", "gender", "family_status", "job", "major_issues_in_workplace", "uk_party_affiliation", "personality_traits", "emotional_conditions_for_supporting_the_union", "busyness_level", "workplace")
 VALUES ('default', 'Default Persona', 'Default', 0, 'Any', 'Any', 'Any', 'Any', 'Any', 'Any', 'Any', 'medium', 'Any')
 ON CONFLICT (id) DO NOTHING;
 
--- Now, let's insert the persona prompt
-INSERT INTO "public"."persona_prompts" ("id", "persona_id", "content", "created_at", "updated_at")
-VALUES (
-    '1',
-    'default',
-    'Act as {{name}}, a {{age}} year old {{job}} in {{workplace}}.
-
-    - Your emotional conditions for supporting the union are: {{emotional_conditions_for_supporting_the_union}}
-    - Your major workplace issues are: {{major_issues_in_workplace}}
-    - Your personality traits are: {{personality_traits}}
-
-    More details about you:
-    - You are a {{segment}} affiliated with the {{uk_party_affiliation}} party.
-    - Your family status is {{family_status}}
-    
-    Provide a concise response in 1-3 short sentences, staying true to your character.',
-    '2024-10-25 14:29:00.813861+00',
-    '2024-10-25 14:29:00.813861+00'
-);
-
 INSERT INTO "public"."scenario_objectives" ("id", "scenario_id", "objective") VALUES 
-('1', 'member-recruitment', '## Practice Active Listening
+('1', 'member-recruitment', '>Practice Active Listening
 
 - Focus on asking open-ended questions about the colleague''s specific workplace experiences and concerns
 - Reflect back what you hear to show understanding
 - Allow silences and give them space to fully express their thoughts
 - Build on what they share rather than jumping to pre-prepared talking points'), 
 
-('2', 'member-recruitment', '## Find Personal Connection Points
+('2', 'member-recruitment', '>Find Personal Connection Points
 
 - Look for opportunities to relate to their situation authentically
 - Share brief relevant examples of how collective action helped address similar issues
 - Acknowledge and validate their concerns about management reactions
 - Frame union membership in terms of their expressed needs and interests'), 
 
-('3', 'member-recruitment', '## Guide Don''t Push
+('3', 'member-recruitment', '>Guide Don''t Push
 
 - Let the conversation flow naturally from their concerns to collective solutions
 - Wait for appropriate moments to suggest union membership as a way to address issues

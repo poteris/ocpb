@@ -103,7 +103,6 @@ export async function createConversation(
   persona: Persona, 
   promptId?: number
 ): Promise<{ id: string; aiResponse: string }> {
-  console.log(promptId)
   const userId = await getUserId();
   const response = await invokeFunction('assistant', { 
     action: 'createConversation', 
@@ -113,6 +112,11 @@ export async function createConversation(
     persona,
     promptId
   });
+  
+  if (!response?.result?.id || !response?.result?.aiResponse) {
+    throw new Error('Invalid response format from server');
+  }
+  
   return response.result;
 }
 

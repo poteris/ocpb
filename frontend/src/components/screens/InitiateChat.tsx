@@ -97,14 +97,14 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   }, []);
 
   const initiateChat = async (message: string) => {
-    if (isInitiatingChat || !persona) return; // Prevent multiple initiations
+    if (isInitiatingChat || !persona) return;
     
     try {
       setIsInitiatingChat(true);
       setIsExiting(true);
       setIsNavigatingToChat(true);
       
-      const [_, { id: conversationId }] = await Promise.all([
+      const [_, conversationResponse] = await Promise.all([
         storePersona(persona),
         createConversation(
           message, 
@@ -114,7 +114,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         )
       ]);
       
-      const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(message)}`;
+      const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(message)}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
       router.push(url);
       localStorage.removeItem('selectedPersona');
     } catch (error) {

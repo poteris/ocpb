@@ -1,1 +1,0 @@
-INSERT INTO "public"."scenarios" ("id", "title", "description", "created_at", "updated_at") VALUES ('member-recruitment', 'Joining the Union', 'Get better at recruiting people in trade union membership in the workplace', '2024-10-23 14:51:56.572437+00', '2024-10-23 14:51:56.572437+00');

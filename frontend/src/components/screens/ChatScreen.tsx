@@ -73,6 +73,8 @@ const ChatScreenContent: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
+    if (!isInitializing) return;
+    
     const initialize = async () => {
       try {
         await initializeSession();
@@ -80,8 +82,9 @@ const ChatScreenContent: React.FC = () => {
         setTimeout(() => setIsInitializing(false), 500);
       }
     };
+
     initialize();
-  }, [initializeSession]);
+  }, [initializeSession, isInitializing]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
