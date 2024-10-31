@@ -9,13 +9,22 @@ export const markdownStyles: Partial<Components> = {
   ul: ({ children, className }) => {
     if (className === 'objectives-list') {
       return (
-        <ul className="space-y-2 mb-4">
+        <ul className="space-y-4 mb-4">
           {React.Children.map(children, (child, index) => (
-            <li className="flex items-start">
-              <span className="inline-flex items-center justify-center w-6 h-6 mr-2 text-sm font-semibold text-white bg-pcsprimary-03 dark:bg-pcsprimary-02 rounded-full">
-                {index + 1}
-              </span>
-              <span className="text-pcsprimary-04 dark:text-gray-300">{child}</span>
+            <li className="flex flex-col space-y-2">
+              <div className="flex items-start">
+                <span className="inline-flex items-center justify-center w-6 h-6 mr-2 text-sm font-semibold text-white bg-pcsprimary-03 dark:bg-pcsprimary-02 rounded-full">
+                  {index + 1}
+                </span>
+                <span className="text-pcsprimary-04 dark:text-gray-300 font-semibold">{child}</span>
+              </div>
+              {React.isValidElement(child) && child.props.children?.props?.children && (
+                <ul className="ml-8 space-y-1 list-disc">
+                  {child.props.children.props.children.map((subItem: string, subIndex: number) => (
+                    <li key={subIndex} className="text-pcsprimary-04 dark:text-gray-300">{subItem}</li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
@@ -23,6 +32,11 @@ export const markdownStyles: Partial<Components> = {
     }
     return <ul className="list-disc list-inside mb-4 text-pcsprimary-04 dark:text-gray-300">{children}</ul>;
   },
+  blockquote: ({ children }) => (
+    <blockquote className="text-lg font-semibold mb-2 text-pcsprimary-03 dark:text-pcsprimary-02">
+      {children}
+    </blockquote>
+  ),
   li: ({ children, className }) => {
     if (className === 'objectives-list-item') {
       return <>{children}</>;

@@ -241,7 +241,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     setIsExiting(true);
     
     try {
-      // Store current persona as selected
+      // Store current persona in localStorage
       localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
       // Wait for exit animation
       await new Promise(resolve => setTimeout(resolve, 300));

@@ -71,8 +71,10 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
     if (storedPersona) {
       const parsedPersona: Persona = JSON.parse(storedPersona);
       setPersona(parsedPersona);
+    } else {
+      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
     }
-  }, [setPersona]);
+  }, [setPersona, router, scenarioId]);
 
   useEffect(() => {
     const fetchPrompts = async () => {
@@ -98,15 +100,13 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
       setIsExiting(true);
       setIsNavigatingToChat(true);
       
-      const [, conversationResponse] = await Promise.all([
-        storePersona(persona),
-        createConversation(
-          message, 
-          scenarioInfo?.id || '', 
-          persona,
-          selectedPromptId ? Number(selectedPromptId) : undefined
-        )
-      ]);
+      await storePersona(persona);
+      const conversationResponse = await createConversation(
+        message, 
+        scenarioInfo?.id || '', 
+        persona,
+        selectedPromptId ? Number(selectedPromptId) : undefined
+      );
       
       const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(message)}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
       router.push(url);

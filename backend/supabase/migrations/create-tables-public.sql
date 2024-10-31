@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS public.scenario_prompts;
 DROP TABLE IF EXISTS public.scenario_objectives;
 DROP TABLE IF EXISTS public.personas;
 DROP TABLE IF EXISTS public.scenarios;
+DROP TABLE IF EXISTS public.system_prompts;
 
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -102,11 +103,8 @@ CREATE POLICY "Users can only access their own conversations" ON public.conversa
 GRANT ALL ON public.messages TO authenticated;
 GRANT ALL ON public.conversations TO authenticated;
 GRANT ALL ON public.feedback_prompts TO authenticated;
-GRANT ALL ON public.scenario_prompts TO authenticated;
 GRANT ALL ON public.scenarios TO authenticated;
 GRANT ALL ON public.scenario_objectives TO authenticated;
 
 -- Update grants for sequences
 GRANT USAGE ON SEQUENCE feedback_prompts_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE scenario_prompts_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE scenario_objectives_id_seq TO authenticated;

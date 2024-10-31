@@ -56,7 +56,10 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   };
 
   const formatObjectives = (objectives: string[]) => {
-    return objectives.map(objective => `- ${objective}`).join('\n');
+    return objectives.map(objective => {
+      const [header, ...bullets] = objective.split('\n');
+      return `> ${header}\n${bullets.join('\n')}`;
+    }).join('\n\n');
   };
 
   const handleEndChat = async () => {
