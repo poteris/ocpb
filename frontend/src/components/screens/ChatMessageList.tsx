@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { Skeleton } from '@/components/ui';
 
 interface Message {
   id: string;
@@ -13,7 +14,41 @@ interface ActiveChatProps {
   isWaitingForInitialResponse: boolean;
 }
 
+interface MessageListSkeletonProps {
+  messageCount?: number;
+}
+
+export const MessageListSkeleton: React.FC<MessageListSkeletonProps> = ({ messageCount = 3 }) => {
+  return (
+    <div className="flex-grow overflow-y-auto">
+      <div className="min-h-full p-4 space-y-6">
+        {Array.from({ length: messageCount }).map((_, index) => (
+          <div
+            key={index}
+            className={`flex ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}
+          >
+            <div className={`relative ${index % 2 === 0 ? 'pl-2' : ''} max-w-xs`}>
+              {index % 2 === 0 && (
+                <Skeleton className="absolute -left-3 -bottom-1 w-4 h-4 rounded-full" />
+              )}
+              <Skeleton 
+                className={`h-12 w-64 rounded-lg ${
+                  index % 2 === 0 ? 'bg-pcsprimary01-light' : 'bg-pcsprimary-02'
+                }`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export const MessageList: React.FC<ActiveChatProps> = ({ messages, isLoading, isWaitingForInitialResponse }) => {
+  if (messages.length === 0 && (isLoading || isWaitingForInitialResponse)) {
+    return <MessageListSkeleton />;
+  }
+
   return (
     <div className="flex-grow overflow-y-auto">
       <div className="min-h-full p-4">

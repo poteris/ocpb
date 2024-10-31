@@ -31,9 +31,9 @@ export const useChat = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
   }, []);
 
-  const handleSendMessage = async (message: string, conversationId: string) => {
-    if (!conversationId || !message.trim()) {
-      console.error('ConversationId is missing or message is empty');
+  const handleSendMessage = async (message: string, conversationId: string, scenarioId: string) => {
+    if (!conversationId || !message.trim() || !scenarioId) {
+      console.error('ConversationId or scenarioId is missing or message is empty');
       return;
     }
 
@@ -49,7 +49,7 @@ export const useChat = () => {
         messages: [...(prev?.messages || []), userMessage]
       }));
 
-      const response = await sendMessage(conversationId, message);
+      const response = await sendMessage(conversationId, message, scenarioId);
       
       if (response && response.content) {
         setCurrentSession(prev => ({

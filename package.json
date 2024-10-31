@@ -9,7 +9,7 @@
   "scripts": {
     "dev:frontend": "yarn workspace frontend dev",
     "dev:backend": "yarn workspace backend supabase start",
-    "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
+    "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\" \"yarn dev:functions\"",
     "build": "cd frontend && yarn build",
     "start": "yarn workspace frontend start",
     "lint": "yarn workspace frontend lint",

@@ -11,6 +11,8 @@ import { createConversation, storePersona } from '@/utils/api';
 import { Persona } from '@/utils/api';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui';
+import { AnimatePresence } from 'framer-motion';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 interface InitiateChatContentProps {
   systemPromptId?: string;
@@ -21,6 +23,10 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
   const { scenarioInfo, persona, setPersona } = useScenario();
+  const [isExiting, setIsExiting] = useState(false);
+  const searchParams = useSearchParams();
+  const scenarioId = searchParams.get('scenarioId');
+  const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
 
   // New array of fixed prompts
   const fixedPrompts = [
@@ -35,11 +41,28 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   // Function to randomly select prompts
   const getRandomPrompts = () => {
     const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 4); // Select 4 prompts instead of 3
+    const isMobile = window.innerWidth < 640; // sm breakpoint in Tailwind
+    return shuffled.slice(0, isMobile ? 3 : 4);
   };
 
   // State to store the randomly selected prompts
-  const [selectedPrompts] = useState(getRandomPrompts());
+  const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
+
+  // Update prompts when screen size changes
+  useEffect(() => {
+    const handleResize = () => {
+      setSelectedPrompts(getRandomPrompts());
+    };
+
+    // Initial setup
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const storedPersona = localStorage.getItem('selectedPersona');
@@ -52,17 +75,23 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const handlePromptSelect = async (prompt: string) => {
     if (persona) {
       try {
-        // Store the persona
-        await storePersona(persona);
-
-        const { id: conversationId } = await createConversation(prompt, scenarioInfo?.id || '', persona, defaultSystemPromptId);
+        setIsExiting(true);
+        setIsNavigatingToChat(true);
+        
+        // Store persona and create conversation in parallel
+        const [_, { id: conversationId }] = await Promise.all([
+          storePersona(persona),
+          createConversation(prompt, scenarioInfo?.id || '', persona, defaultSystemPromptId)
+        ]);
+        
+        // Navigate with loading screen
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
         router.push(url);
-
-        // Clear the stored persona from localStorage
         localStorage.removeItem('selectedPersona');
       } catch (error) {
         console.error('Error starting conversation:', error);
+        setIsExiting(false);
+        setIsNavigatingToChat(false);
       }
     }
   };
@@ -70,116 +99,164 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const handleStartChat = async () => {
     if (inputMessage.trim() && persona) {
       try {
-        // Store the persona
-        await storePersona(persona);
-
-        const { id: conversationId } = await createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, defaultSystemPromptId);
+        setIsExiting(true);
+        setIsNavigatingToChat(true);
+        
+        // Store persona and create conversation in parallel
+        const [_, { id: conversationId }] = await Promise.all([
+          storePersona(persona),
+          createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, defaultSystemPromptId)
+        ]);
+        
+        // Navigate with loading screen
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
         router.push(url);
-
-        // Clear the stored persona from localStorage
         localStorage.removeItem('selectedPersona');
       } catch (error) {
         console.error('Error starting conversation:', error);
+        setIsExiting(false);
+        setIsNavigatingToChat(false);
       }
     }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="flex-shrink-0">
-        <Header 
-          title={scenarioInfo?.title || "Scenario"} 
-          variant="default" 
-          showInfoIcon={true}
-          onInfoClick={() => setShowInfoPopover(true)}
-        />
-      </div>
+  const handleBack = () => {
+    setIsExiting(true);
+    // Store current persona before navigating back
+    if (persona) {
+      localStorage.setItem('selectedPersona', JSON.stringify(persona));
+    }
+    setTimeout(() => {
+      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
+    }, 300);
+  };
 
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-        <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
-          <div>
-            <motion.div 
-              className="flex flex-col items-center mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Image
-                width={250}
-                height={250}
-                alt="Union Training Bot"
-                src="/images/chat-bot.svg"
-                className="mb-8"
-              />
-              <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
-              <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
-                Choose a prompt below or write your own to start your union training session
-              </p>
-            </motion.div>
+  if (isNavigatingToChat) {
+    return (
+      <LoadingScreen 
+        title="Starting Conversation"
+        message="Preparing your training session..."
+      />
+    );
+  }
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div 
+        className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex-shrink-0">
+          <Header 
+            title={scenarioInfo?.title || "Scenario"} 
+            variant="default" 
+            showInfoIcon={true}
+            onInfoClick={() => setShowInfoPopover(true)}
+          />
+        </div>
+
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
+          <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Button
+                  variant="options"
+                  onClick={handleBack}
+                  className="mb-8"
+                >
+                  Back to Scenario Setup
+                </Button>
+              </motion.div>
+
+              <motion.div 
+                className="flex flex-col items-center mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Image
+                  width={250}
+                  height={250}
+                  alt="Union Training Bot"
+                  src="/images/chat-bot.svg"
+                  className="mb-8"
+                />
+                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
+                <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
+                  Choose a prompt below or write your own to start your union training session
+                </p>
+              </motion.div>
+              
+              <motion.div 
+                className="grid gap-4 sm:grid-cols-2 mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                {selectedPrompts.map((prompt, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="options"
+                      text={prompt}
+                      onClick={() => handlePromptSelect(prompt)}
+                      className="text-lg py-4 px-6 text-left h-full w-full"
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
             
             <motion.div 
-              className="grid gap-4 sm:grid-cols-2 mb-12"
+              className="mt-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
             >
-              {selectedPrompts.map((prompt, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    variant="options"
-                    text={prompt}
-                    onClick={() => handlePromptSelect(prompt)}
-                    className="text-lg py-4 px-6 text-left h-full w-full"
-                  />
-                </motion.div>
-              ))}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base p-3 pr-16 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200"
+                  placeholder="Start training..."
+                />
+                <Button
+                  variant="progress"
+                  text="Start"
+                  onClick={handleStartChat}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
+                  disabled={!inputMessage.trim()}
+                />
+              </div>
             </motion.div>
           </div>
-          
-          <motion.div 
-            className="mt-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <div className="relative">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base p-3 pr-16 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200"
-                placeholder="Start training..."
-              />
-              <Button
-                variant="progress"
-                text="Start"
-                onClick={handleStartChat}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
-                disabled={!inputMessage.trim()}
-              />
-            </div>
-          </motion.div>
-        </div>
-      </main>
+        </main>
 
-      <ChatModals
-        showInfoPopover={showInfoPopover}
-        setShowInfoPopover={setShowInfoPopover}
-        scenarioInfo={scenarioInfo}
-        persona={persona}
-        showEndChatModal={false}
-        setShowEndChatModal={() => {}}
-        showFeedbackPopover={false}
-        setShowFeedbackPopover={() => {}}
-        handleFeedbackClose={() => {}}
-        conversationId={''}
-      />
-    </div>
+        <ChatModals
+          showInfoPopover={showInfoPopover}
+          setShowInfoPopover={setShowInfoPopover}
+          scenarioInfo={scenarioInfo}
+          persona={persona}
+          showEndChatModal={false}
+          setShowEndChatModal={() => {}}
+          showFeedbackPopover={false}
+          setShowFeedbackPopover={() => {}}
+          handleFeedbackClose={() => {}}
+          conversationId={''}
+        />
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -193,6 +270,7 @@ const InitiateChatSkeleton: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
         <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
           <div>
+            <Skeleton className="h-10 w-40 mb-8" />
             <div className="flex flex-col items-center mb-12">
               <Skeleton className="w-64 h-64 mb-8 rounded-full" />
               <Skeleton className="h-10 w-3/4 mb-6" />

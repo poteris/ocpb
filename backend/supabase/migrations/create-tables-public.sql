@@ -82,12 +82,12 @@ CREATE TABLE public.conversations (
   user_id TEXT NOT NULL,
   scenario_id VARCHAR(255) NOT NULL,
   persona_id VARCHAR(255) NOT NULL,
-  feedback_id INTEGER NOT NULL,
+  feedback_prompt_id INTEGER DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_message_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (scenario_id) REFERENCES scenarios(id),
   FOREIGN KEY (persona_id) REFERENCES personas(id),
-  FOREIGN KEY (feedback_id) REFERENCES feedback_prompts(id)
+  FOREIGN KEY (feedback_prompt_id) REFERENCES feedback_prompts(id)
 );
 
 -- Messages table

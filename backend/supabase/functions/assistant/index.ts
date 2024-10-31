@@ -272,43 +272,58 @@ export async function POST(req: Request) {
   }
 }
 
-async function createConversation({ userId, initialMessage, scenarioId, persona, systemPromptId = '1' }: { userId: string; initialMessage?: string; scenarioId: string; persona: any; systemPromptId?: string }) {
+async function createConversation({ userId, initialMessage, scenarioId, persona }: { userId: string; initialMessage?: string; scenarioId: string; persona: any }) {
   try {
-
     if (!userId || !scenarioId || !persona) {
       throw new Error('Missing userId, scenarioId, or persona');
     }
 
-    const scenario = await getScenario(scenarioId);
+    // First, ensure the persona exists in the database
+    const { error: personaError } = await supabase
+      .from('personas')
+      .upsert(persona, { onConflict: 'id' });
 
-    if (!scenario) {
-      throw new Error('Scenario not found');
+    if (personaError) {
+      console.error('Error upserting persona:', personaError);
+      throw personaError;
     }
 
     const conversationId = crypto.randomUUID();
 
-    const { error } = await supabase
+    // Create conversation without feedback_prompt_id
+    const { error: conversationError } = await supabase
       .from('conversations')
-      .insert({ conversation_id: conversationId, user_id: userId, scenario_id: scenarioId, persona_id: persona.id, feedback_id: 1 });
+      .insert({ 
+        conversation_id: conversationId, 
+        user_id: userId, 
+        scenario_id: scenarioId, 
+        persona_id: persona.id,
+        feedback_prompt_id: 1
+      });
 
-    if (error) {
-      console.error('Error inserting conversation:', error);
-      throw error;
+    if (conversationError) {
+      console.error('Error inserting conversation:', conversationError);
+      throw conversationError;
     }
 
     let aiResponse = null;
     if (initialMessage) {
-      const systemPrompt = await getInstructionPrompt(scenarioId);
-      const completePrompt = await createCompletePrompt(persona, systemPrompt);
+      try {
+        const systemPrompt = await getInstructionPrompt(scenarioId);
+        const completePrompt = await createCompletePrompt(persona, systemPrompt);
+        
+        const messages = [
+          { role: "system", content: completePrompt },
+          { role: "user", content: initialMessage }
+        ];
 
-      const messages = [
-        { role: "system", content: completePrompt },
-        { role: "user", content: initialMessage }
-      ];
-
-      aiResponse = await getAIResponse(messages);
-
-      await saveMessages(conversationId, initialMessage, aiResponse || '');
+        aiResponse = await getAIResponse(messages);
+        await saveMessages(conversationId, initialMessage, aiResponse || '');
+      } catch (error) {
+        console.error('Error processing initial message:', error);
+        // Continue even if message processing fails
+        aiResponse = "I apologize, but I'm having trouble responding right now. Could you please try again?";
+      }
     }
 
     return { id: conversationId, aiResponse };
@@ -320,8 +335,10 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
 
 async function sendMessage({ conversationId, content, scenarioId }: { conversationId: string; content: string; scenarioId?: string }) {
   try {
-    const { persona } = await getConversationContext(conversationId);
+    // Get conversation context
+    const { persona, scenario } = await getConversationContext(conversationId);
 
+    // Get message history
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select('role, content')
@@ -330,11 +347,29 @@ async function sendMessage({ conversationId, content, scenarioId }: { conversati
 
     if (messagesError) throw messagesError;
 
-    const systemPrompt = await getInstructionPrompt(scenarioId || '1');
+    // Get system prompt
+    const systemPrompt = await getInstructionPrompt(scenarioId || 'member-recruitment');
+    
+    // Create a structured prompt that maintains context
+    const completePrompt = await createCompletePrompt(persona, systemPrompt);
+    
+    // Organize messages with clear context preservation
     let messages = [
-      { role: "system", content: createCompletePrompt(persona, systemPrompt) },
-      ...messagesData.map((msg: any) => ({ role: msg.role, content: msg.content })),
-      { role: "user", content: content }
+      // System message with complete context
+      { 
+        role: "system", 
+        content: `${completePrompt}\n\nRemember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${messagesData.length + 1} in the conversation.`
+      },
+      // Previous conversation history
+      ...messagesData.map((msg: any) => ({ 
+        role: msg.role, 
+        content: msg.content 
+      })),
+      // New user message
+      { 
+        role: "user", 
+        content: content 
+      }
     ];
 
     const aiResponse = await getAIResponse(messages);
@@ -417,57 +452,71 @@ async function retrievePersona(personaId: string) {
 
 // Update the getInstructionPrompt function
 async function getInstructionPrompt(id: string) {
-  let query = supabase.from('scenarios').select('*, scenario_prompts(content)');
+  try {
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('*, scenario_prompts(content)')
+      .eq('id', id)
+      .single();
 
-  if (id) {
-    query = query.eq('id', id).single();
-  } else {
-    query = query.eq('id', '1');
+    if (error) {
+      console.error('Error fetching scenario:', error);
+      console.log(id)
+      return "You are an AI assistant helping with union conversations. Be helpful and professional.";
+    }
+
+    if (!data?.scenario_prompts?.[0]?.content) {
+      console.warn('No scenario prompt found, using default');
+      return "You are an AI assistant helping with union conversations. Be helpful and professional.";
+    }
+
+    const template = HandlebarsJS.compile(data.scenario_prompts[0].content);
+    return template(data);
+  } catch (error) {
+    console.error('Error in getInstructionPrompt:', error);
+    return "You are an AI assistant helping with union conversations. Be helpful and professional.";
   }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching system prompt:', error);
-    return "You are an AI assistant. Respond to the user's messages appropriately.";
-  }
-
-  const template = HandlebarsJS.compile(data.scenario_prompts[0].content);
-  return template(data);
 }
 
 // Update the createCompletePrompt function
 async function createCompletePrompt(persona: any, systemPromptContent: string): Promise<string> {
-  let { data: personaPromptData, error: personaPromptError } = await supabase
-    .from('persona_prompts')
-    .select('content')
-    .eq('persona_id', persona.id)
-    .single();
-
-  if (personaPromptError || !personaPromptData) {
-    console.log('Specific persona prompt not found, using default prompt');
-    ({ data: personaPromptData, error: personaPromptError } = await supabase
+  try {
+    let { data: personaPromptData, error: personaPromptError } = await supabase
       .from('persona_prompts')
       .select('content')
-      .eq('persona_id', 'default')
-      .single());
-  }
+      .eq('persona_id', persona.id)
+      .single();
 
-  if (personaPromptError) {
-    console.error('Error fetching persona prompt:', personaPromptError);
+    if (personaPromptError || !personaPromptData) {
+      console.log('Specific persona prompt not found, using default prompt');
+      ({ data: personaPromptData, error: personaPromptError } = await supabase
+        .from('persona_prompts')
+        .select('content')
+        .eq('persona_id', 'default')
+        .single());
+    }
+
+    if (personaPromptError || !personaPromptData) {
+      console.warn('No persona prompt found, using basic persona info');
+      return `${systemPromptContent}
+        
+        You are role-playing as ${persona.name}, a ${persona.age}-year-old ${persona.job}.
+        Your personality: ${persona.personality_traits}`;
+    }
+
+    const template = HandlebarsJS.compile(personaPromptData.content);
+    const personaPrompt = template(persona);
+
+    return `${systemPromptContent}
+      
+      ${personaPrompt}`;
+  } catch (error) {
+    console.error('Error in createCompletePrompt:', error);
     return systemPromptContent;
   }
-
-  const template = HandlebarsJS.compile(personaPromptData.content);
-  const personaPrompt = template(persona);
-
-  return `${systemPromptContent}
-    
-    ${personaPrompt}`;
 }
 
 async function getAIResponse(messages: any[]) {
-  // Ensure that each message's content is a string
   const formattedMessages = messages.map(msg => ({
     role: msg.role,
     content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
@@ -478,8 +527,10 @@ async function getAIResponse(messages: any[]) {
     messages: formattedMessages,
     max_tokens: 150,
     temperature: 0.7,
-    presence_penalty: 0.6,
-    frequency_penalty: 0.6,
+    // Increase presence_penalty to encourage more dynamic responses
+    presence_penalty: 0.8,
+    // Reduce frequency_penalty to maintain consistent personality
+    frequency_penalty: 0.3,
   });
   return completion.choices[0].message.content;
 }

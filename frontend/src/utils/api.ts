@@ -110,7 +110,7 @@ export async function createConversation(initialMessage: string, scenarioId: str
   return response.result;
 }
 
-export async function sendMessage(conversationId: string, content: string) {
+export async function sendMessage(conversationId: string, content: string, scenarioId?: string) {
   const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content });
   if (response && response.result && response.result.content) {
     return response.result;

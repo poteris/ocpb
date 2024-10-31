@@ -14,6 +14,7 @@ interface WelcomeProps {
 export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     async function fetchScenarios() {
@@ -23,7 +24,9 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
     fetchScenarios();
   }, []);
 
-  const handleScenarioSelect = (scenarioId: string) => {
+  const handleScenarioSelect = async (scenarioId: string) => {
+    setIsTransitioning(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
     setSelectedScenarioId(scenarioId);
     onScenarioSelect(scenarioId);
   };
@@ -33,12 +36,29 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
       {!selectedScenarioId && <Header title="Union Training Bot" variant="alt" />}
       <div className="flex flex-col flex-grow">
         {selectedScenarioId ? (
-          <ScenarioSetup 
-            scenarioId={selectedScenarioId} 
-            onBack={() => setSelectedScenarioId(null)}
-          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex-grow"
+          >
+            <ScenarioSetup 
+              scenarioId={selectedScenarioId} 
+              onBack={() => {
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  setSelectedScenarioId(null);
+                  setIsTransitioning(false);
+                }, 300);
+              }}
+            />
+          </motion.div>
         ) : (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isTransitioning ? 0 : 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
               <div className="max-w-4xl mx-auto py-12 sm:py-20">
                 <motion.h1 
@@ -59,46 +79,48 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
                 </motion.p>
                 <motion.div 
                   className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.1
+                      }
+                    }
+                  }}
+                  initial="hidden"
+                  animate="show"
                 >
-                  {scenarios.map((scenario, index) => (
+                  {scenarios.map((scenario) => (
                     <motion.div 
                       key={scenario.id} 
                       className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 * index }}
+                      variants={{
+                        hidden: { opacity: 0, y: 20 },
+                        show: { opacity: 1, y: 0 }
+                      }}
+                      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <h2 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">{scenario.title}</h2>
-                      <p className="text-gray-600 dark:text-gray-400 mb-6">{scenario.description}</p>
+                      <h2 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                        {scenario.title}
+                      </h2>
+                      <p className="text-gray-600 dark:text-gray-400 mb-6">
+                        {scenario.description}
+                      </p>
                       <Button
                         variant="progress"
                         text="Start Scenario"
                         onClick={() => handleScenarioSelect(scenario.id)}
                         className="w-full text-lg py-3"
+                        disabled={isTransitioning}
                       />
                     </motion.div>
                   ))}
                 </motion.div>
               </div>
             </main>
-            <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-                <div className="max-w-md mx-auto">
-                  <Button
-                    variant="progress"
-                    text="Create an Account"
-                    onClick={() => {}}
-                    className="w-full text-lg py-3"
-                  />
-                </div>
-              </div>
-            </footer>
-          </>
+          </motion.div>
         )}
       </div>
     </div>

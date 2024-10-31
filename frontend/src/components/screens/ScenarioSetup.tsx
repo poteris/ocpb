@@ -11,7 +11,7 @@ import { Loader, ChevronLeft, ChevronRight, RefreshCw } from 'react-feather';
 import { useDebounce } from '@/hooks/useDebounce';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '../ui/Skeleton';
 
 interface ScenarioSetupProps {
@@ -148,6 +148,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
   const [personaIndex, setPersonaIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const fetchScenario = useCallback(async () => {
     const scenarios = await getScenarios();
@@ -158,27 +159,67 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     }
   }, [scenarioId, setScenarioInfo]);
 
-  const generateNewPersona = useCallback(async () => {
+  // Load stored personas and initialize
+  useEffect(() => {
+    const initializePersonas = async () => {
+      setIsLoading(true);
+      try {
+        // First load scenario
+        await fetchScenario();
+
+        // Try to get stored personas
+        const storedPersonasStr = localStorage.getItem('generatedPersonas');
+        const storedPersonas: Persona[] = storedPersonasStr ? JSON.parse(storedPersonasStr) : [];
+        
+        // Check for current persona
+        const currentPersonaStr = localStorage.getItem('selectedPersona');
+        const currentPersona: Persona | null = currentPersonaStr ? JSON.parse(currentPersonaStr) : null;
+
+        if (currentPersona) {
+          // If we have a current persona, add it to the list if not already present
+          const personaExists = storedPersonas.some(p => p.id === currentPersona.id);
+          if (!personaExists) {
+            storedPersonas.unshift(currentPersona);
+          }
+          setPersonaIndex(0);
+        }
+
+        if (storedPersonas.length > 0) {
+          // Use stored personas if available
+          setGeneratedPersonas(storedPersonas);
+          setCurrentPersona(storedPersonas[0]);
+        } else {
+          // Generate new persona if none stored
+          await generateNewPersona();
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializePersonas();
+  }, [fetchScenario, scenarioId]);
+
+  const generateNewPersona = async () => {
     setIsGeneratingPersona(true);
     try {
       const newPersona = await generatePersona();
       if (newPersona) {
-        setGeneratedPersonas(prevPersonas => [...prevPersonas, newPersona]);
+        setGeneratedPersonas(currentPersonas => {
+          const updatedPersonas = [newPersona, ...currentPersonas];
+          // Store in localStorage
+          localStorage.setItem('generatedPersonas', JSON.stringify(updatedPersonas));
+          return updatedPersonas;
+        });
         setCurrentPersona(newPersona);
-        setPersonaIndex(prevIndex => prevIndex + 1);
+        setPersonaIndex(0);
       }
     } catch (error) {
       console.error('Error generating persona:', error);
-      // Show an error message to the user
     } finally {
       setIsGeneratingPersona(false);
     }
-  }, []);
-
-  const debouncedGenerateNewPersona = useCallback(
-    useDebounce(generateNewPersona, 300),
-    [generateNewPersona]
-  );
+  };
 
   const navigatePersona = useCallback((direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' 
@@ -188,16 +229,30 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     setCurrentPersona(generatedPersonas[newIndex]);
   }, [personaIndex, generatedPersonas]);
 
-  useEffect(() => {
-    const initializeComponent = async () => {
-      setIsLoading(true);
-      await fetchScenario();
-      await debouncedGenerateNewPersona();
-      setIsLoading(false);
-    };
+  const handleBack = () => {
+    // Clear stored current persona but keep generated personas
+    localStorage.removeItem('selectedPersona');
+    onBack();
+  };
 
-    initializeComponent();
-  }, [fetchScenario, debouncedGenerateNewPersona]);
+  const navigateTo = useCallback(async (screen: string) => {
+    if (!currentPersona) return;
+    
+    setIsNavigating(true);
+    setIsExiting(true);
+    
+    try {
+      // Store current persona as selected
+      localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
+      // Wait for exit animation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      router.push(`/${screen}?scenarioId=${scenarioId}`);
+    } catch (error) {
+      console.error('Error navigating:', error);
+      setIsNavigating(false);
+      setIsExiting(false);
+    }
+  }, [currentPersona, router, scenarioId]);
 
   const renderSkeleton = useMemo(() => (
     <div className="grid gap-12 lg:grid-cols-2">
@@ -227,72 +282,67 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     </div>
   ), []);
 
-  const navigateTo = useCallback(async (screen: string) => {
-    if (!currentPersona) return;
-    
-    setIsNavigating(true);
-    try {
-      localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
-      router.push(`/${screen}?scenarioId=${scenarioId}`);
-    } catch (error) {
-      console.error('Error navigating:', error);
-      setIsNavigating(false);
-    }
-  }, [currentPersona, router, scenarioId]);
-
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <Header title={scenario?.title || 'Loading...'} variant="default" />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-        <div className="max-w-4xl mx-auto py-12 sm:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Button
-              variant="options"
-              onClick={onBack}
-              className="mb-8"
+    <AnimatePresence mode="wait">
+      <motion.div 
+        className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Header title={scenario?.title || 'Loading...'} variant="default" />
+        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+          <div className="max-w-4xl mx-auto py-12 sm:py-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              Back to Scenarios
-            </Button>
-          </motion.div>
-          
-          {isLoading ? renderSkeleton : (
-            <div className="grid gap-12 lg:grid-cols-2">
-              <ScenarioDescription scenario={scenario} />
-              <PersonaDetails
-                persona={currentPersona}
-                onNavigate={navigatePersona}
-                isGenerating={isGeneratingPersona}
-                onGenerate={generateNewPersona}
-              />
-            </div>
-          )}
-        </div>
-      </main>
-      <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-          <div className="max-w-md mx-auto">
-            <Button
-              variant="progress"
-              onClick={() => navigateTo('initiate-chat')}
-              className="w-full text-lg py-3"
-              disabled={isLoading || !currentPersona || isNavigating}
-            >
-              {isNavigating ? (
-                <>
-                  <Loader className="animate-spin mr-2" size={20} />
-                  Preparing Chat...
-                </>
-              ) : (
-                "Start Chat with Current Persona"
-              )}
-            </Button>
+              <Button
+                variant="options"
+                onClick={handleBack}
+                className="mb-8"
+              >
+                Back to Scenarios
+              </Button>
+            </motion.div>
+            
+            {isLoading ? renderSkeleton : (
+              <div className="grid gap-12 lg:grid-cols-2">
+                <ScenarioDescription scenario={scenario} />
+                <PersonaDetails
+                  persona={currentPersona}
+                  onNavigate={navigatePersona}
+                  isGenerating={isGeneratingPersona}
+                  onGenerate={generateNewPersona}
+                />
+              </div>
+            )}
           </div>
-        </div>
-      </footer>
-    </div>
+        </main>
+        <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
+            <div className="max-w-md mx-auto">
+              <Button
+                variant="progress"
+                onClick={() => navigateTo('initiate-chat')}
+                className="w-full text-lg py-3"
+                disabled={isLoading || !currentPersona || isNavigating}
+              >
+                {isNavigating ? (
+                  <>
+                    <Loader className="animate-spin mr-2" size={20} />
+                    Preparing Chat...
+                  </>
+                ) : (
+                  "Start Chat with Current Persona"
+                )}
+              </Button>
+            </div>
+          </div>
+        </footer>
+      </motion.div>
+    </AnimatePresence>
   );
 };
