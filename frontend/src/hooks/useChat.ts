@@ -48,7 +48,7 @@ export const useChat = () => {
         messages: [...(prev?.messages || []), userMessage]
       }));
 
-      const response = await sendMessage(conversationId, message, scenarioId);
+      const response = await sendMessage(conversationId, message);
       
       if (response && response.content) {
         setCurrentSession(prev => ({
