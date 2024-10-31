@@ -14,6 +14,7 @@ export interface Scenario {
   id: string;
   title: string;
   description: string;
+  context: string;
   objectives: string[];
 }
 
@@ -21,6 +22,7 @@ export interface ScenarioForm {
   id: string;
   title: string;
   description: string;
+  context: string;
   objectives: string[];
 }
 
@@ -32,6 +34,14 @@ export interface Prompt {
   created_at: string;
 }
 
+export interface PromptWithDetails extends Prompt {
+  scenario?: {
+    title: string;
+    description: string;
+    context: string;
+  };
+}
+
 export async function getScenarios(): Promise<Scenario[]> {
   const { data: scenarios, error } = await supabase
     .from('scenarios')
@@ -39,7 +49,7 @@ export async function getScenarios(): Promise<Scenario[]> {
       id,
       title,
       description,
-      scenario_objectives (objective)
+      context
     `);
 
   if (error) {
@@ -49,7 +59,7 @@ export async function getScenarios(): Promise<Scenario[]> {
 
   return scenarios.map(scenario => ({
     ...scenario,
-    objectives: scenario.scenario_objectives.map(obj => obj.objective)
+    objectives: []
   }));
 }
 
@@ -81,14 +91,14 @@ export async function storePersona(persona: Persona) {
   return data;
 }
 
-export async function getScenarioPrompts(): Promise<Prompt[]> {
+export async function getSystemPrompts(): Promise<PromptWithDetails[]> {
   const { data, error } = await supabase
-    .from('scenario_prompts')
+    .from('system_prompts')
     .select('*')
-    .order('id');
+    .order('created_at', { ascending: true });
 
   if (error) {
-    console.error('Error fetching scenario prompts:', error);
+    console.error('Error fetching system prompts:', error);
     return [];
   }
 
@@ -113,7 +123,7 @@ export async function getFeedbackPrompts(): Promise<Prompt[]> {
   const { data, error } = await supabase
     .from('feedback_prompts')
     .select('*')
-    .order('id');
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Error fetching feedback prompts:', error.message, error.details);
@@ -123,7 +133,7 @@ export async function getFeedbackPrompts(): Promise<Prompt[]> {
   return data || [];
 }
 
-export async function updatePrompt(type: 'scenario' | 'persona' | 'feedback', id: number, content: string): Promise<void> {
+export async function updatePrompt(type: 'system' | 'feedback', id: number, content: string): Promise<void> {
   const { error } = await supabase
     .from(`${type}_prompts`)
     .update({ content })
@@ -136,13 +146,14 @@ export async function updatePrompt(type: 'scenario' | 'persona' | 'feedback', id
 }
 
 export async function createPrompt(
-  type: 'scenario' | 'persona' | 'feedback', 
-  content: string, 
-  scenarioId?: string
+  type: 'system' | 'feedback', 
+  content: string
 ): Promise<void> {
-  const data = type === 'scenario' 
-    ? { content, scenario_id: scenarioId }
-    : { content };
+  const data = {
+    content,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
 
   const { error } = await supabase
     .from(`${type}_prompts`)
@@ -154,7 +165,7 @@ export async function createPrompt(
   }
 }
 
-export async function deletePrompt(type: 'scenario' | 'persona' | 'feedback', id: number): Promise<void> {
+export async function deletePrompt(type: 'system' | 'feedback', id: number): Promise<void> {
   const { error } = await supabase
     .from(`${type}_prompts`)
     .delete()
@@ -166,13 +177,19 @@ export async function deletePrompt(type: 'scenario' | 'persona' | 'feedback', id
   }
 }
 
-export async function createScenario(scenario: { id: string; title: string; description: string }) {
+export async function createScenario(scenario: { 
+  id: string; 
+  title: string; 
+  description: string;
+  context: string;
+}) {
   const { error } = await supabase
     .from('scenarios')
     .insert({
       id: scenario.id,
       title: scenario.title,
-      description: scenario.description
+      description: scenario.description,
+      context: scenario.context
     });
 
   if (error) {
@@ -188,7 +205,8 @@ export async function createScenarioWithObjectives(scenario: ScenarioForm) {
     .insert({
       id: scenario.id,
       title: scenario.title,
-      description: scenario.description
+      description: scenario.description,
+      context: scenario.context
     })
     .select()
     .single();
@@ -198,9 +216,10 @@ export async function createScenarioWithObjectives(scenario: ScenarioForm) {
     throw scenarioError;
   }
 
-  // Create objectives
+  // Create objectives with unique IDs
   if (scenario.objectives.length > 0) {
-    const objectivesData = scenario.objectives.map(objective => ({
+    const objectivesData = scenario.objectives.map((objective, index) => ({
+      id: `${scenario.id}-${index + 1}`, // Create a unique ID combining scenario ID and index
       scenario_id: scenario.id,
       objective
     }));
@@ -210,6 +229,11 @@ export async function createScenarioWithObjectives(scenario: ScenarioForm) {
       .insert(objectivesData);
 
     if (objectivesError) {
+      // If objectives creation fails, clean up the scenario
+      await supabase
+        .from('scenarios')
+        .delete()
+        .eq('id', scenario.id);
       console.error('Error creating objectives:', objectivesError);
       throw objectivesError;
     }
@@ -218,32 +242,99 @@ export async function createScenarioWithObjectives(scenario: ScenarioForm) {
   return newScenario;
 }
 
-export async function updateScenarioObjectives(scenarioId: string, objectives: string[]) {
-  // First delete existing objectives
-  const { error: deleteError } = await supabase
-    .from('scenario_objectives')
-    .delete()
-    .eq('scenario_id', scenarioId);
+export async function deleteScenario(scenarioId: string) {
+  try {
+    // First delete the objectives for this scenario
+    const { error: objectivesError } = await supabase
+      .from('scenario_objectives')
+      .delete()
+      .eq('scenario_id', scenarioId);
 
-  if (deleteError) {
-    console.error('Error deleting existing objectives:', deleteError);
-    throw deleteError;
+    if (objectivesError) {
+      console.error('Error deleting objectives:', objectivesError);
+      throw objectivesError;
+    }
+
+    // Then delete the scenario
+    const { error: scenarioError } = await supabase
+      .from('scenarios')
+      .delete()
+      .eq('id', scenarioId);
+
+    if (scenarioError) {
+      console.error('Error deleting scenario:', scenarioError);
+      throw scenarioError;
+    }
+  } catch (error) {
+    console.error('Error in deleteScenario:', error);
+    throw error;
+  }
+}
+
+export async function updateScenarioObjectives(scenarioId: string, objectives: string[]) {
+  try {
+    // First delete existing objectives
+    const { error: deleteError } = await supabase
+      .from('scenario_objectives')
+      .delete()
+      .eq('scenario_id', scenarioId);
+
+    if (deleteError) {
+      console.error('Error deleting existing objectives:', deleteError);
+      throw deleteError;
+    }
+
+    // Then insert new objectives if there are any
+    if (objectives.length > 0) {
+      // Generate unique IDs for each objective
+      const objectivesData = objectives.map((objective, index) => ({
+        id: `${scenarioId}-${index + 1}`, // Create a unique ID combining scenario ID and index
+        scenario_id: scenarioId,
+        objective
+      }));
+
+      const { error: insertError } = await supabase
+        .from('scenario_objectives')
+        .insert(objectivesData);
+
+      if (insertError) {
+        console.error('Error creating new objectives:', insertError);
+        throw insertError;
+      }
+    }
+  } catch (error) {
+    console.error('Error in updateScenarioObjectives:', error);
+    throw error;
+  }
+}
+
+export async function updateScenarioDetails(
+  scenarioId: string, 
+  updates: { 
+    title?: string; 
+    description?: string;
+    context?: string;
+    objectives?: string[];
+  }
+) {
+  // Update scenario details if provided
+  if (updates.title || updates.description || updates.context) {
+    const { error: scenarioError } = await supabase
+      .from('scenarios')
+      .update({
+        ...(updates.title && { title: updates.title }),
+        ...(updates.description && { description: updates.description }),
+        ...(updates.context && { context: updates.context })
+      })
+      .eq('id', scenarioId);
+
+    if (scenarioError) {
+      throw scenarioError;
+    }
   }
 
-  // Then insert new objectives
-  if (objectives.length > 0) {
-    const objectivesData = objectives.map(objective => ({
-      scenario_id: scenarioId,
-      objective
-    }));
-
-    const { error: insertError } = await supabase
-      .from('scenario_objectives')
-      .insert(objectivesData);
-
-    if (insertError) {
-      console.error('Error creating new objectives:', insertError);
-      throw insertError;
-    }
+  // Update objectives if provided
+  if (updates.objectives) {
+    await updateScenarioObjectives(scenarioId, updates.objectives);
   }
 }

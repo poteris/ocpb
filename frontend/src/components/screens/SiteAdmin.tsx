@@ -5,18 +5,91 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { getScenarioPrompts, getPersonaPrompts, getFeedbackPrompts, updatePrompt, createPrompt, deletePrompt, Prompt, getScenarios, Scenario, createScenario, createScenarioWithObjectives, updateScenarioObjectives } from '@/utils/supabaseQueries';
+import { getFeedbackPrompts, updatePrompt, createPrompt, deletePrompt, Prompt, getSystemPrompts, PromptWithDetails } from '@/utils/supabaseQueries';
 import { Modal } from '@/components/ui';
-import { slugify } from '@/utils/helpers';
+import ReactMarkdown from 'react-markdown';
+import { markdownStyles } from '@/utils/markdownStyles';
 
-interface ScenarioForm {
-  id: string;
-  title: string;
-  description: string;
-  objectives: string[];
+interface PromptManagerProps {
+  type: 'system' | 'feedback';
 }
 
-const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = ({ type }) => {
+const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
+  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {message}
+  </div>
+);
+
+// Add new components for truncated text
+const TruncatedText: React.FC<{ text: string; limit?: number }> = ({ text, limit = 100 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  if (text.length <= limit) return <p>{text}</p>;
+  
+  return (
+    <div>
+      <p>
+        {isExpanded ? text : `${text.slice(0, limit)}...`}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          {isExpanded ? 'Show less' : 'Read more'}
+        </button>
+      </p>
+    </div>
+  );
+};
+
+// Update template variables based on SQL schema
+const AVAILABLE_VARIABLES = {
+  scenario: [
+    { name: 'title', description: 'The scenario title' },
+    { name: 'description', description: 'The scenario description' },
+    { name: 'context', description: 'The scenario context' },
+    { name: 'objectives', description: 'The scenario objectives' }
+  ],
+  persona: [
+    { name: 'name', description: 'Persona name' },
+    { name: 'age', description: 'Persona age' },
+    { name: 'job', description: 'Persona job title' },
+    { name: 'workplace', description: 'Place of work' },
+    { name: 'emotional_conditions_for_supporting_the_union', description: 'Emotional conditions' },
+    { name: 'major_issues_in_workplace', description: 'Workplace issues' },
+    { name: 'personality_traits', description: 'Personality traits' },
+    { name: 'segment', description: 'Demographic segment' },
+    { name: 'uk_party_affiliation', description: 'Political affiliation' },
+    { name: 'family_status', description: 'Family status' }
+  ]
+};
+
+// Update the variables section in renderScenarioSection
+const renderVariableStatus = (content: string, variables: Array<{ name: string, description: string }>) => (
+  <div className="space-y-2">
+    {variables.map(({ name, description }) => {
+      const variable = `{{${name}}}`;
+      const isUsed = content.includes(variable);
+      
+      return (
+        <div key={name} className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${
+            isUsed ? 'bg-green-500' : 'bg-gray-300'
+          }`} />
+          <code className={`text-sm ${
+            isUsed ? 'text-green-700 dark:text-green-400' : 'text-gray-500'
+          }`}>
+            {variable}
+          </code>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            - {description}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+);
+
+const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,68 +98,33 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
   const [editContent, setEditContent] = useState('');
   const [newPromptContent, setNewPromptContent] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isNewScenario, setIsNewScenario] = useState(false);
-  const [scenarioForm, setScenarioForm] = useState<ScenarioForm>({
-    id: '',
-    title: '',
-    description: '',
-    objectives: []
-  });
-  const [objectives, setObjectives] = useState<string[]>([]);
-  const [newObjective, setNewObjective] = useState('');
+  const [templatePrompt, setTemplatePrompt] = useState<string>('');
 
   useEffect(() => {
     fetchPrompts();
   }, [type]);
 
-  useEffect(() => {
-    if (type === 'scenario') {
-      const fetchScenarios = async () => {
-        const scenarioData = await getScenarios();
-        setScenarios(scenarioData);
-      };
-      fetchScenarios();
-    }
-  }, [type]);
-
   const fetchPrompts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      let fetchedPrompts;
-      switch (type) {
-        case 'scenario':
-          fetchedPrompts = await getScenarioPrompts();
-          break;
-        case 'persona':
-          fetchedPrompts = await getPersonaPrompts();
-          break;
-        case 'feedback':
-          fetchedPrompts = await getFeedbackPrompts();
-          break;
-      }
-      setPrompts(fetchedPrompts.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ));
-    } catch (err) {
-      setError('Failed to fetch prompts. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    const fetchedPrompts = type === 'system' 
+      ? await getSystemPrompts()
+      : await getFeedbackPrompts();
+    setPrompts(fetchedPrompts);
   }, [type]);
 
-  const handleEdit = (prompt: Prompt) => {
+  const handleEdit = (prompt: PromptWithDetails) => {
     setEditingId(prompt.id);
     setEditContent(prompt.content);
   };
 
   const handleSave = async (id: number) => {
-    await updatePrompt(type, id, editContent);
-    setEditingId(null);
-    fetchPrompts();
+    try {
+      await updatePrompt(type, id, editContent);
+      setEditingId(null);
+      fetchPrompts();
+    } catch (error) {
+      setError('Failed to update prompt. Please try again.');
+    }
   };
 
   const handleCancel = () => {
@@ -94,401 +132,237 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
     setEditContent('');
   };
 
-  const generateScenarioId = (title: string) => {
-    const baseSlug = slugify(title);
-    const existingIds = scenarios
-      .filter(s => s.id.startsWith(baseSlug))
-      .map(s => s.id);
-    
-    if (existingIds.length === 0) return baseSlug;
-    
-    const numbers = existingIds
-      .map(id => {
-        const match = id.match(/-(\d+)$/);
-        return match ? parseInt(match[1]) : 1;
-      });
-    
-    const nextNumber = Math.max(...numbers) + 1;
-    return `${baseSlug}-${nextNumber}`;
-  };
-
-  const handleAddObjective = () => {
-    if (newObjective.trim()) {
-      setObjectives([...objectives, newObjective.trim()]);
-      setNewObjective('');
+  const handleUseTemplate = () => {
+    if (templatePrompt) {
+      setNewPromptContent(templatePrompt);
+    } else {
+      setError('No template available. Please create a prompt first.');
     }
   };
 
-  const handleRemoveObjective = (index: number) => {
-    setObjectives(objectives.filter((_, i) => i !== index));
-  };
-
-  const renderScenarioSection = () => (
-    <div className="space-y-4 border-b pb-6 mb-6">
-      {/* Step 1: Choose Scenario */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Step 1: Choose Scenario
-        </h2>
-        
-        <div className="flex items-center space-x-4 mb-4">
-          <Button
-            variant={isNewScenario ? "progress" : "default"}
-            text="Create New Scenario"
-            onClick={() => setIsNewScenario(true)}
-          />
-          <Button
-            variant={!isNewScenario ? "progress" : "default"}
-            text="Use Existing Scenario"
-            onClick={() => setIsNewScenario(false)}
-          />
-        </div>
-
-        {isNewScenario ? (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Title
-              </label>
-              <Input
-                type="text"
-                value={scenarioForm.title}
-                onChange={(e) => {
-                  const title = e.target.value;
-                  setScenarioForm(prev => ({
-                    ...prev,
-                    title,
-                    id: generateScenarioId(title)
-                  }));
-                }}
-                placeholder="e.g., Joining the Union"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Description
-              </label>
-              <Input
-                type="textarea"
-                rows={2}
-                value={scenarioForm.description}
-                onChange={(e) => setScenarioForm(prev => ({
-                  ...prev,
-                  description: e.target.value
-                }))}
-                placeholder="e.g., understand the benefits and process of joining a trade union"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Generated ID (editable)
-              </label>
-              <Input
-                type="text"
-                value={scenarioForm.id}
-                onChange={(e) => setScenarioForm(prev => ({
-                  ...prev,
-                  id: e.target.value
-                }))}
-                className="font-mono text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Learning Objectives
-              </label>
-              <div className="space-y-2">
-                {objectives.map((objective, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <span className="flex-grow p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                      {objective}
-                    </span>
-                    <Button
-                      variant="destructive"
-                      text="Remove"
-                      onClick={() => handleRemoveObjective(index)}
-                      className="text-xs"
-                    />
-                  </div>
-                ))}
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="text"
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    placeholder="Enter a learning objective..."
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddObjective();
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="options"
-                    text="Add"
-                    onClick={handleAddObjective}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <select
-              value={selectedScenarioId}
-              onChange={(e) => {
-                const scenario = scenarios.find(s => s.id === e.target.value);
-                setSelectedScenarioId(e.target.value);
-                if (scenario) {
-                  setScenarioForm({
-                    id: scenario.id,
-                    title: scenario.title,
-                    description: scenario.description,
-                    objectives: scenario.objectives
-                  });
-                }
-              }}
-              className="w-full p-2 border rounded-md dark:bg-gray-800 dark:border-gray-700"
-            >
-              <option value="">Select a scenario...</option>
-              {scenarios.map((scenario) => (
-                <option key={scenario.id} value={scenario.id}>
-                  {scenario.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* Step 2: Create Prompt */}
-      {(isNewScenario || selectedScenarioId) && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Step 2: Create Prompt
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left column: Template info */}
-            <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
-                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
-                  Your Scenario Details
-                </h3>
-                <div className="space-y-2">
-                  <div className="text-sm text-blue-600 dark:text-blue-400">
-                    <p className="font-medium">Title:</p>
-                    <p className="ml-4">{scenarioForm.title || "Not set"}</p>
-                  </div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400">
-                    <p className="font-medium">Description:</p>
-                    <p className="ml-4">{scenarioForm.description || "Not set"}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-4">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Available Variables
-                </h3>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                  <li><code>{'{{title}}'}</code> - The scenario title</li>
-                  <li><code>{'{{description}}'}</code> - The scenario description</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Right column: Prompt creation */}
-            <div className="space-y-4">
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300">
-                    Default Template
-                  </h3>
-                  <Button
-                    variant="options"
-                    text="Use Template"
-                    onClick={() => setNewPromptContent(
-                      "Role play to help users to {{description}}. The user is a trade union representative speaking to you about {{title}}. Respond as their workplace colleague in the character below. Do not break character. This is an informal interaction. Keep your responses brief. Emphasise your character's feelings about joining a union. It should be a challenge for the user to persuade you. It's VITAL that the user has a REALISTIC experience of being in a workplace to adequately prepare them for what they might encounter. Failure to train them for the difficult interactions they will face in real life will be harmful for them."
-                    )}
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Your Prompt
-                  </label>
-                  <Button
-                    variant="options"
-                    text="Clear"
-                    onClick={() => setNewPromptContent('')}
-                    className="text-xs"
-                  />
-                </div>
-                <Input
-                  type="textarea"
-                  value={newPromptContent}
-                  onChange={(e) => setNewPromptContent(e.target.value)}
-                  className="w-full mb-2"
-                  rows={5}
-                  placeholder="Enter your prompt using the template variables above..."
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Add Submit Section */}
-          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Ready to create?
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isNewScenario ? 
-                    "This will create both a new scenario and its first prompt." :
-                    "This will add a new prompt to the existing scenario."
-                  }
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="default"
-                  text="Clear All"
-                  onClick={() => {
-                    setNewPromptContent('');
-                    setSelectedScenarioId('');
-                    setScenarioForm({ id: '', title: '', description: '', objectives: [] });
-                    setIsNewScenario(false);
-                  }}
-                />
-                <Button
-                  variant="progress"
-                  text={isNewScenario ? "Create Scenario & Prompt" : "Add Prompt"}
-                  onClick={handleAdd}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-            
-            {/* Add validation hints */}
-            {(isNewScenario || selectedScenarioId) && (
-              <div className="mt-4">
-                <div className="flex items-center space-x-2 text-sm">
-                  <div className={`w-2 h-2 rounded-full ${
-                    newPromptContent.includes('{{title}}') && newPromptContent.includes('{{description}}')
-                      ? 'bg-green-500'
-                      : 'bg-gray-300'
-                  }`} />
-                  <span className={
-                    newPromptContent.includes('{{title}}') && newPromptContent.includes('{{description}}')
-                      ? 'text-green-700 dark:text-green-400'
-                      : 'text-gray-500'
-                  }>
-                    Prompt includes both template variables
-                  </span>
-                </div>
-                {isNewScenario && (
-                  <>
-                    <div className="flex items-center space-x-2 text-sm mt-1">
-                      <div className={`w-2 h-2 rounded-full ${
-                        scenarioForm.title && scenarioForm.description
-                          ? 'bg-green-500'
-                          : 'bg-gray-300'
-                      }`} />
-                      <span className={
-                        scenarioForm.title && scenarioForm.description
-                          ? 'text-green-700 dark:text-green-400'
-                          : 'text-gray-500'
-                      }>
-                        Scenario title and description provided
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm mt-1">
-                      <div className={`w-2 h-2 rounded-full ${
-                        scenarioForm.id ? 'bg-green-500' : 'bg-gray-300'
-                      }`} />
-                      <span className={
-                        scenarioForm.id
-                          ? 'text-green-700 dark:text-green-400'
-                          : 'text-gray-500'
-                      }>
-                        Valid scenario ID
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+  const renderTemplateButton = () => (
+    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800 flex justify-between items-center">
+      <span className="text-sm text-green-700 dark:text-green-300">Template</span>
+      <Button
+        variant="options"
+        text="Use Template"
+        onClick={handleUseTemplate}
+        className="text-xs"
+        disabled={!templatePrompt}
+      />
     </div>
   );
 
-  const handleAdd = async () => {
-    setValidationError(null);
-    setLoading(true);
-    
+  const renderScenarioSection = () => (
+    <div className="space-y-4 mb-4">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Create a New System Prompt
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Right Column: Variables */}
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-sm font-medium text-green-700 dark:text-green-300">
+                  Available Variables
+                </h3>
+              </div>
+              
+              {/* Scenario Variables */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
+                  Scenario Variables
+                </h4>
+                {renderVariableStatus(newPromptContent, AVAILABLE_VARIABLES.scenario)}
+              </div>
+
+              {/* Persona Variables */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
+                  Persona Variables
+                </h4>
+                {renderVariableStatus(newPromptContent, AVAILABLE_VARIABLES.persona)}
+              </div>
+
+              {renderTemplateButton()}
+            </div>
+          </div>
+
+          <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Your Prompt
+                </label>
+                <Button
+                  variant="options"
+                  text="Clear"
+                  onClick={() => setNewPromptContent('')}
+                  className="text-xs"
+                />
+              </div>
+              <Input
+                type="textarea"
+                value={newPromptContent}
+                onChange={(e) => setNewPromptContent(e.target.value)}
+                className="w-full mb-2 min-h-[400px]"
+                rows={5}
+                placeholder="Enter your prompt using the template variables..."
+                required
+              />
+            </div>
+        </div>
+
+        {/* Submit Section */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Ready to create?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                This will add a new prompt to the system.
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="default"
+                text="Clear All"
+                onClick={() => {
+                  setNewPromptContent('');
+                }}
+              />
+              <Button
+                variant="progress"
+                text="Add Prompt"
+                onClick={handleAdd}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFeedbackSection = () => (
+    <div className="space-y-4 mb-4">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column: Prompt Creation */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Create a New Feedback Prompt
+            </h2>
+          </div>
+
+          {/* Right Column: Template */}
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-sm font-medium text-green-700 dark:text-green-300">
+                  Feedback Guidelines
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <h4 className="font-medium mb-2">Best Practices:</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Be specific and actionable</li>
+                    <li>Balance positive feedback with areas for improvement</li>
+                    <li>Focus on communication techniques</li>
+                    <li>Consider persuasion effectiveness</li>
+                    <li>Address handling of objections</li>
+                  </ul>
+                </div>
+
+                {renderTemplateButton()}
+              </div>
+            </div>
+          </div>
+          <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Your Prompt
+                </label>
+                <Button
+                  variant="options"
+                  text="Clear"
+                  onClick={() => setNewPromptContent('')}
+                  className="text-xs"
+                />
+              </div>
+              <Input
+                type="textarea"
+                value={newPromptContent}
+                onChange={(e) => setNewPromptContent(e.target.value)}
+                className="w-full mb-2 min-h-[500px]"
+                rows={5}
+                placeholder="Enter your feedback prompt..."
+                required
+              />
+            </div>
+        </div>
+
+        {/* Submit Section */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Ready to create?
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                This will add a new feedback prompt to the system.
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="default"
+                text="Clear All"
+                onClick={() => {
+                  setNewPromptContent('');
+                }}
+              />
+              <Button
+                variant="progress"
+                text="Add Prompt"
+                onClick={handleAdd}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 5. Improve error handling with a custom hook
+  const useAsyncAction = (action: () => Promise<void>) => {
+    return async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        await action();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+  };
+
+  // 6. Improve handleAdd with validation and error handling
+  const handleAdd = useAsyncAction(async () => {
     try {
-      if (!newPromptContent.trim()) {
-        setValidationError('Please enter prompt content');
-        return;
-      }
-
-      if (!newPromptContent.includes('{{title}}') || !newPromptContent.includes('{{description}}')) {
-        setValidationError('Prompt must include both {{title}} and {{description}} variables');
-        return;
-      }
-
-      if (type === 'scenario') {
-        if (isNewScenario) {
-          if (!scenarioForm.title || !scenarioForm.description || !scenarioForm.id) {
-            setValidationError('Please fill in all scenario fields');
-            return;
-          }
-          if (objectives.length === 0) {
-            setValidationError('Please add at least one learning objective');
-            return;
-          }
-          // Create scenario with objectives
-          await createScenarioWithObjectives({
-            ...scenarioForm,
-            objectives
-          });
-          setSelectedScenarioId(scenarioForm.id);
-        }
-
-        if (!selectedScenarioId) {
-          setValidationError('Please select or create a scenario');
-          return;
-        }
-
-        await createPrompt(type, newPromptContent, selectedScenarioId);
-      } else {
-        await createPrompt(type, newPromptContent);
-      }
-
+      await createPrompt(type, newPromptContent);
+      
       // Reset form
       setNewPromptContent('');
-      setSelectedScenarioId('');
-      setScenarioForm({ id: '', title: '', description: '', objectives: [] });
-      setIsNewScenario(false);
       await fetchPrompts();
     } catch (err) {
-      setError('Failed to create prompt. Please try again.');
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     }
-  };
+  });
 
   const handleDuplicate = async (prompt: Prompt) => {
     await createPrompt(type, prompt.content);
@@ -516,64 +390,79 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
     }
   };
 
+  // 7. Extract loading spinner into a component
+  const LoadingSpinner: React.FC = () => (
+    <div className="flex justify-center py-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>
+  );
+
+  // Add TruncatedMarkdown component
+  const TruncatedMarkdown: React.FC<{ content: string }> = ({ content }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const previewLength = 300;
+    
+    const displayContent = isExpanded ? content : content.slice(0, previewLength);
+    const shouldTruncate = content.length > previewLength;
+    
+    return (
+      <div className="prose dark:prose-invert max-w-none">
+        <ReactMarkdown components={markdownStyles}>
+          {displayContent + (shouldTruncate && !isExpanded ? '...' : '')}
+        </ReactMarkdown>
+        {shouldTruncate && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mt-2"
+          >
+            {isExpanded ? 'Show less' : 'Read more'}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      {validationError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {validationError}
-        </div>
-      )}
+      {error && <ErrorMessage message={error} />}
+      {validationError && <ErrorMessage message={validationError} />}
 
-      {type === 'scenario' ? renderScenarioSection() : (
-        <div className="mb-6 space-y-4">
-          <Input
-            type="textarea"
-            value={newPromptContent}
-            onChange={(e) => setNewPromptContent(e.target.value)}
-            className="w-full mb-2"
-            rows={3}
-            placeholder={`Enter new ${type} prompt`}
-            required
-          />
-          <Button
-            variant="progress"
-            text={`Add New ${type.charAt(0).toUpperCase() + type.slice(1)} Prompt`}
-            onClick={handleAdd}
-          />
-        </div>
-      )}
+      {type === 'system' ? renderScenarioSection() : renderFeedbackSection()}
 
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      ) : (
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        {type === 'system' ? 'Existing System Prompts' : 'Existing Feedback Prompts'}
+      </h4>
+      {loading ? <LoadingSpinner /> : (
         <div className="space-y-6 w-full">
-          {prompts.map((prompt) => (
+          {prompts.map((prompt: PromptWithDetails) => (
             <div key={prompt.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">ID: {prompt.id}</span>
-                {type === 'scenario' && prompt.scenario_id && (
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Scenario ID: {prompt.scenario_id}</span>
-                )}
-                {type === 'persona' && prompt.persona_id && (
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Persona ID: {prompt.persona_id}</span>
-                )}
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Prompt ID: {prompt.id}
+                </span>
               </div>
               {editingId === prompt.id ? (
-                <>
-                  <Input
-                    type="textarea"
-                    value={editContent}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditContent(e.target.value)}
-                    className="w-full mb-2"
-                    rows={5}
-                  />
+                <div className="space-y-4">
+                  {type === 'system' && (
+                    <div>
+                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        System Details
+                      </label>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Prompt Content
+                    </label>
+                    <Input
+                      type="textarea"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      rows={5}
+                    />
+                  </div>
+                  
                   <div className="flex justify-end space-x-2">
                     <Button
                       variant="destructive"
@@ -586,11 +475,11 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
                       onClick={() => handleSave(prompt.id)}
                     />
                   </div>
-                </>
+                </div>
               ) : (
                 <>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{prompt.content}</p>
-                  <div className="flex justify-end space-x-2">
+                  <TruncatedMarkdown content={prompt.content} />
+                  <div className="flex justify-end space-x-2 mt-4">
                     <Button
                       variant="options"
                       text="Edit"
@@ -645,21 +534,17 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
 export const SiteAdmin: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <Header title="Admin - Prompts" variant="alt" />
+      <Header title="Site Admin - System Prompts" variant="alt" />
       <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prompt Management</h1>
+        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">System Prompt Management</h1>
         
-        <Tabs defaultValue="scenario" className="w-full">
+        <Tabs defaultValue="system" className="w-full">
           <TabsList>
-            <TabsTrigger value="scenario">Scenario Prompts</TabsTrigger>
-            <TabsTrigger value="persona">Persona Prompts</TabsTrigger>
+            <TabsTrigger value="system">System Prompts</TabsTrigger>
             <TabsTrigger value="feedback">Feedback Prompts</TabsTrigger>
           </TabsList>
-          <TabsContent value="scenario">
-            <PromptManager type="scenario" />
-          </TabsContent>
-          <TabsContent value="persona">
-            <PromptManager type="persona" />
+          <TabsContent value="system">
+            <PromptManager type="system" />
           </TabsContent>
           <TabsContent value="feedback">
             <PromptManager type="feedback" />

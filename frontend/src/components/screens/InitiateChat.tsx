@@ -13,6 +13,9 @@ import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui';
 import { AnimatePresence } from 'framer-motion';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { Select, SelectItem, SelectTrigger, SelectContent } from '@/components/ui';
+import { getSystemPrompts } from '@/utils/supabaseQueries';
+import { SelectValue } from "@radix-ui/react-select";
 
 interface InitiateChatContentProps {
   systemPromptId?: string;
@@ -27,6 +30,11 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const searchParams = useSearchParams();
   const scenarioId = searchParams.get('scenarioId');
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
+  const [availablePrompts, setAvailablePrompts] = useState<Array<{ id: number; content: string }>>([]);
+  const [selectedPromptId, setSelectedPromptId] = useState<string>(
+    defaultSystemPromptId?.toString() || ''
+  );
+  const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 
   // New array of fixed prompts
   const fixedPrompts = [
@@ -72,51 +80,59 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
     }
   }, [setPersona]);
 
-  const handlePromptSelect = async (prompt: string) => {
-    if (persona) {
+  useEffect(() => {
+    const fetchPrompts = async () => {
       try {
-        setIsExiting(true);
-        setIsNavigatingToChat(true);
-        
-        // Store persona and create conversation in parallel
-        const [_, { id: conversationId }] = await Promise.all([
-          storePersona(persona),
-          createConversation(prompt, scenarioInfo?.id || '', persona, defaultSystemPromptId)
-        ]);
-        
-        // Navigate with loading screen
-        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
-        router.push(url);
-        localStorage.removeItem('selectedPersona');
+        const prompts = await getSystemPrompts();
+        setAvailablePrompts(prompts.map(p => ({ 
+          id: p.id, 
+          content: p.content 
+        })));
       } catch (error) {
-        console.error('Error starting conversation:', error);
-        setIsExiting(false);
-        setIsNavigatingToChat(false);
+        console.error('Error fetching system prompts:', error);
+        // Optionally set an error state here
       }
+    };
+    fetchPrompts();
+  }, []);
+
+  const initiateChat = async (message: string) => {
+    if (isInitiatingChat || !persona) return; // Prevent multiple initiations
+    
+    try {
+      setIsInitiatingChat(true);
+      setIsExiting(true);
+      setIsNavigatingToChat(true);
+      
+      const [_, { id: conversationId }] = await Promise.all([
+        storePersona(persona),
+        createConversation(
+          message, 
+          scenarioInfo?.id || '', 
+          persona,
+          selectedPromptId ? Number(selectedPromptId) : undefined
+        )
+      ]);
+      
+      const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(message)}`;
+      router.push(url);
+      localStorage.removeItem('selectedPersona');
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      setIsExiting(false);
+      setIsNavigatingToChat(false);
+    } finally {
+      setIsInitiatingChat(false);
     }
   };
 
+  const handlePromptSelect = async (prompt: string) => {
+    initiateChat(prompt);
+  };
+
   const handleStartChat = async () => {
-    if (inputMessage.trim() && persona) {
-      try {
-        setIsExiting(true);
-        setIsNavigatingToChat(true);
-        
-        // Store persona and create conversation in parallel
-        const [_, { id: conversationId }] = await Promise.all([
-          storePersona(persona),
-          createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, defaultSystemPromptId)
-        ]);
-        
-        // Navigate with loading screen
-        const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
-        router.push(url);
-        localStorage.removeItem('selectedPersona');
-      } catch (error) {
-        console.error('Error starting conversation:', error);
-        setIsExiting(false);
-        setIsNavigatingToChat(false);
-      }
+    if (inputMessage.trim()) {
+      initiateChat(inputMessage.trim());
     }
   };
 
@@ -149,7 +165,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 w-full">
           <Header 
             title={scenarioInfo?.title || "Scenario"} 
             variant="default" 
@@ -165,14 +181,35 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                className="flex justify-between items-center mb-8"
               >
                 <Button
                   variant="options"
                   onClick={handleBack}
-                  className="mb-8"
                 >
                   Back to Scenario Setup
                 </Button>
+
+                <Select 
+                  value={selectedPromptId} 
+                  onValueChange={setSelectedPromptId}
+                >
+                  <SelectTrigger className="w-[300px]">
+                    <SelectValue placeholder="Select system prompt" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePrompts.map((prompt) => (
+                      <SelectItem 
+                        key={prompt.id} 
+                        value={prompt.id.toString()}
+                      >
+                        {prompt.id}: {prompt.content.length > 50 
+                          ? `${prompt.content.substring(0, 47)}...` 
+                          : prompt.content}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </motion.div>
 
               <motion.div 

@@ -1,0 +1,656 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import { getScenarios, Scenario, createScenario, createScenarioWithObjectives, updateScenarioObjectives, updateScenarioDetails, deleteScenario } from '@/utils/supabaseQueries';
+import { Modal } from '@/components/ui';
+import { slugify } from '@/utils/helpers';
+
+interface ScenarioForm {
+  id: string;
+  title: string;
+  description: string;
+  context: string;
+  objectives: string[];
+}
+
+const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [scenarioForm, setScenarioForm] = useState<ScenarioForm>({
+    id: '',
+    title: '',
+    description: '',
+    context: '',
+    objectives: []
+  });
+  const [objectives, setObjectives] = useState<string[]>([]);
+  const [newObjective, setNewObjective] = useState('');
+  const [editScenarioDetails, setEditScenarioDetails] = useState<{
+    title: string;
+    description: string;
+    context: string;
+    objectives: string[];
+  } | null>(null);
+  const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<ScenarioForm | null>(null);
+  const [deleteScenarioId, setDeleteScenarioId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (type === 'scenario') {
+      const fetchScenarios = async () => {
+        const scenarioData = await getScenarios();
+        setScenarios(scenarioData);
+      };
+      fetchScenarios();
+    }
+  }, [type]);
+
+  const generateScenarioId = (title: string) => {
+    const baseSlug = slugify(title);
+    const existingIds = scenarios
+      .filter(s => s.id.startsWith(baseSlug))
+      .map(s => s.id);
+    
+    if (existingIds.length === 0) return baseSlug;
+    
+    const numbers = existingIds
+      .map(id => {
+        const match = id.match(/-(\d+)$/);
+        return match ? parseInt(match[1]) : 1;
+      });
+    
+    const nextNumber = Math.max(...numbers) + 1;
+    return `${baseSlug}-${nextNumber}`;
+  };
+
+  const handleAddObjective = () => {
+    if (newObjective.trim()) {
+      setObjectives([...objectives, newObjective.trim()]);
+      setNewObjective('');
+    }
+  };
+
+  const handleRemoveObjective = (index: number) => {
+    setObjectives(objectives.filter((_, i) => i !== index));
+  };
+
+  const renderScenarioSection = () => (
+    <div className="space-y-4 border-b pb-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Create New Scenario
+        </h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Title
+            </label>
+            <Input
+              type="text"
+              value={scenarioForm.title}
+              onChange={(e) => {
+                const title = e.target.value;
+                setScenarioForm(prev => ({
+                  ...prev,
+                  title,
+                  id: generateScenarioId(title)
+                }));
+              }}
+              placeholder="e.g., Joining the Union"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Description
+            </label>
+            <Input
+              type="textarea"
+              rows={2}
+              value={scenarioForm.description}
+              onChange={(e) => setScenarioForm(prev => ({
+                ...prev,
+                description: e.target.value
+              }))}
+              placeholder="e.g., understand the benefits and process of joining a trade union"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Context
+            </label>
+            <Input
+              type="textarea"
+              rows={3}
+              value={scenarioForm.context}
+              onChange={(e) => setScenarioForm(prev => ({
+                ...prev,
+                context: e.target.value
+              }))}
+              placeholder="Provide background context for this scenario..."
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              This context will help frame the scenario for the AI.
+            </p>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
+            <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+              Template Preview
+            </h3>
+            <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
+              Role play to help users to{' '}
+              <span className="font-bold">
+                {scenarioForm.description || '{{description}}'}
+              </span>
+              . The user is a trade union representative speaking to you about{' '}
+              <span className="font-bold">
+                {scenarioForm.title || '{{title}}'}
+              </span>
+              .
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Learning Objectives
+            </label>
+            <div className="space-y-2">
+              {objectives.map((objective, index) => (
+                <div key={index} className="flex flex-col space-y-2 w-full">
+                  <div className="flex items-center space-x-2 w-full">
+                    <span className="text-gray-500 text-sm">{index + 1}.</span>
+                    <Input
+                      type="text"
+                      value={objective}
+                      onChange={(e) => {
+                        const newObjectives = [...objectives];
+                        newObjectives[index] = e.target.value;
+                        setObjectives(newObjectives);
+                      }}
+                      className="flex-grow"
+                    />
+                    <Button
+                      variant="destructive"
+                      text="Remove"
+                      onClick={() => handleRemoveObjective(index)}
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+              ))}
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-500 text-sm">{objectives.length + 1}.</span>
+                <Input
+                  type="text"
+                  value={newObjective}
+                  onChange={(e) => setNewObjective(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddObjective();
+                    }
+                  }}
+                  placeholder="Enter a learning objective..."
+                  className="flex-grow"
+                />
+                <Button
+                  variant="options"
+                  text="Add"
+                  onClick={handleAddObjective}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button
+              variant="progress"
+              text="Create Scenario"
+              onClick={handleCreateScenario}
+              disabled={loading || objectives.length < 3}
+              className="w-full"
+            />
+            {objectives.length > 0 && objectives.length < 3 && (
+              <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 text-center">
+                Add {3 - objectives.length} more objective{3 - objectives.length === 1 ? '' : 's'} to create
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const handleCreateScenario = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setValidationError(null);
+
+      if (!scenarioForm.title || !scenarioForm.description) {
+        setValidationError('Please fill in all scenario fields');
+        return;
+      }
+      if (objectives.length < 3) {
+        setValidationError('Please add at least 3 learning objectives');
+        return;
+      }
+
+      await createScenarioWithObjectives({
+        ...scenarioForm,
+        objectives
+      });
+
+      setScenarioForm({
+        id: '',
+        title: '',
+        description: '',
+        context: '',
+        objectives: []
+      });
+      setObjectives([]);
+      setNewObjective('');
+
+      const scenarioData = await getScenarios();
+      setScenarios(scenarioData);
+
+      setError('Scenario created successfully!');
+    } catch (err) {
+      setError('Failed to create scenario. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = (scenario: Scenario) => {
+    setEditingScenarioId(scenario.id);
+    setEditForm({
+      id: scenario.id,
+      title: scenario.title,
+      description: scenario.description,
+      context: scenario.context,
+      objectives: scenario.objectives
+    });
+  };
+
+  const handleEditCancel = () => {
+    setEditingScenarioId(null);
+    setEditForm(null);
+  };
+
+  const handleEditSave = async (scenarioId: string) => {
+    if (!editForm) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (editForm.objectives.length < 3) {
+        setError('Please add at least 3 learning objectives');
+        return;
+      }
+
+      await updateScenarioDetails(scenarioId, {
+        title: editForm.title,
+        description: editForm.description,
+        context: editForm.context,
+        objectives: editForm.objectives
+      });
+
+      setEditingScenarioId(null);
+      setEditForm(null);
+      
+      // Refresh scenarios
+      const scenarioData = await getScenarios();
+      setScenarios(scenarioData);
+      
+      setError('Scenario updated successfully!');
+    } catch (err) {
+      setError('Failed to update scenario. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDuplicateScenario = async (scenario: Scenario) => {
+    try {
+      setLoading(true);
+      
+      // Create new ID for duplicated scenario
+      const newId = generateScenarioId(scenario.title);
+      
+      // Create duplicate scenario with new ID
+      await createScenarioWithObjectives({
+        ...scenario,
+        id: newId,
+        title: `${scenario.title} (Copy)`,
+      });
+      
+      // Refresh scenarios
+      const scenarioData = await getScenarios();
+      setScenarios(scenarioData);
+      setError('Scenario duplicated successfully!');
+    } catch (err) {
+      setError('Failed to duplicate scenario. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteScenarioClick = (scenarioId: string) => {
+    setDeleteScenarioId(scenarioId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteScenarioConfirm = async () => {
+    if (!deleteScenarioId) return;
+    
+    try {
+      setLoading(true);
+      await deleteScenario(deleteScenarioId);
+      
+      // Refresh scenarios
+      const scenarioData = await getScenarios();
+      setScenarios(scenarioData);
+      setError('Scenario deleted successfully!');
+    } catch (err) {
+      setError('Failed to delete scenario. Please try again.');
+    } finally {
+      setLoading(false);
+      setShowDeleteModal(false);
+      setDeleteScenarioId(null);
+    }
+  };
+
+  const renderExistingScenarios = () => (
+    <div className="space-y-4">
+      {scenarios.map(scenario => (
+        <div key={scenario.id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          {editingScenarioId === scenario.id ? (
+            // Edit Mode
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                  ID: {scenario.id}
+                </span>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Title
+                </label>
+                <Input
+                  type="text"
+                  value={editForm?.title}
+                  onChange={(e) => setEditForm(prev => ({
+                    ...prev!,
+                    title: e.target.value
+                  }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Description
+                </label>
+                <Input
+                  type="textarea"
+                  rows={2}
+                  value={editForm?.description}
+                  onChange={(e) => setEditForm(prev => ({
+                    ...prev!,
+                    description: e.target.value
+                  }))}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Context
+                </label>
+                <Input
+                  type="textarea"
+                  rows={3}
+                  value={editForm?.context}
+                  onChange={(e) => setEditForm(prev => ({
+                    ...prev!,
+                    context: e.target.value
+                  }))}
+                />
+              </div>
+
+              {/* Template Preview */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
+                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                  Template Preview
+                </h3>
+                <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
+                  Role play to help users to{' '}
+                  <span className="font-bold">{editForm?.description}</span>
+                  . The user is a trade union representative speaking to you about{' '}
+                  <span className="font-bold">{editForm?.title}</span>.
+                </p>
+                {(editForm?.title || editForm?.description) && (
+                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 italic">
+                    ⚡ Make sure the title and description flow naturally in the sentence above
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Learning Objectives
+                </label>
+                <div className="space-y-2">
+                  {editForm?.objectives.map((objective, index) => (
+                    <div key={index} className="flex flex-col space-y-2 w-full">
+                      <div className="flex items-center space-x-2 w-full">
+                        <span className="text-gray-500 text-sm">{index + 1}.</span>
+                        <Button
+                          variant="destructive"
+                          text="Remove"
+                          onClick={() => {
+                            const newObjectives = editForm.objectives.filter((_, i) => i !== index);
+                            setEditForm(prev => ({
+                              ...prev!,
+                              objectives: newObjectives
+                            }));
+                          }}
+                          className="text-xs"
+                        />
+                      </div>
+                      <Input
+                        type="text"
+                        value={objective}
+                        onChange={(e) => {
+                          const newObjectives = [...editForm.objectives];
+                          newObjectives[index] = e.target.value;
+                          setEditForm(prev => ({
+                            ...prev!,
+                            objectives: newObjectives
+                          }));
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    variant="options"
+                    text="Add Objective"
+                    onClick={() => setEditForm(prev => ({
+                      ...prev!,
+                      objectives: [...prev!.objectives, '']
+                    }))}
+                    className="text-xs"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  {editForm && editForm.objectives.length < 3 ? (
+                    <span className="text-amber-600 dark:text-amber-400">
+                      Add {3 - editForm.objectives.length} more objective{3 - editForm.objectives.length === 1 ? '' : 's'}
+                    </span>
+                  ) : (
+                    <span className="text-green-600 dark:text-green-400">
+                      ✓ {editForm?.objectives.length} objectives added
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="destructive"
+                  text="Cancel"
+                  onClick={handleEditCancel}
+                />
+                <Button
+                  variant="progress"
+                  text="Save Changes"
+                  onClick={() => handleEditSave(scenario.id)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          ) : (
+            // Updated View Mode
+            <>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-medium text-lg">{scenario.title}</h3>
+                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                    ID: {scenario.id}
+                  </span>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="options"
+                    text="Edit"
+                    onClick={() => handleEditClick(scenario)}
+                  />
+                  <Button
+                    variant="options"
+                    text="Duplicate"
+                    onClick={() => handleDuplicateScenario(scenario)}
+                  />
+                  <Button
+                    variant="destructive"
+                    text="Delete"
+                    onClick={() => handleDeleteScenarioClick(scenario.id)}
+                  />
+                </div>
+              </div>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {scenario.description}
+              </p>
+
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Context:
+                </h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  {scenario.context}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Learning Objectives:
+                </h4>
+                {scenario.objectives.map((objective, index) => (
+                  <div key={index} className="text-sm text-gray-600 dark:text-gray-400 pl-4">
+                    {index + 1}. {objective}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Scenario"
+        footer={
+          <div className="flex justify-end space-x-4">
+            <Button 
+              variant="default" 
+              text="Cancel" 
+              onClick={() => setShowDeleteModal(false)} 
+            />
+            <Button
+              variant="destructive"
+              text="Delete"
+              onClick={handleDeleteScenarioConfirm}
+              disabled={loading}
+            />
+          </div>
+        }
+      >
+        <p className="text-lg text-gray-700 dark:text-gray-300">
+          Are you sure you want to delete this scenario? This action cannot be undone.
+        </p>
+      </Modal>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
+        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Scenario Management</h1>
+        
+        {error && (
+          <div className={`p-4 rounded-md mb-4 ${
+            error.toLowerCase().includes('success') 
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}>
+            {error}
+          </div>
+        )}
+        
+        <div className="space-y-8">
+          {renderScenarioSection()}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Existing Scenarios
+            </h2>
+            {renderExistingScenarios()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const OrganiserAdmin: React.FC = () => {
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      <Header title="Admin - Prompts" variant="alt" />
+      <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
+        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prompt Management</h1>
+        
+        <Tabs defaultValue="scenario" className="w-full">
+          <TabsList>
+            <TabsTrigger value="scenario">Your Scenarios</TabsTrigger>
+          </TabsList>
+          <TabsContent value="scenario">
+            <PromptManager type="scenario" />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};

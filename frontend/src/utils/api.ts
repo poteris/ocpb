@@ -97,7 +97,13 @@ export async function storePersona(persona: Persona): Promise<void> {
   }
 }
 
-export async function createConversation(initialMessage: string, scenarioId: string, persona: Persona, systemPromptId?: string) {
+export async function createConversation(
+  initialMessage: string, 
+  scenarioId: string, 
+  persona: Persona, 
+  promptId?: number
+): Promise<{ id: string; aiResponse: string }> {
+  console.log(promptId)
   const userId = await getUserId();
   const response = await invokeFunction('assistant', { 
     action: 'createConversation', 
@@ -105,7 +111,7 @@ export async function createConversation(initialMessage: string, scenarioId: str
     initialMessage, 
     scenarioId, 
     persona,
-    systemPromptId
+    promptId
   });
   return response.result;
 }
