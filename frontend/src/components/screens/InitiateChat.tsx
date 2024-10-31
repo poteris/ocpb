@@ -83,7 +83,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
           storePersona(persona),
           createConversation(prompt, scenarioInfo?.id || '', persona, defaultSystemPromptId)
         ]);
-        
+        console.log(_);
         // Navigate with loading screen
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(prompt)}`;
         router.push(url);
@@ -107,7 +107,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
           storePersona(persona),
           createConversation(inputMessage.trim(), scenarioInfo?.id || '', persona, defaultSystemPromptId)
         ]);
-        
+        console.log(_);
         // Navigate with loading screen
         const url = `/chat-screen?conversationId=${conversationId}&firstMessage=${encodeURIComponent(inputMessage.trim())}`;
         router.push(url);

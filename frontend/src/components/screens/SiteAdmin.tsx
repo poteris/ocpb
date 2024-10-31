@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { getScenarioPrompts, getPersonaPrompts, getFeedbackPrompts, updatePrompt, createPrompt, deletePrompt, Prompt, getScenarios, Scenario, createScenario, createScenarioWithObjectives, updateScenarioObjectives } from '@/utils/supabaseQueries';
+import { getScenarioPrompts, getPersonaPrompts, getFeedbackPrompts, updatePrompt, createPrompt, deletePrompt, Prompt, getScenarios, Scenario, createScenarioWithObjectives} from '@/utils/supabaseQueries';
 import { Modal } from '@/components/ui';
 import { slugify } from '@/utils/helpers';
 
@@ -72,7 +72,7 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ));
     } catch (err) {
-      setError('Failed to fetch prompts. Please try again.');
+      setError(`Failed to fetch prompts. ${err}. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -484,7 +484,7 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
       setIsNewScenario(false);
       await fetchPrompts();
     } catch (err) {
-      setError('Failed to create prompt. Please try again.');
+      setError(`Failed to create prompt. ${err}Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -508,7 +508,7 @@ const PromptManager: React.FC<{ type: 'scenario' | 'persona' | 'feedback' }> = (
       await deletePrompt(type, deletePromptId);
       await fetchPrompts();
     } catch (err) {
-      setError('Failed to delete prompt. Please try again.');
+      setError(`Failed to delete prompt. ${err} Please try again.`);
     } finally {
       setLoading(false);
       setShowDeleteModal(false);
