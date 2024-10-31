@@ -2,7 +2,6 @@ import { useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ChatSession, Message } from '@/types/chat';
 import { createConversation, sendMessage } from '@/utils/api';
-import { promptMap } from '@/utils/promptMap';
 import { debounce } from 'lodash';
 import { useScenario } from '@/context/ScenarioContext';
 
@@ -90,9 +89,7 @@ export const useChat = () => {
       setIsWaitingForInitialResponse(true);
 
       try {
-        const shortPrompt = searchParams.get('shortPrompt');
         const firstMessageParam = initialMessage || searchParams.get('firstMessage');
-        const messageToUse = shortPrompt ? promptMap[shortPrompt] : firstMessageParam;
         const scenarioId = searchParams.get('scenarioId') || scenarioInfo?.id;
         const systemPromptIdParam = searchParams.get('systemPromptId');
 
@@ -117,12 +114,12 @@ export const useChat = () => {
           const newSession: ChatSession = {
             id: Date.now().toString(),
             conversationId: '',
-            messages: messageToUse ? [{ id: `first-${Date.now()}`, text: messageToUse, sender: 'user' }] : []
+            messages: firstMessageParam ? [{ id: `first-${Date.now()}`, text: firstMessageParam, sender: 'user' }] : []
           };
           setCurrentSession(newSession);
 
           if (!newSession.conversationId) {
-            const conversationResponse = await createConversation(messageToUse || '', scenarioId, persona, systemPromptIdParam || '1');
+            const conversationResponse = await createConversation(firstMessageParam || '', scenarioId, persona, systemPromptIdParam || '1');
             if (!conversationResponse || !conversationResponse.id) {
               throw new Error('Failed to create conversation');
             }
@@ -132,7 +129,7 @@ export const useChat = () => {
             newSession.conversationId = conversationId;
             saveSessionToStorage(newSession);
 
-            if (messageToUse && conversationResponse.aiResponse) {
+            if (firstMessageParam && conversationResponse.aiResponse) {
               setCurrentSession(prevSession => ({
                 ...prevSession!,
                 messages: [

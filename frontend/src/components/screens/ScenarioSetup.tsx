@@ -8,7 +8,6 @@ import { useScenario } from '@/context/ScenarioContext';
 import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 import { generatePersona, Persona } from '@/utils/api';
 import { Loader, ChevronLeft, ChevronRight, RefreshCw } from 'react-feather';
-import { useDebounce } from '@/hooks/useDebounce';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
 import { motion, AnimatePresence } from 'framer-motion';

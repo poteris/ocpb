@@ -17,9 +17,19 @@ export interface Scenario {
   objectives: string[];
 }
 
+export interface ScenarioForm {
+  id: string;
+  title: string;
+  description: string;
+  objectives: string[];
+}
+
 export interface Prompt {
   id: number;
   content: string;
+  scenario_id?: string;
+  persona_id?: string;
+  created_at: string;
 }
 
 export async function getScenarios(): Promise<Scenario[]> {
@@ -106,11 +116,11 @@ export async function getFeedbackPrompts(): Promise<Prompt[]> {
     .order('id');
 
   if (error) {
-    console.error('Error fetching feedback prompts:', error);
+    console.error('Error fetching feedback prompts:', error.message, error.details);
     return [];
   }
-
-  return data;
+  
+  return data || [];
 }
 
 export async function updatePrompt(type: 'scenario' | 'persona' | 'feedback', id: number, content: string): Promise<void> {
@@ -125,10 +135,18 @@ export async function updatePrompt(type: 'scenario' | 'persona' | 'feedback', id
   }
 }
 
-export async function createPrompt(type: 'scenario' | 'persona' | 'feedback', content: string): Promise<void> {
+export async function createPrompt(
+  type: 'scenario' | 'persona' | 'feedback', 
+  content: string, 
+  scenarioId?: string
+): Promise<void> {
+  const data = type === 'scenario' 
+    ? { content, scenario_id: scenarioId }
+    : { content };
+
   const { error } = await supabase
     .from(`${type}_prompts`)
-    .insert({ content });
+    .insert(data);
 
   if (error) {
     console.error(`Error creating ${type} prompt:`, error);
@@ -145,5 +163,87 @@ export async function deletePrompt(type: 'scenario' | 'persona' | 'feedback', id
   if (error) {
     console.error(`Error deleting ${type} prompt:`, error);
     throw error;
+  }
+}
+
+export async function createScenario(scenario: { id: string; title: string; description: string }) {
+  const { error } = await supabase
+    .from('scenarios')
+    .insert({
+      id: scenario.id,
+      title: scenario.title,
+      description: scenario.description
+    });
+
+  if (error) {
+    console.error('Error creating scenario:', error);
+    throw error;
+  }
+}
+
+export async function createScenarioWithObjectives(scenario: ScenarioForm) {
+  // Start a Supabase transaction
+  const { data: newScenario, error: scenarioError } = await supabase
+    .from('scenarios')
+    .insert({
+      id: scenario.id,
+      title: scenario.title,
+      description: scenario.description
+    })
+    .select()
+    .single();
+
+  if (scenarioError) {
+    console.error('Error creating scenario:', scenarioError);
+    throw scenarioError;
+  }
+
+  // Create objectives
+  if (scenario.objectives.length > 0) {
+    const objectivesData = scenario.objectives.map(objective => ({
+      scenario_id: scenario.id,
+      objective
+    }));
+
+    const { error: objectivesError } = await supabase
+      .from('scenario_objectives')
+      .insert(objectivesData);
+
+    if (objectivesError) {
+      console.error('Error creating objectives:', objectivesError);
+      throw objectivesError;
+    }
+  }
+
+  return newScenario;
+}
+
+export async function updateScenarioObjectives(scenarioId: string, objectives: string[]) {
+  // First delete existing objectives
+  const { error: deleteError } = await supabase
+    .from('scenario_objectives')
+    .delete()
+    .eq('scenario_id', scenarioId);
+
+  if (deleteError) {
+    console.error('Error deleting existing objectives:', deleteError);
+    throw deleteError;
+  }
+
+  // Then insert new objectives
+  if (objectives.length > 0) {
+    const objectivesData = objectives.map(objective => ({
+      scenario_id: scenarioId,
+      objective
+    }));
+
+    const { error: insertError } = await supabase
+      .from('scenario_objectives')
+      .insert(objectivesData);
+
+    if (insertError) {
+      console.error('Error creating new objectives:', insertError);
+      throw insertError;
+    }
   }
 }

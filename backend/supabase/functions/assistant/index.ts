@@ -307,23 +307,22 @@ async function createConversation({ userId, initialMessage, scenarioId, persona 
     }
 
     let aiResponse = null;
-    if (initialMessage) {
-      try {
-        const systemPrompt = await getInstructionPrompt(scenarioId);
-        const completePrompt = await createCompletePrompt(persona, systemPrompt);
-        
-        const messages = [
-          { role: "system", content: completePrompt },
-          { role: "user", content: initialMessage }
-        ];
+    const messageToSend = initialMessage || "Hi";
+    try {
+      const systemPrompt = await getInstructionPrompt(scenarioId);
+      const completePrompt = await createCompletePrompt(persona, systemPrompt);
+      
+      const messages = [
+        { role: "system", content: completePrompt },
+        { role: "user", content: messageToSend }
+      ];
 
-        aiResponse = await getAIResponse(messages);
-        await saveMessages(conversationId, initialMessage, aiResponse || '');
-      } catch (error) {
-        console.error('Error processing initial message:', error);
-        // Continue even if message processing fails
-        aiResponse = "I apologize, but I'm having trouble responding right now. Could you please try again?";
-      }
+      aiResponse = await getAIResponse(messages);
+      await saveMessages(conversationId, messageToSend, aiResponse || '');
+    } catch (error) {
+      console.error('Error processing initial message:', error);
+      // Continue even if message processing fails
+      aiResponse = "I apologize, but I'm having trouble responding right now. Could you please try again?";
     }
 
     return { id: conversationId, aiResponse };

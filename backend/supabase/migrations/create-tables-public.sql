@@ -103,17 +103,19 @@ CREATE TABLE public.messages (
 -- Enable Row Level Security
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.feedback_prompts ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
 CREATE POLICY "Users can only access their own conversations" ON public.conversations
   FOR ALL USING (auth.uid()::text = user_id::text);
-CREATE POLICY "Allow read access to authenticated users for feedback_prompts" 
-    ON public.feedback_prompts FOR SELECT 
-    TO authenticated 
-    USING (true);
 
 -- Grant access to tables for authenticated users
 GRANT ALL ON public.messages TO authenticated;
 GRANT ALL ON public.conversations TO authenticated;
-GRANT SELECT ON public.feedback_prompts TO authenticated;
+GRANT ALL ON public.feedback_prompts TO authenticated;
+GRANT ALL ON public.scenario_prompts TO authenticated;
+GRANT ALL ON public.persona_prompts TO authenticated;
+
+-- Update grants for sequences
+GRANT USAGE ON SEQUENCE feedback_prompts_id_seq TO authenticated;
+GRANT USAGE ON SEQUENCE scenario_prompts_id_seq TO authenticated;
+GRANT USAGE ON SEQUENCE persona_prompts_id_seq TO authenticated;
