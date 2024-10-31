@@ -120,8 +120,8 @@ export async function createConversation(
   return response.result;
 }
 
-export async function sendMessage(conversationId: string, content: string, scenarioId?: string) {
-  const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content });
+export async function sendMessage(conversationId: string, content: string, scenario_id?: string) {
+  const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content, scenario_id });
   if (response && response.result && response.result.content) {
     return response.result;
   } else {

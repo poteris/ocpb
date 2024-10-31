@@ -5,19 +5,15 @@ import { createConversation, sendMessage } from '@/utils/api';
 import { useScenario } from '@/context/ScenarioContext';
 import { useDebounce } from '@/hooks/useDebounce';
 
-const STORAGE_KEY = 'chatSessions';
-
 export const useChat = () => {
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
-  const sessionInitialized = useRef(false);
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('sessionId');
   const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] = useState(false);
   const { scenarioInfo, persona } = useScenario();
-  const [systemPromptId, setSystemPromptId] = useState<string | null>(null);
+  const [systemPromptId] = useState<string | null>(null);
   const initializationAttempted = useRef(false);
 
   const handleSendMessage = async (message: string, conversationId: string, scenarioId: string) => {
@@ -158,7 +154,7 @@ export const useChat = () => {
   }, [searchParams, conversationId, scenarioInfo, persona]);
 
   // Create debounced version of initialize
-  const debouncedInitialize = useDebounce(initialize as (initialMessage?: string) => Promise<void>, 300);
+  const debouncedInitialize = useDebounce(initialize, 300);
 
   // Wrap initialize in a function that uses the debounced version
   const initializeSession = useCallback((initialMessage?: string) => {

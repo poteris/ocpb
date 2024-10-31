@@ -20,27 +20,6 @@ const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
   </div>
 );
 
-// Add new components for truncated text
-const TruncatedText: React.FC<{ text: string; limit?: number }> = ({ text, limit = 100 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  if (text.length <= limit) return <p>{text}</p>;
-  
-  return (
-    <div>
-      <p>
-        {isExpanded ? text : `${text.slice(0, limit)}...`}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {isExpanded ? 'Show less' : 'Read more'}
-        </button>
-      </p>
-    </div>
-  );
-};
-
 // Update template variables based on SQL schema
 const AVAILABLE_VARIABLES = {
   scenario: [
@@ -98,12 +77,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const [editContent, setEditContent] = useState('');
   const [newPromptContent, setNewPromptContent] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [templatePrompt, setTemplatePrompt] = useState<string>('');
-
-  useEffect(() => {
-    fetchPrompts();
-  }, [type]);
+  const [templatePrompt] = useState('');
 
   const fetchPrompts = useCallback(async () => {
     const fetchedPrompts = type === 'system' 
@@ -112,9 +86,18 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
     setPrompts(fetchedPrompts);
   }, [type]);
 
+  useEffect(() => {
+    fetchPrompts();
+  }, [fetchPrompts]);
+
   const handleEdit = (prompt: PromptWithDetails) => {
-    setEditingId(prompt.id);
-    setEditContent(prompt.content);
+    try {
+      setEditingId(prompt.id);
+      setEditContent(prompt.content);
+    } catch (error) {
+      console.error('Error editing prompt:', error);
+      setError('Failed to edit prompt. Please try again.');
+    }
   };
 
   const handleSave = async (id: number) => {
@@ -122,7 +105,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
       await updatePrompt(type, id, editContent);
       setEditingId(null);
       fetchPrompts();
-    } catch (error) {
+    } catch {
       setError('Failed to update prompt. Please try again.');
     }
   };
@@ -355,12 +338,11 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const handleAdd = useAsyncAction(async () => {
     try {
       await createPrompt(type, newPromptContent);
-      
-      // Reset form
       setNewPromptContent('');
       await fetchPrompts();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } catch (error) {
+      console.error('Error creating prompt:', error);
+      setError('Failed to create prompt. Please try again.');
     }
   });
 
@@ -381,7 +363,8 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
     try {
       await deletePrompt(type, deletePromptId);
       await fetchPrompts();
-    } catch (err) {
+    } catch (error) {
+      console.error('Error deleting prompt:', error);
       setError('Failed to delete prompt. Please try again.');
     } finally {
       setLoading(false);
@@ -425,7 +408,6 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   return (
     <div className="w-full">
       {error && <ErrorMessage message={error} />}
-      {validationError && <ErrorMessage message={validationError} />}
 
       {type === 'system' ? renderScenarioSection() : renderFeedbackSection()}
 

@@ -43,7 +43,7 @@ export interface PromptWithDetails extends Prompt {
 }
 
 export async function getScenarios(): Promise<Scenario[]> {
-  const { data: scenarios, error } = await supabase
+  const { data: scenarios, error: scenariosError } = await supabase
     .from('scenarios')
     .select(`
       id,
@@ -52,14 +52,30 @@ export async function getScenarios(): Promise<Scenario[]> {
       context
     `);
 
-  if (error) {
-    console.error('Error fetching scenarios:', error);
+  if (scenariosError) {
+    console.error('Error fetching scenarios:', scenariosError);
     return [];
   }
 
+  // Fetch objectives for all scenarios
+  const { data: objectives, error: objectivesError } = await supabase
+    .from('scenario_objectives')
+    .select('*');
+
+  if (objectivesError) {
+    console.error('Error fetching objectives:', objectivesError);
+    return scenarios.map(scenario => ({
+      ...scenario,
+      objectives: []
+    }));
+  }
+
+  // Combine scenarios with their objectives
   return scenarios.map(scenario => ({
     ...scenario,
-    objectives: []
+    objectives: objectives
+      ?.filter(obj => obj.scenario_id === scenario.id)
+      .map(obj => obj.objective) || []
   }));
 }
 

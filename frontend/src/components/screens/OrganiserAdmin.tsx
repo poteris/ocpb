@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { getScenarios, Scenario, createScenario, createScenarioWithObjectives, updateScenarioObjectives, updateScenarioDetails, deleteScenario } from '@/utils/supabaseQueries';
+import { 
+  getScenarios, 
+  Scenario, 
+  createScenarioWithObjectives, 
+  updateScenarioDetails, 
+  deleteScenario 
+} from '@/utils/supabaseQueries';
 import { Modal } from '@/components/ui';
 import { slugify } from '@/utils/helpers';
 
@@ -22,7 +28,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [scenarioForm, setScenarioForm] = useState<ScenarioForm>({
     id: '',
     title: '',
@@ -32,12 +37,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
   });
   const [objectives, setObjectives] = useState<string[]>([]);
   const [newObjective, setNewObjective] = useState('');
-  const [editScenarioDetails, setEditScenarioDetails] = useState<{
-    title: string;
-    description: string;
-    context: string;
-    objectives: string[];
-  } | null>(null);
   const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ScenarioForm | null>(null);
   const [deleteScenarioId, setDeleteScenarioId] = useState<string | null>(null);
@@ -235,14 +234,13 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
     try {
       setLoading(true);
       setError(null);
-      setValidationError(null);
 
       if (!scenarioForm.title || !scenarioForm.description) {
-        setValidationError('Please fill in all scenario fields');
+        setError('Please fill in all scenario fields');
         return;
       }
       if (objectives.length < 3) {
-        setValidationError('Please add at least 3 learning objectives');
+        setError('Please add at least 3 learning objectives');
         return;
       }
 
@@ -265,7 +263,8 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
       setScenarios(scenarioData);
 
       setError('Scenario created successfully!');
-    } catch (err) {
+    } catch (error) {
+      console.error('Create scenario error:', error);
       setError('Failed to create scenario. Please try again.');
     } finally {
       setLoading(false);
@@ -315,7 +314,8 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
       setScenarios(scenarioData);
       
       setError('Scenario updated successfully!');
-    } catch (err) {
+    } catch (error) {
+      console.error('Edit scenario error:', error);
       setError('Failed to update scenario. Please try again.');
     } finally {
       setLoading(false);
@@ -340,7 +340,8 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
       const scenarioData = await getScenarios();
       setScenarios(scenarioData);
       setError('Scenario duplicated successfully!');
-    } catch (err) {
+    } catch (error) {
+      console.error('Duplicate scenario error:', error);
       setError('Failed to duplicate scenario. Please try again.');
     } finally {
       setLoading(false);
@@ -363,7 +364,8 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
       const scenarioData = await getScenarios();
       setScenarios(scenarioData);
       setError('Scenario deleted successfully!');
-    } catch (err) {
+    } catch (error) {
+      console.error('Delete scenario error:', error);
       setError('Failed to delete scenario. Please try again.');
     } finally {
       setLoading(false);

@@ -36,41 +36,35 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   );
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 
-  // New array of fixed prompts
-  const fixedPrompts = [
-    "Hi, can I interrupt you for a sec?",
-    "Hey, how are you doing?",
-    "Hey mate, sorry to bother you - how's it going?",
-    "What are you up to?",
-    "Hi!",
-    "Heya mate - what's new?"
-  ];
-
-  // Function to randomly select prompts
-  const getRandomPrompts = () => {
-    const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
-    const isMobile = window.innerWidth < 640; // sm breakpoint in Tailwind
-    return shuffled.slice(0, isMobile ? 3 : 4);
-  };
-
   // State to store the randomly selected prompts
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
 
   // Update prompts when screen size changes
   useEffect(() => {
+    // Moved fixedPrompts inside the effect
+    const fixedPrompts = [
+      "Hi, can I interrupt you for a sec?",
+      "Hey, how are you doing?",
+      "Hey mate, sorry to bother you - how's it going?",
+      "What are you up to?",
+      "Hi!",
+      "Heya mate - what's new?"
+    ];
+
+    const getRandomPrompts = () => {
+      const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
+      const isMobile = window.innerWidth < 640;
+      return shuffled.slice(0, isMobile ? 3 : 4);
+    };
+
     const handleResize = () => {
       setSelectedPrompts(getRandomPrompts());
     };
 
-    // Initial setup
     handleResize();
-
-    // Add event listener
     window.addEventListener('resize', handleResize);
-
-    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, []); // Empty dependency array since fixedPrompts is now inside
 
   useEffect(() => {
     const storedPersona = localStorage.getItem('selectedPersona');
@@ -104,7 +98,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
       setIsExiting(true);
       setIsNavigatingToChat(true);
       
-      const [_, conversationResponse] = await Promise.all([
+      const [, conversationResponse] = await Promise.all([
         storePersona(persona),
         createConversation(
           message, 

@@ -95,8 +95,8 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
             <Button 
               variant="options"
               onClick={() => onNavigate('prev')} 
-              disabled={false} // You might want to pass this as a prop
-              className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+              disabled={false}
+              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-200"
             >
               <ChevronLeft size={24} />
             </Button>
@@ -106,8 +106,8 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
             <Button 
               variant="options"
               onClick={() => onNavigate('next')} 
-              disabled={false} // You might want to pass this as a prop
-              className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+              disabled={false}
+              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-200"
             >
               <ChevronRight size={24} />
             </Button>
