@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { getFeedbackPrompts, updatePrompt, createPrompt, deletePrompt, Prompt, getSystemPrompts, PromptWithDetails, getPersonaPrompts } from '@/utils/supabaseQueries';
+import { getFeedbackPrompts, updatePrompt, getSystemPrompts, getPersonaPrompts } from '@/utils/supabaseQueries';
 import { LoadingSpinner } from '@/components/ui';
 interface PromptManagerProps {
   type: 'system' | 'feedback' | 'persona';

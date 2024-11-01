@@ -14,10 +14,7 @@ import { Skeleton } from '@/components/ui';
 import { AnimatePresence } from 'framer-motion';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
-interface InitiateChatContentProps {
-}
-
-const InitiateChatContent: React.FC<InitiateChatContentProps> = () => {
+const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
@@ -26,7 +23,6 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = () => {
   const searchParams = useSearchParams();
   const scenarioId = searchParams.get('scenarioId');
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
-  const [availablePrompts, setAvailablePrompts] = useState<Array<{ id: number; content: string }>>([]);
 
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 

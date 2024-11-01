@@ -7,7 +7,7 @@ import { Header } from '../Header';
 import { useScenario } from '@/context/ScenarioContext';
 import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 import { generatePersona, Persona } from '@/utils/api';
-import { Loader, ChevronLeft, ChevronRight, RefreshCw } from 'react-feather';
+import { Loader, RefreshCw } from 'react-feather';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
 import { motion, AnimatePresence } from 'framer-motion';
