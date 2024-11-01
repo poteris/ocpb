@@ -276,7 +276,7 @@ export async function POST(req: Request) {
   }
 }
 
-async function createConversation({ userId, initialMessage, scenarioId, persona, promptId }: { userId: string; initialMessage?: string; scenarioId: string; persona: any; promptId?: number }) {
+async function createConversation({ userId, initialMessage, scenarioId, persona, systemPromptId }: { userId: string; initialMessage?: string; scenarioId: string; persona: any; systemPromptId?: number }) {
   try {
     if (!userId || !scenarioId || !persona) {
       throw new Error('Missing userId, scenarioId, or persona');
@@ -294,8 +294,6 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
 
     const conversationId = crypto.randomUUID();
 
-    // Get default system prompt ID if none provided
-    let systemPromptId = promptId || 1;
     if (!systemPromptId) {
       const { data: defaultPrompt, error: defaultPromptError } = await supabase
         .from('system_prompts')
@@ -329,7 +327,12 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
     let aiResponse = null;
     const messageToSend = initialMessage || "Hi";
     try {
-      const completePrompt = await getInstructionPrompt(scenarioId, promptId);
+      // Get the conversation context first
+      const { scenario } = await getConversationContext(conversationId);
+      
+      // Get and fill the system prompt template
+      const systemPromptTemplate = await getSystemPrompt(systemPromptId || 1);
+      const completePrompt = await createCompletePrompt(persona, scenario, systemPromptTemplate);
       
       const messages = [
         { role: "system", content: completePrompt },
@@ -340,7 +343,6 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
       await saveMessages(conversationId, messageToSend, aiResponse || '');
     } catch (error) {
       console.error('Error processing initial message:', error);
-      // Continue even if message processing fails
       aiResponse = "I apologise, but I'm having trouble responding right now. Could you please try again?";
     }
 
@@ -354,7 +356,7 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
 async function sendMessage({ conversationId, content, scenarioId }: { conversationId: string; content: string; scenarioId?: string }) {
   try {
     // Get conversation context
-    const { persona, scenario } = await getConversationContext(conversationId);
+    const { persona, scenario, systemPrompt } = await getConversationContext(conversationId);
 
     // Get message history
     const { data: messagesData, error: messagesError } = await supabase
@@ -364,24 +366,9 @@ async function sendMessage({ conversationId, content, scenarioId }: { conversati
       .order('created_at', { ascending: true });
 
     if (messagesError) throw messagesError;
-
-    // Get the conversation details to get the system_prompt_id
-    const { data: conversation, error: conversationError } = await supabase
-      .from('conversations')
-      .select('system_prompt_id')
-      .eq('conversation_id', conversationId)
-      .single();
-
-    if (conversationError) throw conversationError;
-
-    // Get system prompt with the same prompt ID used in conversation creation
-    const systemPromptTemplate = await getInstructionPrompt(
-      scenarioId || scenario.id, 
-      conversation.system_prompt_id
-    );
     
     // Create a structured prompt that maintains context
-    const completePrompt = await createCompletePrompt(persona, systemPromptTemplate);
+    const completePrompt = await createCompletePrompt(persona, scenario, systemPrompt);
     
     // Organise messages with clear context preservation
     let messages = [
@@ -429,7 +416,7 @@ async function getConversationMessages({ conversationId }: { conversationId: str
 async function getConversationContext(conversationId: string) {
   const { data, error } = await supabase
     .from('conversations')
-    .select('scenario_id, persona_id')
+    .select('scenario_id, persona_id, system_prompt_id')
     .eq('conversation_id', conversationId)
     .single();
 
@@ -437,12 +424,13 @@ async function getConversationContext(conversationId: string) {
 
   const scenario = await getScenario(data.scenario_id);
   const persona = await retrievePersona(data.persona_id);
+  const systemPrompt = await getSystemPrompt(data.system_prompt_id);
 
   if (!scenario || !persona) {
     throw new Error('Scenario or persona not found');
   }
 
-  return { scenario, persona };
+  return { scenario, persona, systemPrompt };
 }
 
 async function getScenario(scenarioId: string) {
@@ -480,29 +468,13 @@ async function retrievePersona(personaId: string) {
   return personas;
 }
 
-// Update the getInstructionPrompt function
-async function getInstructionPrompt(id: string, promptId?: number) {
+// Update the getSystemPrompt function
+async function getSystemPrompt(promptId: number): Promise<string> {
   try {
-    // First, get the scenario and its objectives
-    const { data: scenarioData, error: scenarioError } = await supabase
-      .from('scenarios')
-      .select(`
-        *,
-        scenario_objectives (objective)
-      `)
-      .eq('id', id)
-      .single();
-
-    if (scenarioError) {
-      console.error('Error fetching scenario:', scenarioError);
-      return "You are an AI assistant helping with union conversations. Be helpful and professional.";
-    }
-
-    // Then, get the system prompt
     const { data: promptData, error: promptError } = await supabase
       .from('system_prompts')
       .select('content')
-      .eq('id', promptId || 1)
+      .eq('id', promptId)
       .single();
 
     if (promptError || !promptData) {
@@ -510,54 +482,40 @@ async function getInstructionPrompt(id: string, promptId?: number) {
       return "You are an AI assistant helping with union conversations. Be helpful and professional.";
     }
 
-    // Create a template context with scenario data
-    const templateContext = {
-      ...scenarioData,
-      objectives: scenarioData.scenario_objectives.map((obj: any) => obj.objective),
-      title: scenarioData.title,
-      description: scenarioData.description,
-      context: scenarioData.context
-    };
-
-    // Return the system prompt with context
-    return createCompletePrompt(templateContext, promptData.content);
+    // Return the content directly as a string
+    return promptData.content;
   } catch (error) {
-    console.error('Error in getInstructionPrompt:', error);
+    console.error('Error in getSystemPrompt:', error);
     return "You are an AI assistant helping with union conversations. Be helpful and professional.";
   }
 }
 
 // Update the createCompletePrompt function
-async function createCompletePrompt(persona: any, systemPromptTemplate: string): Promise<string> {
+async function createCompletePrompt(persona: any, scenario: any, systemPrompt: string): Promise<string> {
   try {
-    // Combine persona and scenario data into a single context object
-    const templateContext = {
-      // Persona details
+    // Process the template with all context
+    const template = HandlebarsJS.compile(systemPrompt);
+    const finalPrompt = template({
+      title: scenario.title.toLowerCase(),
+      description: scenario.description.toLowerCase(),
       name: persona.name,
       age: persona.age,
-      gender: persona.gender,
+      gender: persona.gender.toLowerCase(),
       job: persona.job,
-      family_status: persona.family_status,
+      family_status: persona.family_status.toLowerCase(),
       segment: persona.segment,
       major_issues_in_workplace: persona.major_issues_in_workplace,
       uk_party_affiliation: persona.uk_party_affiliation,
       personality_traits: persona.personality_traits,
       emotional_conditions: persona.emotional_conditions,
       busyness_level: persona.busyness_level,
-      workplace: persona.workplace,
-      
-      // Add any other context variables needed by your templates
-      current_date: new Date().toISOString().split('T')[0],
-    };
-
-    // Process the template with all context
-    const template = HandlebarsJS.compile(systemPromptTemplate);
-    const finalPrompt = template(templateContext);
-
+      workplace: persona.workplace
+    });
+    console.log(finalPrompt);
     return finalPrompt;
   } catch (error) {
     console.error('Error in createCompletePrompt:', error);
-    return systemPromptTemplate;
+    return systemPrompt;
   }
 }
 
@@ -610,7 +568,6 @@ function withTimeout(handler: (req: Request) => Promise<Response>, timeoutMs: nu
 }
 
 const mainHandler = async (req: Request) => {
-
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -619,24 +576,9 @@ const mainHandler = async (req: Request) => {
   }
 
   try {
-    const body = await req.text();
-    let params: any = {};
-    
-    if (body) {
-      try {
-        params = JSON.parse(body);
-      } catch (e) {
-        console.error('Error parsing JSON:', e);
-        return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
+    const { action, ...params } = await req.json();
 
-    const { action, ...otherParams } = params;
     let result;
-
     switch (action) {
       case 'generatePersona':
         result = await generatePersona();
