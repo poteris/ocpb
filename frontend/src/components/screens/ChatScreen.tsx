@@ -102,7 +102,7 @@ const ChatScreenContent: React.FC = () => {
   if (isInitializing) {
     return (
       <LoadingScreen 
-        title="Initializing Chat"
+        title="Initialising Chat"
         message="Setting up your training environment..."
       />
     );

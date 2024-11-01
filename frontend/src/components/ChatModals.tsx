@@ -42,6 +42,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
 ### Persona Details
 
 - **Name:** ${persona.name}
+- **Segment:** ${persona.segment}
 - **Age:** ${persona.age}
 - **Gender:** ${persona.gender}
 - **Job:** ${persona.job}

@@ -75,7 +75,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
                 onClick={handleSendMessage} 
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-1.5 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
+                className="absolute right-[1%] top-[10%] flex items-center justify-center bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-1.5 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
                 aria-label="Send message"
                 disabled={isLoading || !inputMessage.trim()}
               >
