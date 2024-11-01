@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS public.feedback_prompts;
 DROP TABLE IF EXISTS public.persona_prompts;
 DROP TABLE IF EXISTS public.scenario_prompts;
 DROP TABLE IF EXISTS public.scenario_objectives;
+DROP TABLE IF EXISTS public.system_prompts;
 DROP TABLE IF EXISTS public.personas;
 DROP TABLE IF EXISTS public.scenarios;
 
@@ -16,6 +17,7 @@ CREATE TABLE scenarios (
     id VARCHAR(255) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
+    context TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -47,6 +49,14 @@ CREATE TABLE personas (
     workplace VARCHAR(255) NOT NULL
 );
 
+-- System prompts table
+CREATE TABLE system_prompts (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Scenario prompts table
 CREATE TABLE scenario_prompts (
     id SERIAL PRIMARY KEY,
@@ -62,7 +72,7 @@ CREATE TABLE persona_prompts (
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Feedback prompts table
@@ -80,12 +90,14 @@ CREATE TABLE public.conversations (
   user_id TEXT NOT NULL,
   scenario_id VARCHAR(255) NOT NULL,
   persona_id VARCHAR(255) NOT NULL,
+  system_prompt_id INTEGER DEFAULT 1,
   feedback_prompt_id INTEGER DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   last_message_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (scenario_id) REFERENCES scenarios(id),
   FOREIGN KEY (persona_id) REFERENCES personas(id),
-  FOREIGN KEY (feedback_prompt_id) REFERENCES feedback_prompts(id)
+  FOREIGN KEY (feedback_prompt_id) REFERENCES feedback_prompts(id),
+  FOREIGN KEY (system_prompt_id) REFERENCES system_prompts(id)
 );
 
 -- Messages table
