@@ -12,6 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '../ui/Skeleton';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface ScenarioSetupProps {
   scenarioId: string;
@@ -46,9 +47,12 @@ const ScenarioDescription = React.memo(function ScenarioDescription({ scenario }
   );
 });
 
-const PersonaDetails = React.memo(function PersonaDetails({ persona, onNavigate, isGenerating, onGenerate }: {
+const PersonaDetails = React.memo(function PersonaDetails({ 
+  persona, 
+  isGenerating, 
+  onGenerate 
+}: {
   persona: Persona | null;
-  onNavigate: (direction: 'prev' | 'next') => void;
   isGenerating: boolean;
   onGenerate: () => void;
 }) {
@@ -70,14 +74,24 @@ const PersonaDetails = React.memo(function PersonaDetails({ persona, onNavigate,
 
   const renderPersonaDetails = (persona: Persona) => {
     return `
-${persona.name} is a **${persona.age}-year-old ${persona.gender.toLowerCase()}** who works as a **${persona.job}** at **${persona.workplace}**. 
+### Personal Background
+${persona.name} is a **${persona.age}-year-old ${persona.gender.toLowerCase()}** who works as a **${persona.job}** at **${persona.workplace}**. They're **${persona.family_status.toLowerCase()}** and are segmented as a **${persona.segment}**.
 
-As you approach them, they have a **${persona.busyness_level.toLowerCase()}** level of busyness. They're **${persona.family_status.toLowerCase()}**, and politically lean towards **${persona.uk_party_affiliation}**.
+### Work & Political Context
+* **Workplace Role:** ${persona.job}
+* **Busyness Level:** ${persona.busyness_level}
+* **Political Affiliation:** ${persona.uk_party_affiliation}
 
+### Personality & Workplace Issues
 ${persona.name}'s personality can be characterised as **${persona.personality_traits.toLowerCase()}**. 
 
-At work, the major issues they face include **${persona.major_issues_in_workplace.toLowerCase()}**.
-    `.trim();
+At work, they face several challenges:
+${persona.major_issues_in_workplace}
+
+### Union Perspective
+Their emotional conditions for supporting the union are:
+${persona.emotional_conditions}
+  `.trim();
   };
 
   return (
@@ -91,27 +105,9 @@ At work, the major issues they face include **${persona.major_issues_in_workplac
         renderPersonaSkeleton()
       ) : persona ? (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <Button 
-              variant="options"
-              onClick={() => onNavigate('prev')} 
-              disabled={false}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-200"
-            >
-              <ChevronLeft size={24} />
-            </Button>
-            <h3 className="font-semibold text-2xl text-gray-900 dark:text-gray-100">
-              {persona.name}
-            </h3>
-            <Button 
-              variant="options"
-              onClick={() => onNavigate('next')} 
-              disabled={false}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-200"
-            >
-              <ChevronRight size={24} />
-            </Button>
-          </div>
+          <h3 className="font-semibold text-2xl text-gray-900 dark:text-gray-100 mb-6 text-center">
+            {persona.name}
+          </h3>
           <div className="text-lg text-gray-700 dark:text-gray-300">
             <ReactMarkdown components={markdownStyles}>
               {renderPersonaDetails(persona)}
@@ -142,9 +138,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
   const { setScenarioInfo } = useScenario();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
   const [scenario, setScenario] = useState<Scenario | null>(null);
-  const [generatedPersonas, setGeneratedPersonas] = useState<Persona[]>([]);
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
-  const [personaIndex, setPersonaIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -158,38 +152,25 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     }
   }, [scenarioId, setScenarioInfo]);
 
-  // Load stored personas and initialize
+  // Simplified initialization effect
   useEffect(() => {
     const initializePersonas = async () => {
       setIsLoading(true);
       try {
-        // First load scenario
         await fetchScenario();
-
-        // Try to get stored personas
-        const storedPersonasStr = localStorage.getItem('generatedPersonas');
-        const storedPersonas: Persona[] = storedPersonasStr ? JSON.parse(storedPersonasStr) : [];
         
-        // Check for current persona
-        const currentPersonaStr = localStorage.getItem('selectedPersona');
-        const currentPersona: Persona | null = currentPersonaStr ? JSON.parse(currentPersonaStr) : null;
-
-        if (currentPersona) {
-          // If we have a current persona, add it to the list if not already present
-          const personaExists = storedPersonas.some(p => p.id === currentPersona.id);
-          if (!personaExists) {
-            storedPersonas.unshift(currentPersona);
-          }
-          setPersonaIndex(0);
-        }
-
-        if (storedPersonas.length > 0) {
-          // Use stored personas if available
-          setGeneratedPersonas(storedPersonas);
-          setCurrentPersona(storedPersonas[0]);
+        // Only get the most recent persona for this scenario
+        const storedPersonaStr = localStorage.getItem(`currentPersona_${scenarioId}`);
+        const storedPersona: Persona | null = storedPersonaStr ? JSON.parse(storedPersonaStr) : null;
+        
+        if (storedPersona) {
+          setCurrentPersona(storedPersona);
         } else {
-          // Generate new persona if none stored
-          await generateNewPersona();
+          const newPersona = await generatePersona();
+          if (newPersona) {
+            setCurrentPersona(newPersona);
+            localStorage.setItem(`currentPersona_${scenarioId}`, JSON.stringify(newPersona));
+          }
         }
       } finally {
         setIsLoading(false);
@@ -199,34 +180,24 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
     initializePersonas();
   }, [fetchScenario, scenarioId]);
 
-  const generateNewPersona = async () => {
+  // Wrap the raw generate function in useCallback
+  const generatePersonaRaw = useCallback(async () => {
     setIsGeneratingPersona(true);
     try {
       const newPersona = await generatePersona();
       if (newPersona) {
-        setGeneratedPersonas(currentPersonas => {
-          const updatedPersonas = [newPersona, ...currentPersonas];
-          // Store in localStorage
-          localStorage.setItem('generatedPersonas', JSON.stringify(updatedPersonas));
-          return updatedPersonas;
-        });
         setCurrentPersona(newPersona);
-        setPersonaIndex(0);
+        localStorage.setItem(`currentPersona_${scenarioId}`, JSON.stringify(newPersona));
       }
     } catch (error) {
       console.error('Error generating persona:', error);
     } finally {
       setIsGeneratingPersona(false);
     }
-  };
+  }, [scenarioId]);
 
-  const navigatePersona = useCallback((direction: 'prev' | 'next') => {
-    const newIndex = direction === 'next' 
-      ? (personaIndex + 1) % generatedPersonas.length 
-      : (personaIndex - 1 + generatedPersonas.length) % generatedPersonas.length;
-    setPersonaIndex(newIndex);
-    setCurrentPersona(generatedPersonas[newIndex]);
-  }, [personaIndex, generatedPersonas]);
+  // Create debounced version
+  const generateNewPersona = useDebounce(generatePersonaRaw, 500);
 
   const handleBack = () => {
     // Clear stored current persona but keep generated personas
@@ -312,7 +283,6 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
                 <ScenarioDescription scenario={scenario} />
                 <PersonaDetails
                   persona={currentPersona}
-                  onNavigate={navigatePersona}
                   isGenerating={isGeneratingPersona}
                   onGenerate={generateNewPersona}
                 />

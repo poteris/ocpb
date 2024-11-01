@@ -25,7 +25,7 @@ try {
     }
   })
 } catch (error) {
-  console.error('Error initializing Supabase client:', error)
+  console.error('Error initialising Supabase client:', error)
   Deno.exit(1)
 }
 
@@ -39,50 +39,20 @@ const corsHeaders = {
 
 // Update the generatePersona function
 async function generatePersona() {
-  const segments = ["Former Union Member", "Non-member of the Union", "Reluctant Worker", "Young Worker"];
-  const genders = ["Male", "Female"];
-  const familyStatuses = ["Divorced", "In a relationship", "Married", "Married with Children", "Single", "Widowed"];
-  const ukParties = ["Conservative", "Labour", "Liberal Democrats", "Green", "Reform UK", "Independent"];
-  const busynessLevels = ["low", "medium", "high"];
 
-  const segment = segments[Math.floor(Math.random() * segments.length)];
-  const gender = genders[Math.floor(Math.random() * genders.length)];
-  let age, familyStatus, partyAffiliation;
+  // Fetch the persona prompt
+  const { data: personaPromptData, error: personaPromptError } = await supabase
+    .from('persona_prompts')
+    .select('content')
+    .eq('id', 1)  // Using default prompt ID 1
+    .single();
 
-  if (segment === "Young Worker") {
-    age = Math.floor(Math.random() * (17 - 15 + 1)) + 15;
-    familyStatus = "Single";
-  } else {
-    age = Math.floor(Math.random() * (62 - 18 + 1)) + 18;
-    familyStatus = familyStatuses[Math.floor(Math.random() * familyStatuses.length)];
+  if (personaPromptError) {
+    console.error('Error fetching persona prompt:', personaPromptError);
+    throw personaPromptError;
   }
 
-  // Adjust party affiliation probabilities
-  const partyProbabilities = [0.15, 0.4, 0.1, 0.05, 0.25, 0.05]; // Conservative, Labour, Lib Dem, Green, Reform UK, Independent
-  const randomValue = Math.random();
-  let cumulativeProbability = 0;
-  for (let i = 0; i < ukParties.length; i++) {
-    cumulativeProbability += partyProbabilities[i];
-    if (randomValue <= cumulativeProbability) {
-      partyAffiliation = ukParties[i];
-      break;
-    }
-  }
-
-  const busynessLevel = busynessLevels[Math.floor(Math.random() * busynessLevels.length)];
-  const workplace = "an office in the department of work and pensions";
-
-  const prompt = `Generate a persona for a workplace conversation with a trade union representative. Use the following pre-generated traits:
-
-Segment: ${segment}
-Age: ${age}
-Gender: ${gender}
-Family Status: ${familyStatus}
-UK Party Affiliation: ${partyAffiliation}
-Busyness Level: ${busynessLevel}
-Workplace: ${workplace}
-
-Fill in the remaining details to create a realistic persona.`;
+  const prompt = `${personaPromptData.content}`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -90,30 +60,64 @@ Fill in the remaining details to create a realistic persona.`;
     functions: [
       {
         name: "generate_persona",
-        description: "Generate a persona for a workplace conversation",
+        description: "Generate a coherent persona for a workplace conversation with a trade union representative",
         parameters: {
           type: "object",
           properties: {
-            name: { type: "string" },
-            segment: { type: "string" },
-            age: { type: "number" },
-            gender: { type: "string" },
-            family_status: { type: "string" },
-            job: { type: "string" },
-            major_issues_in_workplace: { type: "string" },
-            uk_party_affiliation: { type: "string" },
-            personality_traits: { type: "string" },
-            emotional_conditions_for_supporting_the_union: { type: "string" },
-            busyness_level: { type: "string" },
-            workplace: { type: "string" }
+            name: { 
+              type: "string",
+              description: "Full name of the person"
+            },
+            segment: { 
+              type: "string",
+              description: "Segment of the person (Former Union Member, Non-member of the Union, Reluctant Worker, Young Worker)"
+            },
+            age: { 
+              type: "number",
+              description: "Age of the person (between 15 and 62)"
+            },
+            gender: { 
+              type: "string",
+              description: "Gender of the person (Male or Female)"
+            },
+            family_status: { 
+              type: "string",
+              description: "Family status of the person (Divorced, In a relationship, Married, Married with Children, Single, Widowed)"
+            },
+            uk_party_affiliation: { 
+              type: "string",
+              description: "Political affiliation of the person (Conservative, Labour, Lib Dem, Green, Reform UK, Independent)"
+            },
+            workplace: { 
+              type: "string",
+              description: "Place of work of the person (an office in the department of work and pensions)"
+            },
+            job: { 
+              type: "string",
+              description: "Specific job title and role"
+            },
+            busyness_level: { 
+              type: "string",
+              description: "Busyness level of the person (low, medium, high)"
+            },
+            major_issues_in_workplace: { 
+              type: "string",
+              description: "Key workplace concerns and challenges"
+            },
+            personality_traits: { 
+              type: "string",
+              description: "Comma-separated list of personality characteristics"
+            },
+            emotional_conditions: { 
+              type: "string",
+              description: "Emotional factors that would influence union support"
+            }
           },
-          required: ["name", "segment", "age", "gender", "family_status", "job", "major_issues_in_workplace", "uk_party_affiliation", "personality_traits", "emotional_conditions_for_supporting_the_union", "busyness_level", "workplace"]
+          required: ["name", "segment", "age", "gender", "family_status", "uk_party_affiliation", "workplace", "job", "major_issues_in_workplace", "personality_traits", "emotional_conditions"]
         }
       }
     ],
-    function_call: { name: "generate_persona" },
-    max_tokens: 300,
-    temperature: 0.7,
+    function_call: { name: "generate_persona" }
   });
 
   const functionCall = completion.choices[0].message.function_call;
@@ -177,7 +181,7 @@ ${conversation.scenario.description}
 
 Persona: ${conversation.persona.name}, ${conversation.persona.age} years old, ${conversation.persona.job}
 Personality: ${conversation.persona.personality_traits}
-Union Support Conditions: ${conversation.persona.emotional_conditions_for_supporting_the_union}
+Union Support Conditions: ${conversation.persona.emotional_conditions}
 
 Conversation:
 ${conversationHistory}
@@ -337,7 +341,7 @@ async function createConversation({ userId, initialMessage, scenarioId, persona,
     } catch (error) {
       console.error('Error processing initial message:', error);
       // Continue even if message processing fails
-      aiResponse = "I apologize, but I'm having trouble responding right now. Could you please try again?";
+      aiResponse = "I apologise, but I'm having trouble responding right now. Could you please try again?";
     }
 
     return { id: conversationId, aiResponse };
@@ -379,7 +383,7 @@ async function sendMessage({ conversationId, content, scenarioId }: { conversati
     // Create a structured prompt that maintains context
     const completePrompt = await createCompletePrompt(persona, systemPromptTemplate);
     
-    // Organize messages with clear context preservation
+    // Organise messages with clear context preservation
     let messages = [
       // System message with complete context
       { 
@@ -538,7 +542,7 @@ async function createCompletePrompt(persona: any, systemPromptTemplate: string):
       major_issues_in_workplace: persona.major_issues_in_workplace,
       uk_party_affiliation: persona.uk_party_affiliation,
       personality_traits: persona.personality_traits,
-      emotional_conditions_for_supporting_the_union: persona.emotional_conditions_for_supporting_the_union,
+      emotional_conditions: persona.emotional_conditions,
       busyness_level: persona.busyness_level,
       workplace: persona.workplace,
       

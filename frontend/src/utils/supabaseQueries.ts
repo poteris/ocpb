@@ -94,7 +94,7 @@ export async function storePersona(persona: Persona) {
       major_issues_in_workplace: persona.major_issues_in_workplace,
       uk_party_affiliation: persona.uk_party_affiliation,
       personality_traits: persona.personality_traits,
-      emotional_conditions_for_supporting_the_union: persona.emotional_conditions_for_supporting_the_union,
+      emotional_conditions: persona.emotional_conditions,
       busyness_level: persona.busyness_level,
       workplace: persona.workplace
     });
@@ -125,7 +125,7 @@ export async function getPersonaPrompts(): Promise<Prompt[]> {
   const { data, error } = await supabase
     .from('persona_prompts')
     .select('*')
-    .order('id');
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Error fetching persona prompts:', error);
@@ -149,7 +149,7 @@ export async function getFeedbackPrompts(): Promise<Prompt[]> {
   return data || [];
 }
 
-export async function updatePrompt(type: 'system' | 'feedback', id: number, content: string): Promise<void> {
+export async function updatePrompt(type: 'system' | 'feedback' | 'persona', id: number, content: string): Promise<void> {
   const { error } = await supabase
     .from(`${type}_prompts`)
     .update({ content })
@@ -162,7 +162,7 @@ export async function updatePrompt(type: 'system' | 'feedback', id: number, cont
 }
 
 export async function createPrompt(
-  type: 'system' | 'feedback', 
+  type: 'system' | 'feedback' | 'persona', 
   content: string
 ): Promise<void> {
   const data = {
@@ -181,7 +181,7 @@ export async function createPrompt(
   }
 }
 
-export async function deletePrompt(type: 'system' | 'feedback', id: number): Promise<void> {
+export async function deletePrompt(type: 'system' | 'feedback' | 'persona', id: number): Promise<void> {
   const { error } = await supabase
     .from(`${type}_prompts`)
     .delete()

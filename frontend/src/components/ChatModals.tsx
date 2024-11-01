@@ -49,9 +49,10 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
 - **Busyness Level:** ${persona.busyness_level}
 - **Family Status:** ${persona.family_status}
 - **Political Leanings:** ${persona.uk_party_affiliation}
-- **Union Support:** ${persona.emotional_conditions_for_supporting_the_union}
+- **Union Support:** ${persona.emotional_conditions}
 - **Personality Traits:** ${persona.personality_traits}
 - **Major Workplace Issues:** ${persona.major_issues_in_workplace}
+- **Emotional Conditions:** ${persona.emotional_conditions}
     `.trim();
   };
 

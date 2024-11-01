@@ -23,6 +23,15 @@ interface ScenarioForm {
   objectives: string[];
 }
 
+export const OrganiserAdmin: React.FC = () => {
+  return (
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      <Header title="Admin - Scenarios" variant="alt" />
+      <PromptManager type="scenario" />
+    </div>
+  );
+};
+
 const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +122,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
             </label>
             <Input
               type="textarea"
-              rows={2}
               value={scenarioForm.description}
               onChange={(e) => setScenarioForm(prev => ({
                 ...prev,
@@ -129,7 +137,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
             </label>
             <Input
               type="textarea"
-              rows={3}
               value={scenarioForm.context}
               onChange={(e) => setScenarioForm(prev => ({
                 ...prev,
@@ -407,7 +414,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
                 </label>
                 <Input
                   type="textarea"
-                  rows={2}
                   value={editForm?.description}
                   onChange={(e) => setEditForm(prev => ({
                     ...prev!,
@@ -422,7 +428,6 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
                 </label>
                 <Input
                   type="textarea"
-                  rows={3}
                   value={editForm?.context}
                   onChange={(e) => setEditForm(prev => ({
                     ...prev!,
@@ -609,50 +614,33 @@ const PromptManager: React.FC<{ type: 'scenario' }> = ({ type }) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Scenario Management</h1>
-        
-        {error && (
-          <div className={`p-4 rounded-md mb-4 ${
-            error.toLowerCase().includes('success') 
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
-          }`}>
-            {error}
-          </div>
-        )}
-        
-        <div className="space-y-8">
-          {renderScenarioSection()}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Existing Scenarios
-            </h2>
-            {renderExistingScenarios()}
-          </div>
+    <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
+      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Scenario Management</h1>
+      
+      {error && (
+        <div className={`p-4 rounded-md mb-4 ${
+          error.toLowerCase().includes('success') 
+            ? 'bg-green-50 text-green-700 border border-green-200'
+            : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {error}
         </div>
-      </div>
-    </div>
-  );
-};
-
-export const OrganiserAdmin: React.FC = () => {
-  return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
-      <Header title="Admin - Prompts" variant="alt" />
-      <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prompt Management</h1>
+      )}
+      
+      <Tabs defaultValue="existing" className="w-full">
+        <TabsList>
+          <TabsTrigger value="existing">Your Scenarios</TabsTrigger>
+          <TabsTrigger value="new">New Scenario</TabsTrigger>
+        </TabsList>
         
-        <Tabs defaultValue="scenario" className="w-full">
-          <TabsList>
-            <TabsTrigger value="scenario">Your Scenarios</TabsTrigger>
-          </TabsList>
-          <TabsContent value="scenario">
-            <PromptManager type="scenario" />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="existing">
+          {renderExistingScenarios()}
+        </TabsContent>
+        
+        <TabsContent value="new">
+          {renderScenarioSection()}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

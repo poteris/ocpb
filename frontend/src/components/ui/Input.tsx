@@ -1,54 +1,47 @@
 import React from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
-  type?: 'text' | 'textarea';
-  label?: string;
+  type?: 'text' | 'textarea' | 'password' | 'email';
   error?: string;
-  rows?: number;
+  className?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ 
-  type = 'text', 
-  label, 
-  error, 
-  className = '', 
-  rows = 3,
-  ...props 
+export const Input: React.FC<InputProps> = ({
+  type = 'text',
+  error,
+  className = '',
+  ...props
 }) => {
-  const inputClasses = `w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none ${
-    error ? 'border-red-500' : 'border-gray-300'
-  } ${className}`;
+  const baseClasses = `
+    w-full
+    px-3
+    py-2
+    bg-white
+    dark:bg-gray-800
+    border
+    rounded-md
+    outline-none
+    focus:ring-2
+    focus:ring-blue-500
+    dark:focus:ring-blue-400
+    ${error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+    ${className}
+  `;
 
-  const renderInput = () => {
-    if (type === 'textarea') {
-      return (
-        <textarea
-          className={inputClasses}
-          rows={rows}
-          {...props as React.TextareaHTMLAttributes<HTMLTextAreaElement>}
-        />
-      );
-    }
+  if (type === 'textarea') {
     return (
-      <input
-        type={type}
-        className={inputClasses}
-        {...props as React.InputHTMLAttributes<HTMLInputElement>}
+      <textarea
+        className={`${baseClasses} h-full`}
+        {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
       />
     );
-  };
+  }
 
   return (
-    <div className="mb-4">
-      {label && (
-        <label className="block mb-2 text-sm font-bold text-gray-700">
-          {label}
-        </label>
-      )}
-      {renderInput()}
-      {error && (
-        <p className="mt-1 text-xs text-red-500">{error}</p>
-      )}
-    </div>
+    <input
+      type={type}
+      className={baseClasses}
+      {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+    />
   );
 };

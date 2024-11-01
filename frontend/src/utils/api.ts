@@ -60,13 +60,13 @@ export interface Persona {
   age: string;
   gender: string;
   family_status: string;
-  job: string;
-  major_issues_in_workplace: string;
   uk_party_affiliation: string;
-  personality_traits: string;
-  emotional_conditions_for_supporting_the_union: string;
-  busyness_level: string;
   workplace: string;
+  job: string;
+  busyness_level: string;
+  major_issues_in_workplace: string;
+  personality_traits: string;
+  emotional_conditions: string;
 }
 
 export async function generatePersona(): Promise<Persona | null> {

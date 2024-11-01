@@ -43,7 +43,7 @@ CREATE TABLE personas (
     major_issues_in_workplace TEXT NOT NULL,
     uk_party_affiliation VARCHAR(255) NOT NULL,
     personality_traits TEXT NOT NULL,
-    emotional_conditions_for_supporting_the_union TEXT NOT NULL,
+    emotional_conditions TEXT NOT NULL,
     busyness_level VARCHAR(50) NOT NULL,
     workplace VARCHAR(255) NOT NULL
 );
@@ -58,6 +58,14 @@ CREATE TABLE system_prompts (
 
 -- Feedback prompts table
 CREATE TABLE feedback_prompts (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add persona prompts table
+CREATE TABLE persona_prompts (
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -105,6 +113,8 @@ GRANT ALL ON public.conversations TO authenticated;
 GRANT ALL ON public.feedback_prompts TO authenticated;
 GRANT ALL ON public.scenarios TO authenticated;
 GRANT ALL ON public.scenario_objectives TO authenticated;
+GRANT ALL ON public.persona_prompts TO authenticated;
 
 -- Update grants for sequences
 GRANT USAGE ON SEQUENCE feedback_prompts_id_seq TO authenticated;
+GRANT USAGE ON SEQUENCE persona_prompts_id_seq TO authenticated;

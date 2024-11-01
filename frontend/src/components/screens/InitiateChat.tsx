@@ -13,15 +13,11 @@ import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui';
 import { AnimatePresence } from 'framer-motion';
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { Select, SelectItem, SelectTrigger, SelectContent } from '@/components/ui';
-import { getSystemPrompts } from '@/utils/supabaseQueries';
-import { SelectValue } from "@radix-ui/react-select";
 
 interface InitiateChatContentProps {
-  systemPromptId?: string;
 }
 
-const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptId: defaultSystemPromptId }) => {
+const InitiateChatContent: React.FC<InitiateChatContentProps> = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
@@ -31,9 +27,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
   const scenarioId = searchParams.get('scenarioId');
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
   const [availablePrompts, setAvailablePrompts] = useState<Array<{ id: number; content: string }>>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState<string>(
-    defaultSystemPromptId?.toString() || ''
-  );
+
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 
   // State to store the randomly selected prompts
@@ -76,21 +70,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
     }
   }, [setPersona, router, scenarioId]);
 
-  useEffect(() => {
-    const fetchPrompts = async () => {
-      try {
-        const prompts = await getSystemPrompts();
-        setAvailablePrompts(prompts.map(p => ({ 
-          id: p.id, 
-          content: p.content 
-        })));
-      } catch (error) {
-        console.error('Error fetching system prompts:', error);
-        // Optionally set an error state here
-      }
-    };
-    fetchPrompts();
-  }, []);
+
 
   const initiateChat = async (message: string) => {
     if (isInitiatingChat || !persona) return;
@@ -105,7 +85,7 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
         message, 
         scenarioInfo?.id || '', 
         persona,
-        selectedPromptId ? Number(selectedPromptId) : undefined
+
       );
       
       const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(message)}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
@@ -183,27 +163,6 @@ const InitiateChatContent: React.FC<InitiateChatContentProps> = ({ systemPromptI
                 >
                   Back to Scenario Setup
                 </Button>
-
-                <Select 
-                  value={selectedPromptId} 
-                  onValueChange={setSelectedPromptId}
-                >
-                  <SelectTrigger className="w-[300px]">
-                    <SelectValue placeholder="Select system prompt" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availablePrompts.map((prompt) => (
-                      <SelectItem 
-                        key={prompt.id} 
-                        value={prompt.id.toString()}
-                      >
-                        {prompt.id}: {prompt.content.length > 50 
-                          ? `${prompt.content.substring(0, 47)}...` 
-                          : prompt.content}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </motion.div>
 
               <motion.div 
@@ -326,12 +285,9 @@ const InitiateChatSkeleton: React.FC = () => {
 };
 
 export const InitiateChat: React.FC = () => {
-  const searchParams = useSearchParams();
-  const systemPromptId = searchParams.get('systemPromptId');
-
   return (
     <Suspense fallback={<InitiateChatSkeleton />}>
-      <InitiateChatContent systemPromptId={systemPromptId || undefined} />
+      <InitiateChatContent />
     </Suspense>
   );
 };

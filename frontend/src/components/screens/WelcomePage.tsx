@@ -67,7 +67,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  Welcome to Union Training Bot
+                  Welcome to the Union Training Bot
                 </motion.h1>
                 <motion.p 
                   className="mb-12 text-xl sm:text-2xl text-gray-700 dark:text-gray-300 text-center"

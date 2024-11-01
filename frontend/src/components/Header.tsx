@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Info } from 'react-feather';
+import Link from 'next/link';
 
 interface HeaderProps {
   title?: string;
@@ -20,17 +21,22 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className={`${bgColor} py-3 sm:py-4 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10`}>
-      <div className="flex items-center flex-grow max-w-screen-xl mx-auto w-full">
-        <Image
-          width={48}
-          height={48}
-          className="rounded-full w-10 h-10 sm:w-12 sm:h-12"
-          alt="Bot Avatar"
-          src="/images/bot-avatar.svg"
-        />
-        <div className="ml-3 sm:ml-4 flex-grow">
-          <h1 className={`font-semibold ${textColor} text-lg sm:text-xl md:text-2xl truncate`}>{title}</h1>
-        </div>
+      <div className="flex items-center justify-between flex-grow max-w-screen-xl mx-auto w-full">
+        <Link 
+          href="/"
+          className="flex-shrink-0 flex items-center cursor-pointer"
+        >
+          <Image
+            width={48}
+            height={48}
+            className="rounded-full w-10 h-10 sm:w-12 sm:h-12"
+            alt="Bot Avatar"
+            src="/images/bot-avatar.svg"
+          />
+          <div className="ml-3 sm:ml-4">
+            <h1 className={`font-semibold ${textColor} text-lg sm:text-xl md:text-2xl truncate`}>{title}</h1>
+          </div>
+        </Link>
         {showInfoIcon && (
           <button 
             onClick={onInfoClick} 
