@@ -7,7 +7,7 @@
     "dev:backend": "pnpm --filter backend supabase start",
     "dev:functions": "pnpm --filter  backend supabase functions serve",
     "dev": "concurrently  \"pnpm dev:backend\" \"pnpm dev:functions\" \"pnpm dev:frontend\"",
-    "build": "cd frontend && yarn build",
+    "build": "cd frontend && pnpm build",
     "start": "pnpm --filter frontend start",
     "lint": "pnpm --filter frontend lint",
     "db:pull": "pnpm --filter backend supabase db pull",
