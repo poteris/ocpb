@@ -6,41 +6,103 @@
 @tailwind utilities;
 
 /* ===================
-   Root Variables
+   Root Variables Custom Theme
 =================== */
 :root {
   /* Font Variables */
   --font-roboto-slab: "Roboto Slab", serif;
-
+  
   /* Primary Colors */
-  --pcsprimary-01: rgba(28, 155, 174, 1);
-  --pcsprimary-02: rgba(23, 66, 144, 1);
-  --pcsprimary-03: rgba(57, 57, 57, 1);
-  --pcsprimary-04: rgba(70, 70, 70, 1);
-  --pcsprimary-05: rgba(186, 186, 186, 1);
-  --pcsprimary-06: rgba(245, 243, 243, 1);
-  --pcsprimary01-light: rgba(238, 253, 255, 1);
+  --pcsprimary-01: 190 73% 40%;
+  --pcsprimary-02: 215 73% 33%;
+  --pcsprimary-03: 0 0% 22%;
+  --pcsprimary-04: 0 0% 27%;
+  --pcsprimary-05: 0 0% 73%;
+  --pcsprimary-06: 0 0% 96%;
+  --pcsprimary01-light: 187 100% 97%;
 
   /* Secondary Colors */
-  --pcssecondary-01: rgba(237, 114, 2, 1);
-  --pcssecondary-02: rgba(255, 204, 1, 1);
-  --pcssecondary-03: rgba(235, 81, 143, 1);
-  --pcssecondary-04: rgba(151, 27, 125, 1);
-  --pcssecondary-05: rgba(96, 141, 164, 1);
-  --pcssecondary-06: rgba(186, 191, 1, 1);
-  --pcssecondary-07: rgba(229, 48, 18, 1);
-  --pcssecondary-08: rgba(67, 72, 111, 1);
+  --pcssecondary-01: 24 98% 47%;
+  --pcssecondary-02: 48 100% 50%;
+  --pcssecondary-03: 336 82% 62%;
+  --pcssecondary-04: 316 69% 35%;
+  --pcssecondary-05: 200 27% 51%;
+  --pcssecondary-06: 64 99% 37%;
+  --pcssecondary-07: 8 85% 48%;
+  --pcssecondary-08: 231 25% 35%;
 
   /* Default Background and Foreground */
   --background: #ffffff;
   --foreground: #000000;
 }
 
+
+
+/*=====================
+    Shadcn Theme
+    removed primary and secondary colors to use pcsprimary and pcssecondary
+    Note: can be removed if not needed
+=====================*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;  
+    --primary-foreground: 0 0% 98%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
 /* Dark Mode Colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 93.1%;
   }
 }
 
@@ -147,3 +209,18 @@ button:focus-visible {
 @import url("https://fonts.googleapis.com/css?family=Roboto+Slab:500,400,700");
 
 @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  button {
+    @apply text-white rounded-full ; 
+  }
+  
+}
