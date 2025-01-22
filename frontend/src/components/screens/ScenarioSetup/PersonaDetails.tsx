@@ -81,7 +81,7 @@ ${persona.emotional_conditions}
           <p className="text-lg text-gray-700 dark:text-gray-300">Generating persona...</p>
         </div>
       )}
-      <Button onClick={onGenerate} className="w-full py-3" disabled={isGenerating}>
+      <Button onClick={onGenerate} className="w-full text-lg py-3" disabled={isGenerating}>
         <RefreshCw className={`mr-2 ${isGenerating ? "animate-spin" : ""}`} size={24} />
         {isGenerating ? "Generating..." : "Generate New Persona"}
       </Button>

@@ -56,7 +56,7 @@ export const Welcome = () => {
                     className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                     <h2 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">{scenario.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">{scenario.description}</p>
-                    <Button onClick={() => handleScenarioSelect(scenario.id)} className="w-full py-3">
+                    <Button onClick={() => handleScenarioSelect(scenario.id)} className="w-full text-lg py-3">
                       Start Scenario
                     </Button>
                   </div>
