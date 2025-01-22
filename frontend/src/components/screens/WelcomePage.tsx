@@ -6,6 +6,8 @@ import { Button } from '@/components/ui';
 import { ScenarioSetup } from './ScenarioSetup';
 import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+import { TrainingScenario } from '@/types/scenarios';
 
 interface WelcomeProps {
   onScenarioSelect: (scenarioId: string) => void;
@@ -13,13 +15,13 @@ interface WelcomeProps {
 
 export const Welcome: React.FC<WelcomeProps> = ({ onScenarioSelect }) => {
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
-  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [scenarios, setScenarios] = useState<TrainingScenario[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     async function fetchScenarios() {
-      const fetchedScenarios = await getScenarios();
-      setScenarios(fetchedScenarios);
+      const response = await axios.get<TrainingScenario[]>('/api/scenarios/get-scenarios');
+      setScenarios(response.data);
     }
     fetchScenarios();
   }, []);
