@@ -6,7 +6,6 @@ import { Download, Info, Trash2, Plus } from 'react-feather';
 import { useRouter } from 'next/navigation';
 import { downloadChatHistory, downloadFeedbackAsPDF } from '@/utils/downloadData';
 import { ChatSession } from '@/types/chat';
-import analysisData from './analysis.json';
 
 const STORAGE_KEY = 'chatSessions';
 

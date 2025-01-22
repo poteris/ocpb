@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  --font-roboto-slab: var(--font-roboto-slab);
   --pcsprimary-01: rgba(28, 155, 174, 1);
   --pcsprimary-02: rgba(23, 66, 144, 1);
   --pcsprimary-03: rgba(57, 57, 57, 1);
@@ -39,12 +40,25 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-roboto-slab);
+  font-family: var(--font-roboto-slab), serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Add these new utility classes */
+  .max-w-screen-xl {
+    max-width: 1280px;
+  }
+
+  .max-w-screen-lg {
+    max-width: 1024px;
+  }
+
+  .max-w-screen-md {
+    max-width: 768px;
   }
 }
 
@@ -88,4 +102,26 @@ body {
 @keyframes bounce {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1); }
+}
+
+/* Add these media queries for larger screens */
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }

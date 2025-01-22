@@ -14,3 +14,9 @@
 2. Simply type ```yarn``` in the terminal for setup 
 
 3. Run ```yarn dev``` in order to run backend and frontend concurrently. 
+
+#Build Notes
+- Uses .github/workflows/deploy.yml
+
+1. Create the supabase project then
+2. Add secrets in github actions

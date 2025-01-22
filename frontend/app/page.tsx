@@ -7,7 +7,6 @@ export default function WelcomePage() {
   const router = useRouter();
 
   const handleScenarioSelect = (scenarioId: string) => {
-    console.log(`Selected scenario: ${scenarioId}`);
     router.push(`/scenario-setup?scenarioId=${scenarioId}`);
   };
 

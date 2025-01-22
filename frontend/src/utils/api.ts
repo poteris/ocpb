@@ -53,38 +53,81 @@ async function invokeFunction(functionName: string, body: FunctionBody) {
   }
 }
 
-export async function createAssistant(name: string, description: string, model: string) {
-  return invokeFunction('assistant', { action: 'createAssistant', name, description, model })
+export interface Persona {
+  id: string;
+  name: string;
+  segment: string;
+  age: string;
+  gender: string;
+  family_status: string;
+  uk_party_affiliation: string;
+  workplace: string;
+  job: string;
+  busyness_level: string;
+  major_issues_in_workplace: string;
+  personality_traits: string;
+  emotional_conditions: string;
 }
 
-export async function createConversation(initialMessage: string, scenarioId: string, personaId: string) {
+export async function generatePersona(): Promise<Persona | null> {
+  try {
+    const response = await invokeFunction('assistant', {
+      action: 'generatePersona',
+    });
+
+    if (response && response.result) {
+      return response.result;
+    } else {
+      console.error('Unexpected response format:', response);
+      throw new Error('Unexpected response format from server');
+    }
+  } catch (error) {
+    console.error('Error fetching persona:', error);
+    return null;
+  }
+}
+
+export async function storePersona(persona: Persona): Promise<void> {
+  try {
+    const { error } = await supabase.from('personas').upsert(persona, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error storing persona:', error);
+    throw error;
+  }
+}
+
+export async function createConversation(
+  initialMessage: string, 
+  scenarioId: string, 
+  persona: Persona, 
+  promptId?: number
+): Promise<{ id: string; aiResponse: string }> {
   const userId = await getUserId();
   const response = await invokeFunction('assistant', { 
     action: 'createConversation', 
     userId, 
     initialMessage, 
     scenarioId, 
-    personaId 
+    persona,
+    promptId
   });
+  
+  if (!response?.result?.id || !response?.result?.aiResponse) {
+    throw new Error('Invalid response format from server');
+  }
+  
   return response.result;
 }
 
-export async function sendMessage(conversationId: string, content: string) {
-  const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content });
+export async function sendMessage(conversationId: string, content: string, scenario_id?: string) {
+  const response = await invokeFunction('assistant', { action: 'sendMessage', conversationId, content, scenario_id });
   if (response && response.result && response.result.content) {
     return response.result;
   } else {
     console.error('Unexpected response format:', response);
     throw new Error('Unexpected response format from server');
   }
-}
-
-export async function runAssistant(threadId: string) {
-  return invokeFunction('assistant', { action: 'runAssistant', threadId })
-}
-
-export async function getThreadMessages(threadId: string) {
-  return invokeFunction('assistant', { action: 'getThreadMessages', threadId })
 }
 
 // Implement this function to get the current user's ID
@@ -108,4 +151,30 @@ function getOrCreateTemporaryUserId() {
   }
   
   return temporaryUserId;
+}
+
+export interface FeedbackData {
+  score: number;
+  strengths: { title: string; description: string; }[];
+  areas_for_improvement: { title: string; description: string; }[];
+  summary: string;
+}
+
+export async function getFeedback(conversationId: string): Promise<FeedbackData> {
+  try {
+    const response = await invokeFunction('assistant', {
+      action: 'getFeedback',
+      conversationId,
+    });
+
+    if (response && response.result) {
+      return response.result;
+    } else {
+      console.error('Unexpected response format:', response);
+      throw new Error('Unexpected response format from server');
+    }
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    throw error;
+  }
 }

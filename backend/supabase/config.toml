@@ -3,7 +3,7 @@
 project_id = "ocpb"
 
 [functions.assistant]
-timeout = 120
+# timeout = 120
 verify_jwt = false
 
 [api]

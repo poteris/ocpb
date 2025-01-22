@@ -27,8 +27,12 @@ const config: Config = {
         'pcssecondary-07': 'var(--pcssecondary-07)',
         'pcssecondary-08': 'var(--pcssecondary-08)',
       },
+      fontFamily: {
+        'roboto-slab': ['var(--font-roboto-slab)', 'serif'],
+      },
     },
   },
   plugins: [],
+  darkMode: 'media', // This enables dark mode based on system preferences
 };
 export default config;
