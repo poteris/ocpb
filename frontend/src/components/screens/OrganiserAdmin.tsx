@@ -192,7 +192,9 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                       }}
                       className="flex-grow"
                     />
-                    <Button onClick={() => handleRemoveObjective(index)}>Remove</Button>
+                    <Button onClick={() => handleRemoveObjective(index)} className="text-xs">
+                      Remove
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -483,7 +485,8 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                         ...prev!,
                         objectives: [...prev!.objectives, ""],
                       }))
-                    }>
+                    }
+                    className="text-xs">
                     Add Objective
                   </Button>
                 </div>

@@ -185,7 +185,9 @@ const InitiateChatContent: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}>
                 {selectedPrompts.map((prompt, index) => (
                   <motion.div key={index} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button onClick={() => handleStartChat(prompt)} className=" py-4 px-6 text-left h-full w-full">
+                    <Button
+                      onClick={() => handlePromptSelect(prompt)}
+                      className="text-lg py-4 px-6 text-left h-full w-full">
                       {prompt}
                     </Button>
                   </motion.div>
