@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Modal } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
@@ -192,12 +192,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                       }}
                       className="flex-grow"
                     />
-                    <Button
-                      variant="destructive"
-                      text="Remove"
-                      onClick={() => handleRemoveObjective(index)}
-                      className="text-xs"
-                    />
+                    <Button onClick={() => handleRemoveObjective(index)}>Remove</Button>
                   </div>
                 </div>
               ))}
@@ -216,19 +211,15 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                   placeholder="Enter a learning objective..."
                   className="flex-grow"
                 />
-                <Button variant="options" text="Add" onClick={handleAddObjective} />
+                <Button onClick={handleAddObjective}>Add</Button>
               </div>
             </div>
           </div>
 
           <div className="pt-4">
-            <Button
-              variant="progress"
-              text="Create Scenario"
-              onClick={handleCreateScenario}
-              disabled={loading || objectives.length < 3}
-              className="w-full"
-            />
+            <Button onClick={handleCreateScenario} disabled={loading || objectives.length < 3} className="w-full">
+              Create Scenario
+            </Button>
             {objectives.length > 0 && objectives.length < 3 && (
               <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 text-center">
                 Add {3 - objectives.length} more objective{3 - objectives.length === 1 ? "" : "s"} to create
@@ -460,8 +451,6 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                       <div className="flex items-center space-x-2 w-full">
                         <span className="text-gray-500 text-sm">{index + 1}.</span>
                         <Button
-                          variant="destructive"
-                          text="Remove"
                           onClick={() => {
                             const newObjectives = editForm.objectives.filter((_, i) => i !== index);
                             setEditForm((prev) => ({
@@ -469,8 +458,9 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                               objectives: newObjectives,
                             }));
                           }}
-                          className="text-xs"
-                        />
+                          className="text-xs">
+                          Remove
+                        </Button>
                       </div>
                       <Input
                         type="text"
@@ -488,16 +478,14 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                     </div>
                   ))}
                   <Button
-                    variant="options"
-                    text="Add Objective"
                     onClick={() =>
                       setEditForm((prev) => ({
                         ...prev!,
                         objectives: [...prev!.objectives, ""],
                       }))
-                    }
-                    className="text-xs"
-                  />
+                    }>
+                    Add Objective
+                  </Button>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   {editForm && editForm.objectives.length < 3 ? (
@@ -514,13 +502,10 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="destructive" text="Cancel" onClick={handleEditCancel} />
-                <Button
-                  variant="progress"
-                  text="Save Changes"
-                  onClick={() => handleEditSave(scenario.id)}
-                  disabled={loading}
-                />
+                <Button onClick={handleEditCancel}>Cancel</Button>
+                <Button onClick={() => handleEditSave(scenario.id)} disabled={loading}>
+                  Save Changes
+                </Button>
               </div>
             </div>
           ) : (
@@ -532,9 +517,9 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                   <span className="text-xs font-mono text-gray-500 dark:text-gray-400">ID: {scenario.id}</span>
                 </div>
                 <div className="flex space-x-2">
-                  <Button variant="options" text="Edit" onClick={() => handleEditClick(scenario)} />
-                  <Button variant="options" text="Duplicate" onClick={() => handleDuplicateScenario(scenario)} />
-                  <Button variant="destructive" text="Delete" onClick={() => handleDeleteScenarioClick(scenario.id)} />
+                  <Button onClick={() => handleEditClick(scenario)}>Edit</Button>
+                  <Button onClick={() => handleDuplicateScenario(scenario)}>Duplicate</Button>
+                  <Button onClick={() => handleDeleteScenarioClick(scenario.id)}>Delete</Button>
                 </div>
               </div>
 
@@ -565,8 +550,10 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         title="Delete Scenario"
         footer={
           <div className="flex justify-end space-x-4">
-            <Button variant="default" text="Cancel" onClick={() => setShowDeleteModal(false)} />
-            <Button variant="destructive" text="Delete" onClick={handleDeleteScenarioConfirm} disabled={loading} />
+            <Button onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button onClick={handleDeleteScenarioConfirm} disabled={loading}>
+              Delete
+            </Button>
           </div>
         }>
         <p className="text-lg text-gray-700 dark:text-gray-300">

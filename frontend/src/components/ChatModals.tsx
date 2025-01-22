@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Modal, InfoPopover, Button } from "@/components/ui";
+import { Modal, InfoPopover, Skeleton } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { FeedbackPopover } from "./screens/FeedbackScreen";
 import { ScenarioInfo } from "@/context/ScenarioContext";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
-import { Skeleton } from "@/components/ui";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import { Persona } from "@/types/persona";
@@ -126,14 +126,11 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         title="End Chat"
         footer={
           <div className="flex justify-end space-x-4">
-            <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
-            <Button variant="destructive" text="End Chat" onClick={handleEndChat} />
+            <Button onClick={() => setShowEndChatModal(false)}>Cancel</Button>
+            <Button onClick={handleEndChat}>End Chat</Button>
           </div>
-        }
-      >
-        <p className="text-lg text-gray-700 dark:text-gray-300">
-          Are you sure you want to end this chat?
-        </p>
+        }>
+        <p className="text-lg text-gray-700 dark:text-gray-300">Are you sure you want to end this chat?</p>
       </Modal>
 
       {showInfoPopover && scenarioInfo && (
@@ -160,8 +157,7 @@ ${persona ? renderPersonaDetails(persona) : ""}
         <FeedbackPopover
           onClose={handleFeedbackClose}
           score={feedbackData?.score || 0}
-          analysisData={feedbackData || undefined}
-        >
+          analysisData={feedbackData || undefined}>
           {isLoadingFeedback ? renderFeedbackSkeleton() : null}
         </FeedbackPopover>
       )}

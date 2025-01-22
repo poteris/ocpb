@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger, LoadingSpinner } from "@/components/ui";
 import axios from "axios";
@@ -185,8 +185,12 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           <div className="flex space-x-2">
             {hasUnsavedChanges && (
               <>
-                <Button variant="destructive" text="Discard" onClick={handleDiscard} disabled={loading} />
-                <Button variant="progress" text="Save Changes" onClick={handleSave} disabled={loading} />
+                <Button onClick={handleDiscard} disabled={loading}>
+                  Discard
+                </Button>
+                <Button onClick={handleSave} disabled={loading}>
+                  Save Changes
+                </Button>
               </>
             )}
           </div>

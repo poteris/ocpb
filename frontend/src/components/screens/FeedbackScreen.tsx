@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, Star, CheckCircle, AlertCircle } from 'react-feather';
-import { Button } from '../ui';
+import React from "react";
+import { X, Star, CheckCircle, AlertCircle } from "react-feather";
+import { Button } from "@/components/ui/button";
 
 interface AnalysisData {
   summary: string;
@@ -28,7 +28,9 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Feedback</h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
           <X size={24} />
         </button>
       </div>
@@ -42,12 +44,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
                 <h3 className="text-lg font-bold mb-2">Performance Score</h3>
                 <div className="flex">
                   {[...Array(5)].map((_, index) => (
-                    <Star
-                      key={index}
-                      size={24}
-                      fill={index < score ? 'white' : 'none'}
-                      stroke="white"
-                    />
+                    <Star key={index} size={24} fill={index < score ? "white" : "none"} stroke="white" />
                   ))}
                 </div>
               </div>
@@ -95,18 +92,8 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 
       {/* Footer */}
       <div className="p-4 flex justify-between border-t border-gray-200 dark:border-gray-700">
-        {onContinueChat && (
-          <Button
-            variant="default"
-            text="Continue Chatting"
-            onClick={onContinueChat}
-          />
-        )}
-        <Button
-          variant="progress"
-          text="Close"
-          onClick={onClose}
-        />
+        {onContinueChat && <Button onClick={onContinueChat}>Continue Chatting</Button>}
+        <Button onClick={onClose}>Close</Button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Button } from "../../ui";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Header } from "../../Header";
 // import { getScenarios, Scenario } from '@/utils/supabaseQueries';
@@ -92,7 +92,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
         setIsExiting(!isExiting);
       }
     },
-    [currentPersona, router, scenario?.id, setSelectedPersona, isExiting, isNavigating],
+    [currentPersona, router, scenario?.id, setSelectedPersona, isExiting, isNavigating]
   );
 
   const renderSkeleton = useMemo(
@@ -123,7 +123,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
         </div>
       </div>
     ),
-    [],
+    []
   );
 
   return (
@@ -132,7 +132,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
         <div className="max-w-4xl mx-auto py-12 sm:py-20">
           <div>
-            <Button variant="options" onClick={() => router.back()} className="mb-8">
+            <Button onClick={() => router.back()} className="mb-8">
               Back to Scenarios
             </Button>
           </div>
@@ -155,11 +155,9 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
           <div className="max-w-md mx-auto">
             <Button
-              variant="progress"
               onClick={() => navigateTo("initiate-chat")}
-              className="w-full text-lg py-3"
-              disabled={isLoading || !currentPersona || isNavigating}
-            >
+              className="w-full py-3"
+              disabled={isLoading || !currentPersona || isNavigating}>
               {isNavigating ? (
                 <>
                   <Loader className="animate-spin mr-2" size={20} />

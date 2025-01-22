@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Loader } from "react-feather";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatInputProps {
@@ -34,7 +34,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [inputMessage]);
 
   const handleSendMessage = () => {
-
     if (inputMessage.trim()) {
       onSendMessage();
       setInputMessage("");
@@ -55,8 +54,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           initial={false}
           animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
           transition={{ duration: 0.2 }}
-          className="relative"
-        >
+          className="relative">
           <textarea
             ref={inputRef}
             value={inputMessage}
@@ -78,8 +76,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 onClick={handleSendMessage}
                 className="absolute right-[1%] top-[10%] flex items-center justify-center bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-1.5 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
                 aria-label="Send message"
-                disabled={isLoading || !inputMessage.trim()}
-              >
+                disabled={isLoading || !inputMessage.trim()}>
                 {isLoading ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
               </motion.button>
             )}
@@ -87,10 +84,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </motion.div>
       </div>
       <Button
-        variant="destructive"
         onClick={onEndChat}
-        className="text-sm sm:text-base px-3 sm:px-4 py-2 rounded-full h-[40px] whitespace-nowrap flex-shrink-0"
-      >
+        className="text-sm sm:text-base px-3 sm:px-4 py-2 rounded-full h-[40px] whitespace-nowrap flex-shrink-0">
         End Chat
       </Button>
     </div>

@@ -2,13 +2,12 @@
 
 import React, { useState, Suspense, useEffect } from "react";
 import { Header } from "../../Header";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChatModals } from "../../ChatModals";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui";
-import { AnimatePresence } from "framer-motion";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useAtom } from "jotai";
 import { selectedPersonaAtom, scenarioAtom } from "@/store";
@@ -138,10 +137,8 @@ const InitiateChatContent: React.FC = () => {
   // };
 
   const navigateToChat = (conversationResponse: ConversationResponse, message: string) => {
-    const url = `/chat-screen?conversationId=${
-      conversationResponse.id
-    }&firstMessage=${encodeURIComponent(
-      message,
+    const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(
+      message
     )}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
     router.push(url);
   };
@@ -176,9 +173,7 @@ const InitiateChatContent: React.FC = () => {
   };
 
   if (isNavigatingToChat) {
-    return (
-      <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />
-    );
+    return <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />;
   }
 
   return (
@@ -188,8 +183,7 @@ const InitiateChatContent: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: isExiting ? 0 : 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+        transition={{ duration: 0.3 }}>
         <div className="flex-shrink-0 w-full">
           <Header
             title={scenarioInfo?.title || "Scenario"}
@@ -206,29 +200,17 @@ const InitiateChatContent: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex justify-between items-center mb-8"
-              >
-                <Button variant="options" onClick={handleBack}>
-                  Back to Scenario Setup
-                </Button>
+                className="flex justify-between items-center mb-8">
+                <Button onClick={handleBack}>Back to Scenario Setup</Button>
               </motion.div>
 
               <motion.div
                 className="flex flex-col items-center mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Image
-                  width={250}
-                  height={250}
-                  alt="Union Training Bot"
-                  src="/images/chat-bot.svg"
-                  className="mb-8"
-                />
-                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">
-                  Start Training
-                </h2>
+                transition={{ duration: 0.5 }}>
+                <Image width={250} height={250} alt="Union Training Bot" src="/images/chat-bot.svg" className="mb-8" />
+                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
                 <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
                   Choose a prompt below or write your own to start your union training session
                 </p>
@@ -238,16 +220,12 @@ const InitiateChatContent: React.FC = () => {
                 className="grid gap-4 sm:grid-cols-2 mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
+                transition={{ duration: 0.5, delay: 0.2 }}>
                 {selectedPrompts.map((prompt, index) => (
                   <motion.div key={index} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant="options"
-                      text={prompt}
-                      onClick={() => handlePromptSelect(prompt)}
-                      className="text-lg py-4 px-6 text-left h-full w-full"
-                    />
+                    <Button onClick={() => handlePromptSelect(prompt)} className=" py-4 px-6 text-left h-full w-full">
+                      {prompt}
+                    </Button>
                   </motion.div>
                 ))}
               </motion.div>
@@ -257,8 +235,7 @@ const InitiateChatContent: React.FC = () => {
               className="mt-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
+              transition={{ duration: 0.5, delay: 0.4 }}>
               <div className="relative">
                 <input
                   type="text"
@@ -268,12 +245,11 @@ const InitiateChatContent: React.FC = () => {
                   placeholder="Start training..."
                 />
                 <Button
-                  variant="progress"
-                  text="Start"
                   onClick={handleStartChat}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
-                  disabled={!inputMessage.trim()}
-                />
+                  disabled={!inputMessage.trim()}>
+                  Start
+                </Button>
               </div>
             </motion.div>
           </div>
