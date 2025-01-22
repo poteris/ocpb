@@ -20,7 +20,6 @@ import { TrainingScenario } from '@/types/scenarios';
 
 interface ScenarioSetupProps {
   scenarioId: string;
-  onBack: () => void;
 }
 
 
@@ -153,7 +152,7 @@ ${persona.emotional_conditions}
   );
 });
 
-export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack }) => {
+export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
   const router = useRouter();
   const { setScenarioInfo } = useScenario();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
@@ -222,9 +221,9 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
 
   // TODO: no need to store persona in local storage or remove it when navigating back
   const handleBack = () => {
+    router.back();
     // Clear stored current persona but keep generated personas
     localStorage.removeItem('selectedPersona');
-    onBack();
   };
 
   const navigateTo = useCallback(async (screen: string) => {
@@ -246,6 +245,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
       setIsExiting(false);
     }
   }, [currentPersona, router, scenarioId]);
+
 
   const renderSkeleton = useMemo(() => (
     <div className="grid gap-12 lg:grid-cols-2">
