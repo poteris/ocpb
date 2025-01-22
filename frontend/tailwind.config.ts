@@ -68,6 +68,9 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
+      fontFamily: {
+        "roboto-slab": ["var(--font-roboto-slab)", "serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -75,8 +78,8 @@ const config: Config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
-  darkMode: "media",
+  plugins: [require("tailwindcss-animate")],
+  darkMode: ["media", "class"],
 };
 
 export default config;
