@@ -1,73 +1,49 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button } from '../ui';
-import { useRouter } from 'next/navigation';
-import { Header } from '../Header';
-import { useScenario } from '@/context/ScenarioContext';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Button } from "../ui";
+import { useRouter } from "next/navigation";
+import { Header } from "../Header";
+import { useScenario } from "@/context/ScenarioContext";
 // import { getScenarios, Scenario } from '@/utils/supabaseQueries';
 
-import { Loader, RefreshCw } from 'react-feather';
-import ReactMarkdown from 'react-markdown';
-import { markdownStyles } from '@/utils/markdownStyles';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Skeleton } from '../ui/Skeleton';
-import { useDebounce } from '@/hooks/useDebounce';
-import { Persona } from '@/types/persona';
-import axios from 'axios';
-import { TrainingScenario } from '@/types/scenarios';
+import { Loader, RefreshCw } from "react-feather";
+import ReactMarkdown from "react-markdown";
+import { markdownStyles } from "@/utils/markdownStyles";
+import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "../ui/Skeleton";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Persona } from "@/types/persona";
+import axios from "axios";
+import { TrainingScenario } from "@/types/scenarios";
+import { atom } from "jotai";
+import { scenarioIdAtom } from "@/store";
 
-
+import  ScenarioDescription  from "./ScenarioSetup/ScenarioDescription";
+import {useAtom} from 'jotai';
+import {scenarioAtom} from '@/store';
+ 
 interface ScenarioSetupProps {
   scenarioId: string;
 }
 
-
 async function generatePersona() {
-  const persona = await axios.get<Persona>('/api/persona/generate-new-persona');
+  const persona = await axios.get<Persona>("/api/persona/generate-new-persona");
   return persona.data;
 }
 
-
 async function getScenarios() {
-  const scenarios = await axios.get<TrainingScenario[]>('/api/scenarios/get-scenarios');
+  const scenarios = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
   return scenarios.data;
 }
 
-// TODO move to a separate file
-const ScenarioDescription = React.memo(function ScenarioDescription({ scenario }: { scenario: TrainingScenario | null }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <section className="mb-12">
-        <h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Scenario Description</h2>
-        <p className="text-lg text-gray-700 dark:text-gray-300">{scenario?.description}</p>
-      </section>
 
-      <section>
-        <h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Objectives</h2>
-        <div className="text-lg text-gray-700 dark:text-gray-300 space-y-4">
-          {scenario?.objectives.map((objective, index) => (
-            <div key={index} className="mb-4">
-              <ReactMarkdown components={markdownStyles}>
-                {objective}
-              </ReactMarkdown>
-            </div>
-          ))}
-        </div>
-      </section>
-    </motion.div>
-  );
-});
 
 //  TODO move to a separate file
 const PersonaDetails = React.memo(function PersonaDetails({
   persona,
   isGenerating,
-  onGenerate
+  onGenerate,
 }: {
   persona: Persona | null;
   isGenerating: boolean;
@@ -88,7 +64,6 @@ const PersonaDetails = React.memo(function PersonaDetails({
       <Skeleton className="h-4 w-4/5" />
     </div>
   );
-
 
   // TODO move this out
   const renderPersonaDetails = (persona: Persona) => {
@@ -119,7 +94,9 @@ ${persona.emotional_conditions}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
     >
-      <h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Chatbot Persona</h2>
+      <h2 className="text-3xl font-semibold mb-6 text-gray-900 dark:text-gray-100">
+        Chatbot Persona
+      </h2>
       {isGenerating ? (
         renderPersonaSkeleton()
       ) : persona ? (
@@ -145,7 +122,7 @@ ${persona.emotional_conditions}
         className="w-full text-lg py-3"
         disabled={isGenerating}
       >
-        <RefreshCw className={`mr-2 ${isGenerating ? 'animate-spin' : ''}`} size={24} />
+        <RefreshCw className={`mr-2 ${isGenerating ? "animate-spin" : ""}`} size={24} />
         {isGenerating ? "Generating..." : "Generate New Persona"}
       </Button>
     </motion.section>
@@ -156,31 +133,25 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
   const router = useRouter();
   const { setScenarioInfo } = useScenario();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
-  const [scenario, setScenario] = useState<Scenario | null>(null);
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [scenario, _] = useAtom(scenarioAtom);
 
-  const fetchScenario = useCallback(async () => {
-    const scenarios = await getScenarios();
-    const foundScenario = scenarios.find(s => s.id === scenarioId);
-    setScenario(foundScenario || null);
-    if (foundScenario) {
-      setScenarioInfo(foundScenario);
-    }
-  }, [scenarioId, setScenarioInfo]);
 
   // Simplified initialization effect
   useEffect(() => {
     const initializePersonas = async () => {
       setIsLoading(true);
       try {
-        await fetchScenario();
+        // await fetchScenario();
 
         // Only get the most recent persona for this scenario
         const storedPersonaStr = localStorage.getItem(`currentPersona_${scenarioId}`);
-        const storedPersona: Persona | null = storedPersonaStr ? JSON.parse(storedPersonaStr) : null;
+        const storedPersona: Persona | null = storedPersonaStr
+          ? JSON.parse(storedPersonaStr)
+          : null;
 
         if (storedPersona) {
           setCurrentPersona(storedPersona);
@@ -197,7 +168,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
     };
 
     initializePersonas();
-  }, [fetchScenario, scenarioId]);
+  }, [ scenarioId]); 
 
   // Wrap the raw generate function in useCallback
   const generatePersonaRaw = useCallback(async () => {
@@ -210,7 +181,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
         localStorage.setItem(`currentPersona_${scenarioId}`, JSON.stringify(newPersona));
       }
     } catch (error) {
-      console.error('Error generating persona:', error);
+      console.error("Error generating persona:", error);
     } finally {
       setIsGeneratingPersona(false);
     }
@@ -223,57 +194,62 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
   const handleBack = () => {
     router.back();
     // Clear stored current persona but keep generated personas
-    localStorage.removeItem('selectedPersona');
+    localStorage.removeItem("selectedPersona");
   };
 
-  const navigateTo = useCallback(async (screen: string) => {
-    if (!currentPersona) return;
+  const navigateTo = useCallback(
+    async (screen: string) => {
+      if (!currentPersona) return;
 
-    setIsNavigating(true);
-    setIsExiting(true);
+      setIsNavigating(true);
+      setIsExiting(true);
 
-    try {
-      // Store current persona in localStorage
-      localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
-      // Wait for exit animation
-      await new Promise(resolve => setTimeout(resolve, 300));
-      // TODO use Link component instead if a click is routing the user to a new page 
-      router.push(`/${screen}?scenarioId=${scenarioId}`);
-    } catch (error) {
-      console.error('Error navigating:', error);
-      setIsNavigating(false);
-      setIsExiting(false);
-    }
-  }, [currentPersona, router, scenarioId]);
+      try {
+        // Store current persona in localStorage
+        localStorage.setItem("selectedPersona", JSON.stringify(currentPersona));
+        // Wait for exit animation
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        // TODO use Link component instead if a click is routing the user to a new page
+        router.push(`/${screen}?scenarioId=${scenarioId}`);
+      } catch (error) {
+        console.error("Error navigating:", error);
+        setIsNavigating(false);
+        setIsExiting(false);
+      }
+    },
+    [currentPersona, router, scenarioId],
+  );
 
-
-  const renderSkeleton = useMemo(() => (
-    <div className="grid gap-12 lg:grid-cols-2">
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-5/6 mb-2" />
-        <Skeleton className="h-4 w-4/5 mb-8" />
-
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-5/6 mb-2" />
-        <Skeleton className="h-4 w-4/5" />
-      </div>
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
-          <Skeleton className="h-6 w-1/2 mb-4" />
+  const renderSkeleton = useMemo(
+    () => (
+      <div className="grid gap-12 lg:grid-cols-2">
+        <div>
+          <Skeleton className="h-8 w-3/4 mb-6" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6 mb-2" />
-          <Skeleton className="h-4 w-4/5 mb-2" />
+          <Skeleton className="h-4 w-4/5 mb-8" />
+
+          <Skeleton className="h-8 w-3/4 mb-6" />
           <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-5/6 mb-2" />
+          <Skeleton className="h-4 w-4/5" />
         </div>
-        <Skeleton className="h-12 w-full" />
+        <div>
+          <Skeleton className="h-8 w-3/4 mb-6" />
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
+            <Skeleton className="h-6 w-1/2 mb-4" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-5/6 mb-2" />
+            <Skeleton className="h-4 w-4/5 mb-2" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+          <Skeleton className="h-12 w-full" />
+        </div>
       </div>
-    </div>
-  ), []);
+    ),
+    [],
+  );
 
   return (
     <AnimatePresence mode="wait">
@@ -284,7 +260,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Header title={scenario?.title || 'Loading...'} variant="default" />
+        <Header title={scenario?.title || "Loading..."} variant="default" />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
           <div className="max-w-4xl mx-auto py-12 sm:py-20">
             <motion.div
@@ -292,18 +268,16 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Button
-                variant="options"
-                onClick={handleBack}
-                className="mb-8"
-              >
+              <Button variant="options" onClick={handleBack} className="mb-8">
                 Back to Scenarios
               </Button>
             </motion.div>
 
-            {isLoading ? renderSkeleton : (
+            {isLoading ? (
+              renderSkeleton
+            ) : (
               <div className="grid gap-12 lg:grid-cols-2">
-                <ScenarioDescription scenario={scenario} />
+                {scenario && <ScenarioDescription scenario={scenario} />}
                 <PersonaDetails
                   persona={currentPersona}
                   isGenerating={isGeneratingPersona}
@@ -318,7 +292,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
             <div className="max-w-md mx-auto">
               <Button
                 variant="progress"
-                onClick={() => navigateTo('initiate-chat')}
+                onClick={() => navigateTo("initiate-chat")}
                 className="w-full text-lg py-3"
                 disabled={isLoading || !currentPersona || isNavigating}
               >
