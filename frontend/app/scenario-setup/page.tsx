@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { ScenarioSetup } from '@/components/screens/ScenarioSetup';
+import { ScenarioSetup } from '@/components/screens/ScenarioSetup/ScenarioSetup';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function ScenarioSetupContent() {
