@@ -1,5 +1,9 @@
-import {trainingScenarios} from '@/const/scenarios'
-export async function GET(request: Request) {
+
+import {getScenarios} from "./fetchScenarios"
+
+export async function GET(  ) {
+    const trainingScenarios = await getScenarios()
+    
     return new Response(JSON.stringify(trainingScenarios), {
         status: 200,
         headers: {
