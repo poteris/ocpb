@@ -6,19 +6,28 @@ import { useRouter } from 'next/navigation';
 import { Header } from '../Header';
 import { useScenario } from '@/context/ScenarioContext';
 import { getScenarios, Scenario } from '@/utils/supabaseQueries';
-import { generatePersona, Persona } from '@/utils/api';
+
 import { Loader, RefreshCw } from 'react-feather';
 import ReactMarkdown from 'react-markdown';
 import { markdownStyles } from '@/utils/markdownStyles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '../ui/Skeleton';
 import { useDebounce } from '@/hooks/useDebounce';
+import {Persona} from '@/types/persona';
+import axios from 'axios';
 
 interface ScenarioSetupProps {
   scenarioId: string;
   onBack: () => void;
 }
 
+
+async function generatePersona() { 
+  const persona = await axios.get<Persona>('/api/persona/generate-new-persona');
+  return persona.data; 
+}
+
+// TODO move to a separate file
 const ScenarioDescription = React.memo(function ScenarioDescription({ scenario }: { scenario: Scenario | null }) {
   return (
     <motion.div
@@ -47,6 +56,7 @@ const ScenarioDescription = React.memo(function ScenarioDescription({ scenario }
   );
 });
 
+//  TODO move to a separate file
 const PersonaDetails = React.memo(function PersonaDetails({ 
   persona, 
   isGenerating, 
@@ -72,6 +82,8 @@ const PersonaDetails = React.memo(function PersonaDetails({
     </div>
   );
 
+
+  // TODO move this out
   const renderPersonaDetails = (persona: Persona) => {
     return `
 ### Personal Background
@@ -187,6 +199,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
       const newPersona = await generatePersona();
       if (newPersona) {
         setCurrentPersona(newPersona);
+        // ? Why is this necessary?
         localStorage.setItem(`currentPersona_${scenarioId}`, JSON.stringify(newPersona));
       }
     } catch (error) {
@@ -199,6 +212,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
   // Create debounced version
   const generateNewPersona = useDebounce(generatePersonaRaw, 500);
 
+  // TODO: no need to store persona in local storage or remove it when navigating back
   const handleBack = () => {
     // Clear stored current persona but keep generated personas
     localStorage.removeItem('selectedPersona');
@@ -216,6 +230,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId, onBack
       localStorage.setItem('selectedPersona', JSON.stringify(currentPersona));
       // Wait for exit animation
       await new Promise(resolve => setTimeout(resolve, 300));
+      // TODO use Link component instead if a click is routing the user to a new page 
       router.push(`/${screen}?scenarioId=${scenarioId}`);
     } catch (error) {
       console.error('Error navigating:', error);
