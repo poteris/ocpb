@@ -6,7 +6,8 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-const completion = await openai.chat.completions.create({
+const generateNewPersona = async () => { 
+  const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [{ role: "user", content: genericPersonaPrompt }],
     functions: [
@@ -72,12 +73,16 @@ const completion = await openai.chat.completions.create({
     function_call: { name: "generate_persona" }
   });
 
-  const functionCall = completion.choices[0].message.function_call;
+  const functionCall = completion.choices[0].message.function_call; // TODO: fix depracation of function_call
   if (!functionCall || !functionCall.arguments) {
     throw new Error('No function call or arguments received from OpenAI');
   }
 
+
   const generatedPersona = JSON.parse(functionCall.arguments) as Persona; // expecting openai functions to handle consistent keys
-export {generatedPersona}
+  return generatedPersona;
+}
+
+export { generateNewPersona }
 
 
