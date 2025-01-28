@@ -46,7 +46,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
   const [scenario,] = useAtom(scenarioAtom);
   const [, setSelectedPersona] = useAtom(selectedPersonaAtom);
 
-  // Simplified initialization effect
+ 
   useEffect(() => {
     const initializePersonas = async () => {
       setIsLoading(true);
@@ -66,8 +66,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
     initializePersonas();
   }, [scenario]);
 
-  // Wrap the raw generate function in useCallback
-  const generatePersonaRaw = async () => {
+  const handleGenerateNewPersona = async () => {
     setIsGeneratingPersona(true);
     try {
       const newPersona = await generatePersona();
@@ -80,9 +79,10 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
       setIsGeneratingPersona(false);
     }
   };
+  
 
 
-  const generateNewPersona = generatePersonaRaw()
+
 
 
   const navigateTo = useCallback(
@@ -161,7 +161,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = ({ scenarioId }) => {
                 <PersonaDetails
                   persona={currentPersona}
                   isGenerating={isGeneratingPersona}
-                  onGenerate={generateNewPersona}
+                  onGenerate={handleGenerateNewPersona}
                 />
               </div>
             )}
