@@ -28,8 +28,7 @@ import  { TrainingScenario } from '@/types/scenarios'
       title: data.title,
       description: data.description,
       context: data.context,
-      objectives: data.scenario_objectives.map(obj => obj.objective) || [],
-  
+      objectives: (data.scenario_objectives ?? []).map(obj => obj.objective),
     }));
   }
 
