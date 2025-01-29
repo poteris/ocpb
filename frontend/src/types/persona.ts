@@ -4,7 +4,7 @@ export interface Persona {
     id: string;
     name: string;
     segment: string;
-    age: string;
+    age: number;
     gender: string;
     family_status: string;
     uk_party_affiliation: string;
@@ -20,7 +20,7 @@ export const personaSchema = z.object({
     id: z.string(),
     name: z.string(),
     segment: z.string(),
-    age: z.string(),
+    age: z.number(),
     gender: z.string(),
     family_status: z.string(),
     uk_party_affiliation: z.string(),
