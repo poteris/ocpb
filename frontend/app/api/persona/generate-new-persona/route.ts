@@ -1,4 +1,6 @@
 import { generateNewPersona as newPersona } from './generateNewPersona';
+import { mockPersona } from '../../../../__mocks__/mockData';
+import { NextResponse } from 'next/server';
 import { z } from "zod";
 
  const personaSchema = z.object({
@@ -19,28 +21,23 @@ import { z } from "zod";
 
 export async function GET() {
   try {
+
+    if( process.env.NODE_ENV !== 'production') {
+      console.log('Using mock persona');
+      return NextResponse.json(mockPersona, { status: 200 });
+    }
+    
     const persona = await newPersona();
     
     personaSchema.parse(persona); // will throw an error if the persona does not match the schema
     
-    console.log(persona); 
-    return new Response(JSON.stringify(persona), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return NextResponse.json(persona, { status: 200 });
   } catch (error) {
     console.error('Error generating persona:', error);
 
-    return new Response(
-      JSON.stringify({ error: 'Failed to generate persona' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    return NextResponse.json(
+      { error: 'Failed to generate persona' },
+      { status: 500 }
     );
   }
 }
