@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { InitiateChat } from '@/components/screens/InitiateChat';
+import { InitiateChat } from '@/components/screens/InitiateChat/InitiateChat';
 
 export default function InitiateChatPage() {
   return (
