@@ -20,7 +20,7 @@ export const mockPersona: Persona = {
   id: "loony-persona-id",
   name: "Loony McLoonyface",
   segment: "Whimsical",
-  age: "42",
+  age: 42,
   gender: "Unicorn",
   family_status: "Married to the Moon",
   uk_party_affiliation: "The Official Loony Party",
