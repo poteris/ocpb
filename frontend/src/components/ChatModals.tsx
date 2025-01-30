@@ -1,13 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Modal, InfoPopover, Button } from '@/components/ui';
-import { FeedbackPopover } from './screens/FeedbackScreen';
-import { ScenarioInfo } from '@/context/ScenarioContext';
-import { Persona, getFeedback, FeedbackData } from '@/utils/api';
-import ReactMarkdown from 'react-markdown';
-import { markdownStyles } from '@/utils/markdownStyles';
-import { Skeleton } from '@/components/ui';
+import React, { useState } from "react";
+import { Modal, InfoPopover, Button } from "@/components/ui";
+import { FeedbackPopover } from "./screens/FeedbackScreen";
+import { ScenarioInfo } from "@/context/ScenarioContext";
+import { Persona, getFeedback } from "@/utils/api";
+import ReactMarkdown from "react-markdown";
+import { markdownStyles } from "@/utils/markdownStyles";
+import { Skeleton } from "@/components/ui";
+import axios from "axios";
+import {FeedbackData} from "@/types/feedback"; 
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -22,6 +24,13 @@ interface ChatModalsProps {
   conversationId: string | null;
 }
 
+async function generateFeedbackOnConversation(conversationId: string) {
+  const feedbackResponse = await axios.post<FeedbackData>("/api/feedback/generate-feedback", {
+    conversationId,
+  });
+  return feedbackResponse.data;
+}
+
 export const ChatModals: React.FC<ChatModalsProps> = ({
   showEndChatModal,
   setShowEndChatModal,
@@ -32,7 +41,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   handleFeedbackClose,
   scenarioInfo,
   persona,
-  conversationId
+  conversationId,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -58,15 +67,17 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   };
 
   const formatObjectives = (objectives: string[]) => {
-    return objectives.map(objective => {
-      const [header, ...bullets] = objective.split('\n');
-      return `> ${header}\n${bullets.join('\n')}`;
-    }).join('\n\n');
+    return objectives
+      .map((objective) => {
+        const [header, ...bullets] = objective.split("\n");
+        return `> ${header}\n${bullets.join("\n")}`;
+      })
+      .join("\n\n");
   };
 
   const handleEndChat = async () => {
     if (!conversationId) {
-      console.error('No conversation ID available');
+      console.error("No conversation ID available");
       return;
     }
 
@@ -75,10 +86,15 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
     setShowFeedbackPopover(true);
 
     try {
-      const feedback = await getFeedback(conversationId);
+      // NOTE: generating feedback on conversation
+      // const feedback = await getFeedback(conversationId);
+      const feedback = await generateFeedbackOnConversation(conversationId);
+      
+
+    
       setFeedbackData(feedback);
     } catch (error) {
-      console.error('Error fetching feedback:', error);
+      console.error("Error fetching feedback:", error);
       // Handle error (e.g., show an error message to the user)
     } finally {
       setIsLoadingFeedback(false);
@@ -112,12 +128,22 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         title="End Chat"
         footer={
           <div className="flex justify-end space-x-4">
-            <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
-            <Button variant="destructive" text="End Chat" onClick={handleEndChat} />
+            <Button
+              variant="default"
+              text="Cancel"
+              onClick={() => setShowEndChatModal(false)}
+            />
+            <Button
+              variant="destructive"
+              text="End Chat"
+              onClick={handleEndChat}
+            />
           </div>
         }
       >
-        <p className="text-lg text-gray-700 dark:text-gray-300">Are you sure you want to end this chat?</p>
+        <p className="text-lg text-gray-700 dark:text-gray-300">
+          Are you sure you want to end this chat?
+        </p>
       </Modal>
 
       {showInfoPopover && scenarioInfo && (
@@ -133,7 +159,7 @@ ${scenarioInfo.description}
 
 ${formatObjectives(scenarioInfo.objectives)}
 
-${persona ? renderPersonaDetails(persona) : ''}
+${persona ? renderPersonaDetails(persona) : ""}
               `.trim()}
             </ReactMarkdown>
           </div>

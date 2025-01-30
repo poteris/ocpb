@@ -1,5 +1,6 @@
 import { TrainingScenario } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
+import { FeedbackData } from "@/types/feedback";
 
 export const mockTrainingScenario: TrainingScenario = {
   id: "loony-party-recruitment",
@@ -31,3 +32,36 @@ export const mockPersona: Persona = {
   personality_traits: "Eccentric, Imaginative, Playful",
   emotional_conditions: "Perpetually Joyful",
 };
+
+
+
+export const mockFeedback: FeedbackData = {
+        score: 3,
+        strengths: [
+          {
+            title: "Good listener",
+            description:
+              "You listened to the user's concerns and responded appropriately.",
+          },
+          {
+            title: "Clear communication",
+            description:
+              "You communicated clearly and effectively, which helped the user understand your responses.",
+          },
+        ],
+
+        areas_for_improvement: [
+          {
+            title: "Empathy",
+            description:
+              "You could show more empathy towards the user's situation to build rapport and trust.",
+          },
+          {
+            title: "Active listening",
+            description:
+              "You could improve your active listening skills by summarizing the user's concerns before responding.",
+          },
+        ],
+        summary:
+          "Overall, you did a good job in this conversation. Keep up the good work and continue to improve your communication skills.",
+      };
