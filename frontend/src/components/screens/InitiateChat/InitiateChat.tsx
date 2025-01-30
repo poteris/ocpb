@@ -1,48 +1,89 @@
-'use client';
+"use client";
 
 import React, { useState, Suspense, useEffect } from "react";
-import { Header } from '../Header';
-import { Button } from '@/components/ui';
+import { Header } from "../../Header";
+import { Button } from "@/components/ui";
 import Image from "next/image";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useScenario } from '@/context/ScenarioContext';
-import { ChatModals } from '../ChatModals';
-import { createConversation, storePersona } from '@/utils/api';
-import { Persona } from '@/utils/api';
-import { motion } from 'framer-motion';
-import { Skeleton } from '@/components/ui';
-import { AnimatePresence } from 'framer-motion';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { useRouter, useSearchParams } from "next/navigation";
+import { useScenario } from "@/context/ScenarioContext";
+import { ChatModals } from "../../ChatModals";
+import { createConversation, storePersona } from "@/utils/api";
+import { Persona } from "@/utils/api";
+import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui";
+import { AnimatePresence } from "framer-motion";
+import { LoadingScreen } from "@/components/LoadingScreen";
+import { useAtom } from "jotai";
+import { selectedPersonaAtom, scenarioAtom } from "@/store";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
+
+const FIXED_PROMPTS = [
+  "Hi, can I interrupt you for a sec?",
+  "Hey, how are you doing?",
+  "Hey mate, sorry to bother you - how's it going?",
+  "What are you up to?",
+  "Hi!",
+  "Heya mate - what's new?",
+];
+
+interface CreateNewChatRequest {
+  userId: string;
+  initialMessage: string;
+  scenarioId: string;
+  persona: Persona;
+  systemPromptId?: number;
+}
+interface ConversationResponse {
+  id: string;
+  aiResponse: string;
+}
+
+async function createNewChat({
+  initialMessage,
+  scenarioId,
+  persona,
+}: CreateNewChatRequest) {
+  try {
+    const response = await axios.post<ConversationResponse>(
+      "/api/chat/create-new-chat",
+      {
+        userId: uuidv4(), // TODO: currently we don't have a user based system, so we are using uuid
+        initialMessage,
+        scenarioId,
+        persona,
+      } as CreateNewChatRequest
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating new chat:", error);
+    throw error;
+  }
+}
 
 const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
-  const { scenarioInfo, persona, setPersona } = useScenario();
+  // const { scenarioInfo, persona, setPersona } = useScenario();
   const [isExiting, setIsExiting] = useState(false);
   const searchParams = useSearchParams();
-  const scenarioId = searchParams.get('scenarioId');
+
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
 
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 
   // State to store the randomly selected prompts
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
+  const [persona, setSelectedPersona] = useAtom(selectedPersonaAtom);
+  const scenarioId = searchParams.get("scenarioId");
+  // TODO: fetch scenario info. Two ways to handle this - either fetch from db or use global context
+  const [scenarioInfo, setScenarioInfo] = useAtom(scenarioAtom);
 
   // Update prompts when screen size changes
   useEffect(() => {
-    // Moved fixedPrompts inside the effect
-    const fixedPrompts = [
-      "Hi, can I interrupt you for a sec?",
-      "Hey, how are you doing?",
-      "Hey mate, sorry to bother you - how's it going?",
-      "What are you up to?",
-      "Hi!",
-      "Heya mate - what's new?"
-    ];
-
     const getRandomPrompts = () => {
-      const shuffled = [...fixedPrompts].sort(() => 0.5 - Math.random());
+      const shuffled = [...FIXED_PROMPTS].sort(() => 0.5 - Math.random());
       const isMobile = window.innerWidth < 640;
       return shuffled.slice(0, isMobile ? 3 : 4);
     };
@@ -52,74 +93,103 @@ const InitiateChatContent: React.FC = () => {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []); // Empty dependency array since fixedPrompts is now inside
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
-    const storedPersona = localStorage.getItem('selectedPersona');
+    const storedPersona = persona;
     if (storedPersona) {
-      const parsedPersona: Persona = JSON.parse(storedPersona);
-      setPersona(parsedPersona);
+      // const parsedPersona: Persona = JSON.parse(storedPersona);
+      // setPersona(parsedPersona);
     } else {
       router.push(`/scenario-setup?scenarioId=${scenarioId}`);
     }
-  }, [setPersona, router, scenarioId]);
+  }, [persona, router, scenarioId]);
 
-
-
-  const initiateChat = async (message: string) => {
+  const startChat = async (message: string) => {
     if (isInitiatingChat || !persona) return;
-    
+
     try {
       setIsInitiatingChat(true);
       setIsExiting(true);
       setIsNavigatingToChat(true);
-      
-      await storePersona(persona);
-      const conversationResponse = await createConversation(
-        message, 
-        scenarioInfo?.id || '', 
-        persona,
 
-      );
-      
-      const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(message)}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
-      router.push(url);
-      localStorage.removeItem('selectedPersona');
+      // await storePersona(persona); // we are doing this in create chat function anyway
+      // const conversationResponse = await createConversation(
+      //   message,
+      //   scenarioId || "",
+      //   persona
+      // );
+      // createNewChat(message);
+
+      const conversationResponse = await createNewChat({
+        userId: uuidv4(),
+        initialMessage: message,
+        scenarioId: scenarioId || "",
+        persona,
+      });
+
+      navigateToChat(conversationResponse, message);
     } catch (error) {
-      console.error('Error starting conversation:', error);
-      setIsExiting(false);
-      setIsNavigatingToChat(false);
+      handleChatError(error as ChatError);
     } finally {
       setIsInitiatingChat(false);
     }
   };
 
+  // TODO: remove, unnecessary
+  // const createNewChat = async (message: string) => {
+  //   if (!persona) {
+  //     throw new Error("Persona is null");
+  //   }
+  //   return await createConversation(message, scenarioId || "", persona);
+  // };
+
+  const navigateToChat = (
+    conversationResponse: ConversationResponse,
+    message: string
+  ) => {
+    const url = `/chat-screen?conversationId=${
+      conversationResponse.id
+    }&firstMessage=${encodeURIComponent(
+      message
+    )}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
+    router.push(url);
+  };
+
+  interface ChatError {
+    message: string;
+  }
+
+  const handleChatError = (error: ChatError) => {
+    console.error("Error starting conversation:", error);
+    setIsExiting(false);
+    setIsNavigatingToChat(false);
+  };
+
+  // TODO combine the two functions
   const handlePromptSelect = async (prompt: string) => {
-    initiateChat(prompt);
+    startChat(prompt);
   };
 
   const handleStartChat = async () => {
     if (inputMessage.trim()) {
-      initiateChat(inputMessage.trim());
+      startChat(inputMessage.trim());
     }
   };
 
   const handleBack = () => {
     setIsExiting(true);
-    // Store current persona before navigating back
-    if (persona) {
-      localStorage.setItem('selectedPersona', JSON.stringify(persona));
-    }
-    setTimeout(() => {
-      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
-    }, 300);
+    // setTimeout(() => {
+    //   router.push(`/scenario-setup?scenarioId=${scenarioId}`);
+    // }, 300);
+    router.back();
   };
 
   if (isNavigatingToChat) {
     return (
-      <LoadingScreen 
+      <LoadingScreen
         title="Starting Conversation"
         message="Preparing your training session..."
       />
@@ -128,7 +198,7 @@ const InitiateChatContent: React.FC = () => {
 
   return (
     <AnimatePresence mode="wait">
-      <motion.div 
+      <motion.div
         className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800"
         initial={{ opacity: 0 }}
         animate={{ opacity: isExiting ? 0 : 1 }}
@@ -136,9 +206,9 @@ const InitiateChatContent: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div className="flex-shrink-0 w-full">
-          <Header 
-            title={scenarioInfo?.title || "Scenario"} 
-            variant="default" 
+          <Header
+            title={scenarioInfo?.title || "Scenario"}
+            variant="default"
             showInfoIcon={true}
             onInfoClick={() => setShowInfoPopover(true)}
           />
@@ -153,15 +223,12 @@ const InitiateChatContent: React.FC = () => {
                 transition={{ duration: 0.5 }}
                 className="flex justify-between items-center mb-8"
               >
-                <Button
-                  variant="options"
-                  onClick={handleBack}
-                >
+                <Button variant="options" onClick={handleBack}>
                   Back to Scenario Setup
                 </Button>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="flex flex-col items-center mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -174,13 +241,16 @@ const InitiateChatContent: React.FC = () => {
                   src="/images/chat-bot.svg"
                   className="mb-8"
                 />
-                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
+                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">
+                  Start Training
+                </h2>
                 <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
-                  Choose a prompt below or write your own to start your union training session
+                  Choose a prompt below or write your own to start your union
+                  training session
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="grid gap-4 sm:grid-cols-2 mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -202,8 +272,8 @@ const InitiateChatContent: React.FC = () => {
                 ))}
               </motion.div>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="mt-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -239,7 +309,7 @@ const InitiateChatContent: React.FC = () => {
           showFeedbackPopover={false}
           setShowFeedbackPopover={() => {}}
           handleFeedbackClose={() => {}}
-          conversationId={''}
+          conversationId={""}
         />
       </motion.div>
     </AnimatePresence>
@@ -263,14 +333,14 @@ const InitiateChatSkeleton: React.FC = () => {
               <Skeleton className="h-6 w-full mb-2" />
               <Skeleton className="h-6 w-5/6 mb-8" />
             </div>
-            
+
             <div className="grid gap-4 sm:grid-cols-2 mb-12">
               {[1, 2, 3, 4].map((index) => (
                 <Skeleton key={index} className="h-16 w-full rounded-lg" />
               ))}
             </div>
           </div>
-          
+
           <div className="mt-auto">
             <Skeleton className="h-12 w-full rounded-full" />
           </div>

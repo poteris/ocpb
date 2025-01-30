@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { genericPersonaPrompt } from './genericPrompt';
-import {Persona} from '@/types/persona'
+import { v4 as uuidv4 } from 'uuid';
+
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
@@ -79,7 +80,11 @@ const generateNewPersona = async () => {
   }
 
 
-  const generatedPersona = JSON.parse(functionCall.arguments) as Persona; // expecting openai functions to handle consistent keys
+  const generatedPersona = JSON.parse(functionCall.arguments) 
+  generatedPersona.id = uuidv4();
+  
+  
+
   return generatedPersona;
 }
 
