@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader } from 'react-feather';
-import { Button } from '@/components/ui';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Loader } from "react-feather";
+import { Button } from "@/components/ui";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatInputProps {
   inputMessage: string;
@@ -16,7 +16,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   setInputMessage,
   onSendMessage,
   onEndChat,
-  isLoading
+  isLoading,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -24,7 +24,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     const adjustHeight = () => {
       if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
+        inputRef.current.style.height = "auto";
         const newHeight = Math.min(inputRef.current.scrollHeight, 100);
         inputRef.current.style.height = `${newHeight}px`;
       }
@@ -34,14 +34,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [inputMessage]);
 
   const handleSendMessage = () => {
+
     if (inputMessage.trim()) {
       onSendMessage();
-      setInputMessage('');
+      setInputMessage("");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
+    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -70,11 +71,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           />
           <AnimatePresence>
             {(inputMessage.trim() || isLoading) && (
-              <motion.button 
+              <motion.button
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
-                onClick={handleSendMessage} 
+                onClick={handleSendMessage}
                 className="absolute right-[1%] top-[10%] flex items-center justify-center bg-pcsprimary-03 dark:bg-pcsprimary-02 text-white p-1.5 rounded-full hover:bg-pcsprimary-04 dark:hover:bg-pcsprimary-01 transition-colors duration-200 disabled:opacity-50"
                 aria-label="Send message"
                 disabled={isLoading || !inputMessage.trim()}
