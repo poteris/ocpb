@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Persona, personaSchema } from "@/types/persona";
-import { supabase } from "@/lib/supabaseClient";
+import {  personaSchema } from "@/types/persona";
+import{createConversation} from "./createNewChat";
 import { z } from "zod";
 
 const createNewChatRequestSchema = z.object({
@@ -23,23 +23,11 @@ export async function POST(req: NextRequest) {
 
     const parsedBody = createNewChatRequestSchema.parse(body);
 
-    const { data, error } = await supabase.functions.invoke("assistant", {
-      body: JSON.stringify({
-        action: "createConversation",
-        ...parsedBody,
-      }),
-    });
+  
+    const response = await createConversation(parsedBody);
 
-    if (error || !data) {
-      console.error("Error invoking assistant function:", error);
-      return NextResponse.json(
-        { error: "Failed to create new chat" },
-        { status: 500 }
-      );
-    }
-
-    const {result} = data;
-    const parsedResponse = conversationResponseSchema.parse(result);
+  
+    const parsedResponse = conversationResponseSchema.parse(response);
 
     return NextResponse.json(parsedResponse, { status: 200 });
   } catch (error) {
