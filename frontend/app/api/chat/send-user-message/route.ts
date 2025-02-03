@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/init";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
@@ -21,13 +21,6 @@ export async function POST(req: NextRequest) {
 
     const parsedBody = sendUserMessageRequestSchema.parse(body);
 
-    if (process.env.NODE_ENV !== "production") {
-      return NextResponse.json(
-        { id: uuid(), text: "Hello", sender: "bot" },
-        { status: 200 }
-      );
-    }
-
     const { data, error } = await supabase.functions.invoke("assistant", {
       body: JSON.stringify({
         action: "sendMessage",
@@ -35,13 +28,9 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-
     if (error || !data) {
       console.error("Error invoking assistant function:", error);
-      return NextResponse.json(
-        { error: "Failed to get a message from LLM" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to get a message from LLM" }, { status: 500 });
     }
 
     const llmMessage = { id: uuid(), text: data.result.content, sender: "bot" };
@@ -51,9 +40,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(parsedResponse, { status: 200 });
   } catch (error) {
     console.error("Error creating new chat:", error);
-    return NextResponse.json(
-      { error: "Failed to create new chat" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create new chat" }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-import { supabase } from "../../src/lib/supabaseClient";
+import { supabase } from "@/lib/init";
 import { getScenarios } from "../../app/api/scenarios/get-scenarios/fetchScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
@@ -25,7 +25,7 @@ describe("getScenarios", () => {
       /id,\s*title,\s*description,\s*context,\s*scenario_objectives \(objective\)/;
 
     expect(supabase.from("scenarios").select).toHaveBeenCalledWith(
-      expect.stringMatching(expectedQueryString)
+      expect.stringMatching(expectedQueryString),
     );
   });
 
@@ -52,83 +52,80 @@ describe("getScenarios", () => {
         details: mockError.details,
         hint: mockError.hint,
         code: mockError.code,
-      })
+      }),
     );
     expect(result).toEqual([]);
   });
 
-    it('should return formatted scenario data when no error', async () => {
+  it("should return formatted scenario data when no error", async () => {
+    // NOTE: we transform the data in the original function to add the objectives for each scenario
+    const mockData = [
+      {
+        id: "1",
+        title: "Scenario A",
+        description: "Description A",
+        context: "Context A",
+        scenario_objectives: [{ objective: "Objective A1" }, { objective: "Objective A2" }],
+      },
+      {
+        id: "2",
 
-     // NOTE: we transform the data in the original function to add the objectives for each scenario
-      const mockData = [
-        {
-          id: "1",
-          title: 'Scenario A',
-          description: 'Description A',
-          context: 'Context A',
-          scenario_objectives: [
-            { objective: 'Objective A1' },
-            { objective: 'Objective A2' },
-          ],
-        },
-        {
-          id: "2",
+        title: "Scenario B",
+        description: "Description B",
+        context: "Context B",
+        scenario_objectives: [{ objective: "Objective B1" }],
+      },
+    ];
 
-          title: 'Scenario B',
-          description: 'Description B',
-          context: 'Context B',
-          scenario_objectives: [{ objective: 'Objective B1' }],
-        },
-      ];
-
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockResolvedValue({ data: mockData, error: null }),
-      });
-
-      const result = await getScenarios();
-
-      const expected: TrainingScenario[] = [
-        {
-          id: "1",
-          title: 'Scenario A',
-          description: 'Description A',
-          context: 'Context A',
-          objectives: ['Objective A1', 'Objective A2'],
-        },
-        {
-          id: "2",
-          title: 'Scenario B',
-          description: 'Description B',
-          context: 'Context B',
-          objectives: ['Objective B1'],
-        },
-      ];
-      expect(result).toEqual(expected);
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockResolvedValue({ data: mockData, error: null }),
     });
 
-    it('should handle missing scenario_objectives and return an empty objectives array', async () => {
-      const mockData = [
-        {
-          id: "1",
-          title: 'Scenario C',
-          description: 'Description C',
-          context: 'Context C',
-        },
-      ];
+    const result = await getScenarios();
 
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: jest.fn().mockResolvedValue({ data: mockData, error: null }),
-      });
+    const expected: TrainingScenario[] = [
+      {
+        id: "1",
+        title: "Scenario A",
+        description: "Description A",
+        context: "Context A",
+        objectives: ["Objective A1", "Objective A2"],
+      },
+      {
+        id: "2",
+        title: "Scenario B",
+        description: "Description B",
+        context: "Context B",
+        objectives: ["Objective B1"],
+      },
+    ];
+    expect(result).toEqual(expected);
+  });
 
-      const result = await getScenarios();
+  it("should handle missing scenario_objectives and return an empty objectives array", async () => {
+    const mockData = [
+      {
+        id: "1",
+        title: "Scenario C",
+        description: "Description C",
+        context: "Context C",
+      },
+    ];
 
-      expect(result).toEqual([
-        {
-          id: "1",
-          title: 'Scenario C',
-          description: 'Description C',
-          context: 'Context C',
-          objectives: [],       },
-      ]);
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: jest.fn().mockResolvedValue({ data: mockData, error: null }),
     });
+
+    const result = await getScenarios();
+
+    expect(result).toEqual([
+      {
+        id: "1",
+        title: "Scenario C",
+        description: "Description C",
+        context: "Context C",
+        objectives: [],
+      },
+    ]);
+  });
 });
