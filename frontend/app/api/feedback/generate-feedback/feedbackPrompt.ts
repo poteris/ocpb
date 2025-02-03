@@ -1,5 +1,7 @@
 import { conversationDataSchema, messageDataSchema, MessageData } from "./types";
 import { supabase } from "@/lib/init";
+import {getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById} from "@/lib/db";
+
 
 type FeedbackPrompt = {
   content: string;
@@ -15,27 +17,12 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
   try {
     // Fetch conversation (including scenario, persona, messages) and feedback prompt in parallel
     const [conversationResult, feedbackPromptResult] = await Promise.all([
-      supabase
-        .from("conversations")
-        .select(
-          `
-          *,
-          scenario:scenarios(*),
-          persona:personas(*),
-          messages(*)
-        `,
-        )
-        .eq("conversation_id", conversationId)
-        .single(),
-      supabase.from("feedback_prompts").select("content").single(),
+      getConversationById(conversationId),
+      getFeedbackPromptFromDb(conversationId),
     ]);
-
-    // Handle errors
-    if (conversationResult.error) {
-      throw new Error(`Error fetching conversation: ${conversationResult.error.message}`);
-    }
-    if (feedbackPromptResult.error) {
-      throw new Error(`Error fetching feedback prompt: ${feedbackPromptResult.error.message}`);
+ 
+    if (conversationResult.error || feedbackPromptResult.error) {
+      throw new Error(`Error fetching data: ${conversationResult.error?.message || feedbackPromptResult.error?.message}`);
     }
 
     // Parse and validate using zod
