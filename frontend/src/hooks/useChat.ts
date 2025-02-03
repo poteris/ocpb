@@ -1,33 +1,26 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatSession, ChatMessage } from "@/types/chat";
-import { createConversation } from "@/utils/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { selectedPersonaAtom, scenarioAtom } from "@/store";
 import { useAtom } from "jotai";
 import axios from "axios";
 import { v4 as uuid } from "uuid";
+import { createNewChat } from "@/components/screens/InitiateChat/InitiateChat";
 
 export const useChat = () => {
-  const [currentSession, setCurrentSession] = useState<ChatSession | null>(
-    null
-  );
+  const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const searchParams = useSearchParams();
-  const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] =
-    useState(false);
+  const [isWaitingForInitialResponse, setIsWaitingForInitialResponse] = useState(false);
   const [systemPromptId] = useState<string | null>(null);
   const initializationAttempted = useRef(false);
   const [persona] = useAtom(selectedPersonaAtom);
   const [scenarioInfo] = useAtom(scenarioAtom);
 
-  async function sendUserMessage(
-    conversationId: string,
-    content: string,
-    scenario_id: string
-  ) {
+  async function sendUserMessage(conversationId: string, content: string, scenario_id: string) {
     const response = axios.post<ChatMessage>("/api/chat/send-user-message", {
       conversationId,
       content,
@@ -35,22 +28,15 @@ export const useChat = () => {
     });
     return response;
   }
-// TODO: requires more refactoring
-  const handleSendMessage = async (
-    message: string,
-    conversationId: string,
-    scenarioId: string
-  ) => {
+  // TODO: requires more refactoring
+  const handleSendMessage = async (message: string, conversationId: string, scenarioId: string) => {
     if (!conversationId || !message.trim() || !scenarioId) {
-      console.error(
-        "ConversationId or scenarioId is missing or message is empty"
-      );
+      console.error("ConversationId or scenarioId is missing or message is empty");
       return;
     }
 
     setIsLoading(true);
     try {
-      
       const userMessage: ChatMessage = {
         id: uuid(),
         text: message,
@@ -62,11 +48,7 @@ export const useChat = () => {
         messages: [...(prev?.messages || []), userMessage],
       }));
       // NOTE: this is where the message is sent to the LLM and DB
-      const response = await sendUserMessage(
-        conversationId,
-        message,
-        scenarioId
-      );
+      const response = await sendUserMessage(conversationId, message, scenarioId);
       const botMessage = response.data;
       if (response) {
         setCurrentSession((prev) => ({
@@ -102,12 +84,11 @@ export const useChat = () => {
       setIsWaitingForInitialResponse(true);
 
       try {
-        const firstMessageParam =
-          initialMessage || searchParams.get("firstMessage");
+        const firstMessageParam = initialMessage || searchParams.get("firstMessage");
         const initialResponseParam = searchParams.get("initialResponse");
         // const scenarioId = searchParams.get('scenarioId') || scenarioInfo?.id;
         const scenarioId = scenarioInfo?.id;
-        const systemPromptIdParam = searchParams.get("systemPromptId");
+        // const systemPromptIdParam = searchParams.get("systemPromptId");
         const conversationIdParam = searchParams.get("conversationId");
         if (!scenarioId || !persona) {
           if (!persona) {
@@ -143,12 +124,19 @@ export const useChat = () => {
         // Create new conversation if needed
         // TODO: replace with next api call
         if (!conversationId && firstMessageParam) {
-          const conversationResponse = await createConversation(
-            firstMessageParam,
+          const conversationResponse = await createNewChat({
+            userId: uuid(),
+            initialMessage: firstMessageParam,
             scenarioId,
             persona,
-            systemPromptIdParam ? Number(systemPromptIdParam) : undefined
-          );
+          });
+
+          // await createConversation(
+          //   firstMessageParam,
+          //   scenarioId,
+          //   persona,
+          //   systemPromptIdParam ? Number(systemPromptIdParam) : undefined
+          // );
           if (!conversationResponse || !conversationResponse.id) {
             throw new Error("Failed to create conversation");
           }
@@ -177,7 +165,7 @@ export const useChat = () => {
         setIsWaitingForInitialResponse(false);
       }
     },
-    [searchParams, conversationId, scenarioInfo, persona]
+    [searchParams, conversationId, scenarioInfo, persona],
   );
 
   // Create debounced version of initialize
@@ -188,7 +176,7 @@ export const useChat = () => {
     (initialMessage?: string) => {
       debouncedInitialize(initialMessage);
     },
-    [debouncedInitialize]
+    [debouncedInitialize],
   );
 
   // Cleanup on unmount

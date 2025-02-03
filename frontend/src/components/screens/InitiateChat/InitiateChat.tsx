@@ -37,7 +37,7 @@ interface ConversationResponse {
   aiResponse: string;
 }
 
-async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
+export async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
     const response = await axios.post<ConversationResponse>("/api/chat/create-new-chat", {
       userId: uuidv4(), // TODO: currently we don't have a user based system

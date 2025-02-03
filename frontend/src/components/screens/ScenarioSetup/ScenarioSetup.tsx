@@ -40,7 +40,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [scenario] = useAtom(scenarioAtom);
-  const [, setSelectedPersona] = useAtom(selectedPersonaAtom);
+  const [selectedPersona, setSelectedPersona] = useAtom(selectedPersonaAtom);
 
   useEffect(() => {
     const initializePersonas = async () => {
@@ -80,7 +80,6 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
       if (!currentPersona) return;
 
       setIsNavigating(!isNavigating);
-
 
       try {
         setSelectedPersona(currentPersona);
@@ -144,7 +143,7 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
             <div className="grid gap-12 lg:grid-cols-2">
               {scenario && <ScenarioDescription scenario={scenario} />}
               <PersonaDetails
-                persona={currentPersona}
+                persona={selectedPersona}
                 isGenerating={isGeneratingPersona}
                 onGenerate={handleGenerateNewPersona}
               />
