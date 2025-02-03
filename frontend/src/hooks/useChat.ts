@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatSession, ChatMessage } from "@/types/chat";
-import { createConversation, sendMessage } from "@/utils/api";
+import { createConversation } from "@/utils/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { selectedPersonaAtom, scenarioAtom } from "@/store";
 import { useAtom } from "jotai";
@@ -141,6 +141,7 @@ export const useChat = () => {
           return;
         }
         // Create new conversation if needed
+        // TODO: replace with next api call
         if (!conversationId && firstMessageParam) {
           const conversationResponse = await createConversation(
             firstMessageParam,

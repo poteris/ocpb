@@ -7,22 +7,21 @@ import { TrainingScenario } from "@/types/scenarios";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
-import {  scenarioAtom} from "@/store";
+import { scenarioAtom } from "@/store";
 
 export const Welcome = () => {
   const [scenarios, setScenarios] = useState<TrainingScenario[]>([]);
-  const [_, setScenario] = useAtom(scenarioAtom);
-
+  const [, setScenario] = useAtom(scenarioAtom);
 
   const router = useRouter();
 
   useEffect(() => {
     async function fetchScenarios() {
       try {
-      const response = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
-      setScenarios(response.data);
+        const response = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
+        setScenarios(response.data);
       } catch (error) {
-      console.error("Failed to fetch scenarios:", error);
+        console.error("Failed to fetch scenarios:", error);
       }
     }
     fetchScenarios();
@@ -33,7 +32,7 @@ export const Welcome = () => {
     if (selected) {
       setScenario(selected);
     }
-  
+
     router.push(`/scenario-setup?scenarioId=${scenarioId}`);
   }
 

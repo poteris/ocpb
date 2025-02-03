@@ -4,12 +4,12 @@ import React, { useState } from "react";
 import { Modal, InfoPopover, Button } from "@/components/ui";
 import { FeedbackPopover } from "./screens/FeedbackScreen";
 import { ScenarioInfo } from "@/context/ScenarioContext";
-import { Persona, getFeedback } from "@/utils/api";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
 import { Skeleton } from "@/components/ui";
 import axios from "axios";
-import {FeedbackData} from "@/types/feedback"; 
+import { FeedbackData } from "@/types/feedback";
+import { Persona } from "@/types/persona";
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -89,9 +89,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
       // NOTE: generating feedback on conversation
       // const feedback = await getFeedback(conversationId);
       const feedback = await generateFeedbackOnConversation(conversationId);
-      
 
-    
       setFeedbackData(feedback);
     } catch (error) {
       console.error("Error fetching feedback:", error);
@@ -128,16 +126,8 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         title="End Chat"
         footer={
           <div className="flex justify-end space-x-4">
-            <Button
-              variant="default"
-              text="Cancel"
-              onClick={() => setShowEndChatModal(false)}
-            />
-            <Button
-              variant="destructive"
-              text="End Chat"
-              onClick={handleEndChat}
-            />
+            <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
+            <Button variant="destructive" text="End Chat" onClick={handleEndChat} />
           </div>
         }
       >

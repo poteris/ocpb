@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { v4 as uuidv4 } from 'uuid'
 import dotenv from 'dotenv'
-
+import {Persona} from '@/types/persona'
 dotenv.config()
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -53,21 +53,7 @@ async function invokeFunction(functionName: string, body: FunctionBody) {
   }
 }
 
-export interface Persona {
-  id: string;
-  name: string;
-  segment: string;
-  age: string;
-  gender: string;
-  family_status: string;
-  uk_party_affiliation: string;
-  workplace: string;
-  job: string;
-  busyness_level: string;
-  major_issues_in_workplace: string;
-  personality_traits: string;
-  emotional_conditions: string;
-}
+
 
 export async function generatePersona(): Promise<Persona | null> {
   try {

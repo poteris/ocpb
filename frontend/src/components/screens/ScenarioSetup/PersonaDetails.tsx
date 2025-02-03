@@ -31,6 +31,8 @@ const PersonaDetails: React.FC<PersonaDetailsProps> = React.memo(
       </div>
     );
 
+    PersonaDetails.displayName = 'PersonaDetails';
+
     const renderPersonaDetails = (persona: Persona) => {
       return `
 ### Personal Background

@@ -5,10 +5,7 @@ import { Header } from "../../Header";
 import { Button } from "@/components/ui";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useScenario } from "@/context/ScenarioContext";
 import { ChatModals } from "../../ChatModals";
-import { createConversation, storePersona } from "@/utils/api";
-import { Persona } from "@/utils/api";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui";
 import { AnimatePresence } from "framer-motion";
@@ -17,6 +14,7 @@ import { useAtom } from "jotai";
 import { selectedPersonaAtom, scenarioAtom } from "@/store";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import { Persona } from "@/types/persona";
 
 const FIXED_PROMPTS = [
   "Hi, can I interrupt you for a sec?",
@@ -39,21 +37,14 @@ interface ConversationResponse {
   aiResponse: string;
 }
 
-async function createNewChat({
-  initialMessage,
-  scenarioId,
-  persona,
-}: CreateNewChatRequest) {
+async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
-    const response = await axios.post<ConversationResponse>(
-      "/api/chat/create-new-chat",
-      {
-        userId: uuidv4(), // TODO: currently we don't have a user based system, so we are using uuid
-        initialMessage,
-        scenarioId,
-        persona,
-      } as CreateNewChatRequest
-    );
+    const response = await axios.post<ConversationResponse>("/api/chat/create-new-chat", {
+      userId: uuidv4(), // TODO: currently we don't have a user based system
+      initialMessage,
+      scenarioId,
+      persona,
+    } as CreateNewChatRequest);
     return response.data;
   } catch (error) {
     console.error("Error creating new chat:", error);
@@ -75,10 +66,10 @@ const InitiateChatContent: React.FC = () => {
 
   // State to store the randomly selected prompts
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
-  const [persona, setSelectedPersona] = useAtom(selectedPersonaAtom);
+  const [persona] = useAtom(selectedPersonaAtom);
   const scenarioId = searchParams.get("scenarioId");
   // TODO: fetch scenario info. Two ways to handle this - either fetch from db or use global context
-  const [scenarioInfo, setScenarioInfo] = useAtom(scenarioAtom);
+  const [scenarioInfo] = useAtom(scenarioAtom);
 
   // Update prompts when screen size changes
   useEffect(() => {
@@ -146,14 +137,11 @@ const InitiateChatContent: React.FC = () => {
   //   return await createConversation(message, scenarioId || "", persona);
   // };
 
-  const navigateToChat = (
-    conversationResponse: ConversationResponse,
-    message: string
-  ) => {
+  const navigateToChat = (conversationResponse: ConversationResponse, message: string) => {
     const url = `/chat-screen?conversationId=${
       conversationResponse.id
     }&firstMessage=${encodeURIComponent(
-      message
+      message,
     )}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
     router.push(url);
   };
@@ -189,10 +177,7 @@ const InitiateChatContent: React.FC = () => {
 
   if (isNavigatingToChat) {
     return (
-      <LoadingScreen
-        title="Starting Conversation"
-        message="Preparing your training session..."
-      />
+      <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />
     );
   }
 
@@ -245,8 +230,7 @@ const InitiateChatContent: React.FC = () => {
                   Start Training
                 </h2>
                 <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
-                  Choose a prompt below or write your own to start your union
-                  training session
+                  Choose a prompt below or write your own to start your union training session
                 </p>
               </motion.div>
 
@@ -257,11 +241,7 @@ const InitiateChatContent: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 {selectedPrompts.map((prompt, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
+                  <motion.div key={index} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       variant="options"
                       text={prompt}

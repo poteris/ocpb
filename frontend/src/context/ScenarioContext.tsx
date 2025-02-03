@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Persona } from '@/utils/api';
+// import { Persona } from '@/utils/api';
+import { Persona } from '@/types/persona';
 
 export interface ScenarioInfo {
   id: string;

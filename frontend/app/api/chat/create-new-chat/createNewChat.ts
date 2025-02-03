@@ -1,7 +1,9 @@
 import { supabase } from "../../../../src/lib/supabaseClient";
 import OpenAI from "openai";
 import Handlebars from "handlebars";
-import {Persona} from "@/types/persona";
+import { Persona } from "@/types/persona";
+import { TrainingScenario } from "@/types/scenarios";
+
 
 
 const openai = new OpenAI({
@@ -9,21 +11,22 @@ const openai = new OpenAI({
 });
 
 interface CreateNewChatRequest {
-   userId: string;
-   initialMessage: string;
-   scenarioId: string;
-   persona: Persona;
-   systemPromptId?: number;
+  userId: string;
+  initialMessage: string;
+  scenarioId: string;
+  persona: Persona;
+  systemPromptId?: number;
 }
 
 
-async function getScenario(scenarioId: string) {
+async function getScenario(scenarioId: string): Promise<TrainingScenario> {
   const { data, error } = await supabase
     .from('scenarios')
     .select(`
       id,
       title,
       description,
+      context,
       scenario_objectives (objective)
     `)
     .eq('id', scenarioId)
@@ -33,7 +36,7 @@ async function getScenario(scenarioId: string) {
 
   return {
     ...data,
-    objectives: data.scenario_objectives.map((obj: any) => obj.objective)
+    objectives: data.scenario_objectives.map((obj: { objective: string }) => obj.objective)
   };
 }
 
@@ -95,7 +98,7 @@ async function getConversationContext(conversationId: string) {
 }
 
 
-async function createCompletePrompt(persona: any, scenario: any, systemPrompt: string): Promise<string> {
+async function createCompletePrompt(persona: Persona, scenario: TrainingScenario, systemPrompt: string): Promise<string> {
   try {
     // Process the template with all context
     const template = Handlebars.compile(systemPrompt);
@@ -123,23 +126,32 @@ async function createCompletePrompt(persona: any, scenario: any, systemPrompt: s
   }
 }
 
+interface MessageData {
+  role: "user" | "system" | "assistant";
+  content: string;
+}
 
-async function getAIResponse(messages: any[]) {
+async function getAIResponse(messages: MessageData[]) {
+
   const formattedMessages = messages.map(msg => ({
-    role: msg.role,
-    content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+    role: msg.role as "user" | "system" | "assistant",
+    content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content)
   }));
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+
+
+  const params: OpenAI.Chat.ChatCompletionCreateParams = {
     messages: formattedMessages,
-    max_tokens: 150,
-    temperature: 0.7,
-    // Increase presence_penalty to encourage more dynamic responses
-    presence_penalty: 0.8,
-    // Reduce frequency_penalty to maintain consistent personality
-    frequency_penalty: 0.3,
-  });
+    model: "gpt-4",
+  };
+
+  // const formattedMessages = messages.map(msg => ({
+  //   role: msg.role,
+  //   content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+  // }));
+
+  const completion = await openai.chat.completions.create(
+    params);
   return completion.choices[0].message.content;
 }
 
@@ -175,6 +187,7 @@ export async function createConversation({
       throw personaError;
     }
 
+    // TODO: use uuidv4
     const conversationId = crypto.randomUUID();
 
 
@@ -223,7 +236,7 @@ export async function createConversation({
         systemPromptTemplate
       );
 
-      const messages = [
+      const messages: MessageData[] = [
         { role: "system", content: completePrompt },
         { role: "user", content: messageToSend },
       ];
