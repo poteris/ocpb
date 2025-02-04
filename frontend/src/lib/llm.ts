@@ -3,17 +3,12 @@ import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
 import { openaiClient } from "@/lib/init";
 import Handlebars from "handlebars";
-import { MessageToOpenAi } from "@/types/llm";
+
+
 const llm_model = process.env.LLM_MODEL || "gpt-4o";
 
-/**
- * Sends a series of messages to an AI model and retrieves the response.
- *
- * @param messages - An array of message objects to be sent to the AI model. Each message should have a role and content.
- * @returns string or null - The response from the AI model.
- *
- */
-export async function getAIResponse(messages: MessageToOpenAi[]): Promise<string | null> {
+
+export async function getAIResponse(messages: OpenAI.ChatCompletionMessageParam[]): Promise<string | null> {
   const formattedMessages = messages.map((msg) => ({
     role: msg.role as "user" | "system" | "assistant",
     content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
@@ -27,17 +22,8 @@ export async function getAIResponse(messages: MessageToOpenAi[]): Promise<string
   return completion.choices[0].message.content;
 }
 
-/**
- * Creates a complete prompt by processing a Handlebars template with the provided persona and scenario context.
- *
- * @param {Persona} persona - The persona object containing details about the individual.
- * @param {TrainingScenario} scenario - The training scenario object containing details about the scenario.
- * @param {string} systemPrompt - The Handlebars template string to be processed.
- * @returns {Promise<string>} - A promise that resolves to the final processed prompt string.
- *
- * @throws Will log an error message and return the original systemPrompt if an error occurs during template processing.
- */
-export async function createCompletePrompt(
+
+export async function createBasePromptForMessage(
   persona: Persona,
   scenario: TrainingScenario,
   systemPrompt: string,
@@ -64,21 +50,8 @@ export async function createCompletePrompt(
     console.log(finalPrompt);
     return finalPrompt;
   } catch (error) {
-    console.error("Error in createCompletePrompt:", error);
+    console.error("Error in createBasePromptForMessage:", error);
     return systemPrompt;
   }
 }
 
-/**
- * Generates an array of message data to start a conversation.
- *
- * @param systemPrompt - The initial prompt from the system.
- * @param userMessage - The message from the user.
- * @returns An array of message data objects with roles and content.
- */
-export function conversationStarter(systemPrompt: string, userMessage: string): MessageToOpenAi[] {
-  return [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userMessage },
-  ];
-}
