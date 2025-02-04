@@ -1,6 +1,6 @@
-import { getAIResponse, createCompletePrompt } from "@/lib/llm";
-import { getConversationContext, saveMessages, getAllMessage } from "@/lib/db";
-import {MessageToOpenAi} from "@/types/llm";
+import { getAIResponse, createBasePromptForMessage } from "@/lib/llm";
+import { getConversationContext, saveMessages, getAllChatMessages } from "@/lib/db";
+import OpenAI from "openai";
 
 
 export async function sendMessage({
@@ -12,39 +12,36 @@ export async function sendMessage({
   scenarioId?: string;
 }) {
   try {
-    // Get conversation context
     const { persona, scenario, systemPrompt } = await getConversationContext(conversationId);
 
-    // Get message history
-    const messagesData = await getAllMessage(conversationId);
+    const messagesData = await getAllChatMessages(conversationId);
 
     if (!persona || !scenario || !systemPrompt || !messagesData) {
       throw new Error("Missing persona, scenario, systemPrompt, or messagesData");
     }
 
     // Create a structured prompt that maintains context
-    const completePrompt = await createCompletePrompt(persona, scenario, systemPrompt);
+    const basePrompt = await createBasePromptForMessage(persona, scenario, systemPrompt);
+    const instruction = `Remember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${messagesData.length + 1} in the conversation.`
 
-    // Organise messages with clear context preservation
-    const messages = [
-      // System message with complete context
+    const messages= [
+      // System message with context
       {
         role: "system",
-        content: `${completePrompt}\n\nRemember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${messagesData.length + 1} in the conversation.`,
+        content: `${basePrompt}\n ${instruction}`,
       },
-      // Previous conversation history
-      ...messagesData.map((msg: MessageToOpenAi) => ({
+      // append conversation history
+      ...messagesData.map((msg: OpenAI.ChatCompletionMessageParam) => ({
         role: msg.role,
         content: msg.content,
       })),
-      // New user message
       {
         role: "user",
         content: content,
       },
-    ];
+    ] as OpenAI.ChatCompletionMessageParam[];
 
-    const aiResponse = await getAIResponse(messages);
+    const aiResponse = await getAIResponse(messages );
     if (!aiResponse) throw new Error("No response from AI");
     await saveMessages(conversationId, content, aiResponse);
 

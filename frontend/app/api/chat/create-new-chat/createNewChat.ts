@@ -1,6 +1,7 @@
 import { Persona } from "@/types/persona";
 import { getConversationContext, getSystemPrompt, saveMessages, upsertPersona, insertConversation} from "@/lib/db";
-import {conversationStarter, createCompletePrompt, getAIResponse} from "@/lib/llm";
+import { createBasePromptForMessage, getAIResponse} from "@/lib/llm";
+import OpenAI from "openai";
 
 
 
@@ -58,13 +59,17 @@ export async function createConversation({
 
       // Get and fill the system prompt template
       const systemPromptTemplate = await getSystemPrompt(systemPromptId || 1);
-      const completePrompt = await createCompletePrompt(
+      const basePrompt = await createBasePromptForMessage(
         persona,
         scenario,
         systemPromptTemplate
       );
     
-      const messages = conversationStarter(completePrompt, messageToSend);
+
+      const messages: OpenAI.ChatCompletionMessageParam[] = [
+        { role: "system", content: basePrompt },
+        { role: "user", content: messageToSend},
+      ]
 
       aiResponse = await getAIResponse(messages);
       await saveMessages(conversationId, messageToSend, aiResponse || "");
