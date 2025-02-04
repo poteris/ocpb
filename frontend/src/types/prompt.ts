@@ -6,3 +6,11 @@ export interface PromptData {
   persona_id?: string;
   created_at: string;
 }
+
+export interface PromptWithDetails extends PromptData {
+  scenario?: {
+    title: string;
+    description: string;
+    context: string;
+  };
+}
