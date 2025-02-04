@@ -5,14 +5,27 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
-import { updatePrompt, getSystemPrompts, getPersonaPrompts } from "@/utils/supabaseQueries";
 import { LoadingSpinner } from "@/components/ui";
 import axios from "axios";
-import { PromptData } from "@/types/prompt";
+import { PromptData, PromptWithDetails } from "@/types/prompt";
 
 async function getFeedbackPrompts() {
   const response = await axios.get<PromptData>("/api/prompts/feedback/get-prompt");
   return response.data;
+}
+
+async function getSystemPrompts() {
+  const response = await axios.get<PromptWithDetails>("/api/prompts/system/get-prompt");
+  return response.data;
+}
+
+async function getPersonaPrompts() {
+  const response = await axios.get<PromptData>("/api/prompts/persona/get-prompt");
+  return response.data;
+}
+
+async function updatePrompt(type: "system" | "feedback" | "persona", id: number, content: string) {
+  await axios.post("/api/prompts/update-prompt", { type, id, content });
 }
 
 interface PromptManagerProps {
