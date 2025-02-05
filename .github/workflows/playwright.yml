@@ -1,5 +1,8 @@
-name: Playwright Tests
-on: pull_request
+name: Nightly Playwright Dev Tests
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
 
 jobs:
   test:
