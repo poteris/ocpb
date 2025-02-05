@@ -18,12 +18,12 @@ interface ScenarioForm {
 }
 
 async function getScenarios() {
-  const response = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
+  const response = await axios.get<TrainingScenario[]>("/api/scenarios");
   return response.data;
 }
 
 async function createNewScenario(scenario: TrainingScenario) {
-  const response = await axios.post("/api/scenarios/create-scenario", scenario);
+  const response = await axios.post<TrainingScenario>("/api/scenarios/create-scenario", scenario);
   return response.data;
 }
 
@@ -36,9 +36,10 @@ async function updateScenarioDetails(
     objectives?: string[];
   },
 ) {
-  const response = await axios.post("/api/scenarios/update-scenario", scenarioId, updates);
+  const response = await axios.patch(`/api/scenarios/${scenarioId}`, updates);
   return response.data;
 }
+
 
 async function deleteScenario(scenarioId: string) {
   const response = await axios.post("/api/scenarios/delete-scenario", scenarioId);

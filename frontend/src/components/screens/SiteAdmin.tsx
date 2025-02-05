@@ -10,22 +10,21 @@ import axios from "axios";
 import { PromptData, PromptWithDetails } from "@/types/prompt";
 
 async function getFeedbackPrompts() {
-  const response = await axios.get<PromptData>("/api/prompts/feedback/get-prompt");
+  const response = await axios.get<PromptData>("/api/prompts/feedback");
   return response.data;
 }
 
 async function getSystemPrompts() {
-  const response = await axios.get<PromptWithDetails>("/api/prompts/system/get-prompt");
+  const response = await axios.get<PromptWithDetails>("/api/prompts/system");
   return response.data;
 }
 
 async function getPersonaPrompts() {
-  const response = await axios.get<PromptData>("/api/prompts/persona/get-prompt");
+  const response = await axios.get<PromptData>("/api/prompts/persona");
   return response.data;
 }
-
-async function updatePrompt(type: "system" | "feedback" | "persona", id: number, content: string) {
-  await axios.post("/api/prompts/update-prompt", { type, id, content });
+async function updatePrompt(id: number, type: "system" | "feedback" | "persona", content: string) {
+  await axios.patch(`/api/prompts/${id}`, { type, content });
 }
 
 interface PromptManagerProps {
@@ -92,15 +91,13 @@ const renderVariableStatus = (
           className={`flex ${isLongVariable ? "items-start" : "items-center"} space-x-2`}
         >
           <div
-            className={`w-2 h-2 rounded-full ${isLongVariable ? "mt-1.5" : ""} flex-shrink-0 ${
-              isUsed ? "bg-green-500" : "bg-gray-300"
-            }`}
+            className={`w-2 h-2 rounded-full ${isLongVariable ? "mt-1.5" : ""} flex-shrink-0 ${isUsed ? "bg-green-500" : "bg-gray-300"
+              }`}
           />
           <div className={`${isLongVariable ? "flex-1 min-w-0" : ""}`}>
             <code
-              className={`text-sm ${isLongVariable ? "break-all" : ""} ${
-                isUsed ? "text-green-700 dark:text-green-400" : "text-gray-500"
-              }`}
+              className={`text-sm ${isLongVariable ? "break-all" : ""} ${isUsed ? "text-green-700 dark:text-green-400" : "text-gray-500"
+                }`}
             >
               {variable}
             </code>
