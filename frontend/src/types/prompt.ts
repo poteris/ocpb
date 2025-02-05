@@ -1,16 +1,24 @@
-// TODO: update
-export interface PromptData {
-  id: number;
-  content: string;
-  scenario_id?: string;
-  persona_id?: string;
-  created_at: string;
-}
+import { z } from "zod";
 
-export interface PromptWithDetails extends PromptData {
-  scenario?: {
-    title: string;
-    description: string;
-    context: string;
-  };
-}
+export const PromptDataSchema = z.object({
+  id: z.number(),
+  content: z.string(),
+  scenario_id: z.string().optional(),
+  persona_id: z.string().optional(),
+  created_at: z.string(),
+});
+
+
+const ScenarioSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  context: z.string(),
+});
+
+export const PromptWithDetailsSchema = PromptDataSchema.extend({
+  scenario: ScenarioSchema.optional(), 
+});
+
+
+export type PromptData = z.infer<typeof PromptDataSchema>;
+export type PromptWithDetails = z.infer<typeof PromptWithDetailsSchema>;
