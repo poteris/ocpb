@@ -1,4 +1,7 @@
 import { supabase } from "@/lib/init";
+import { NextRequest, NextResponse } from "next/server";
+import { Result } from "@/types/result";
+import { TrainingScenario } from "@/types/scenarios";
 
 export async function updateScenarioObjectives(scenarioId: string, objectives: string[]) {
   try {
@@ -43,11 +46,11 @@ export async function updateScenarioDetails(
     description?: string;
     context?: string;
     objectives?: string[];
-  },
-) {
-  // Update scenario details if provided
+  }
+): Promise<Result<TrainingScenario>> {
+ 
   if (updates.title || updates.description || updates.context) {
-    const { error: scenarioError } = await supabase
+    const { data, error } = await supabase
       .from("scenarios")
       .update({
         ...(updates.title && { title: updates.title }),
@@ -56,13 +59,34 @@ export async function updateScenarioDetails(
       })
       .eq("id", scenarioId);
 
-    if (scenarioError) {
-      throw scenarioError;
+
+
+    if (error) {
+      console.error("Error updating scenario details:", error);
+      return { success: false, error: error.message };
     }
+    return { success: true, data: data };
+  
   }
 
   // Update objectives if provided
   if (updates.objectives) {
     await updateScenarioObjectives(scenarioId, updates.objectives);
   }
+  
+ 
+}
+
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const body = await req.json();
+    await updateScenarioDetails(params.id, body);
+    return NextResponse.ok({ success: true });
+  } catch (error) {
+    console.error("Error updating scenario:", error);
+    return NextResponse.error({ message: "Error updating scenario" });
+  }
+
+
 }

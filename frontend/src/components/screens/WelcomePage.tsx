@@ -18,7 +18,7 @@ export const Welcome = () => {
   useEffect(() => {
     async function fetchScenarios() {
       try {
-        const response = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
+        const response = await axios.get<TrainingScenario[]>("/api/scenarios");
         setScenarios(response.data);
       } catch (error) {
         console.error("Failed to fetch scenarios:", error);

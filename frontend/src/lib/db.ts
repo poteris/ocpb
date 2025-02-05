@@ -1,6 +1,34 @@
 import { supabase } from "./init";
-import { TrainingScenario } from "@/types/scenarios";
+import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
+import { Result } from "@/types/result";
+import { z } from "zod";
+
+export async function getAllScenarios(): Promise<Result<TrainingScenario[]>> {
+  
+    const { data, error } = await supabase.from("scenarios").select(`
+        id,
+        title,
+        description,
+        context,
+        scenario_objectives (objective)
+      `);
+
+      if (error) {
+        console.error("Error fetching scenarios:", error);
+        return { success: false, error: error.message };
+      }
+
+      const validationResult = z.array(TrainingScenarioSchema).safeParse(data);
+      if (!validationResult.success) {
+        console.error("Error validating scenarios data:", validationResult.error);
+        return { success: false, error: "Error validating data" };
+      }
+
+      return { success: true, data: validationResult.data };
+      
+
+}
 
 
 export async function getScenario(
@@ -157,26 +185,6 @@ export async function getAllChatMessages(conversationId: string) {
   }
 }
 
-export async function getAllScenarios() {
-  try {
-    const { data, error } = await supabase.from("scenarios").select(`
-        id,
-        title,
-        description,
-        context,
-        scenario_objectives (objective)
-      `);
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching scenarios:", error);
-    return null;
-  }
-}
 
 export async function getConversationById(conversationId: string) {
   return await supabase
