@@ -12,8 +12,8 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
-      working-directory: ./frontend/e2e
     - name: Install Playwright Browsers
+      working-directory: ./frontend/e2e
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
       working-directory: ./frontend/e2e
