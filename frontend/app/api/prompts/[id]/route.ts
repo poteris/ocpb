@@ -1,27 +1,22 @@
 import { supabase } from "@/lib/init";
 import { NextResponse, NextRequest } from "next/server";
-import { Result } from "@/types/result";
-import { z } from 'zod';
-
-
-
+import { Result, Option, err, ok } from "@/types/result";
+import { z } from "zod";
 
 export async function updatePrompt(
   id: number,
   type: "system" | "feedback" | "persona",
   content: string
-): Promise<Result<void>> {
+): Promise<Result<Option<void>, string>> {
   const { error } = await supabase.from(`${type}_prompts`).update({ content }).eq("id", id);
 
   if (error) {
     console.error(`Error updating ${type} prompt:`, error);
-    return { success: false, error: error.message };
+    return err("Error updating prompt");
   }
 
-  return { success: true };
-
+  return ok({ isSome: false });
 }
-
 
 export const UpdatePromptSchema = z.object({
   type: z.enum(["system", "feedback", "persona"]),
@@ -43,8 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   const result = await updatePrompt(id, validatedRequest.data.type, validatedRequest.data.content);
 
-
-  if (!result.success) {
+  if (!result.isOk) {
     console.warn("Update failed:", result.error);
     return NextResponse.json({ message: result.error }, { status: 500 });
   }

@@ -2,7 +2,6 @@ import { getAIResponse, createBasePromptForMessage } from "@/lib/llm";
 import { getConversationContext, saveMessages, getAllChatMessages } from "@/lib/db";
 import OpenAI from "openai";
 
-
 export async function sendMessage({
   conversationId,
   content,
@@ -22,9 +21,11 @@ export async function sendMessage({
 
     // Create a structured prompt that maintains context
     const basePrompt = await createBasePromptForMessage(persona, scenario, systemPrompt);
-    const instruction = `Remember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${messagesData.length + 1} in the conversation.`
+    const instruction = `Remember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${
+      messagesData.length + 1
+    } in the conversation.`;
 
-    const messages= [
+    const messages = [
       // System message with context
       {
         role: "system",
@@ -41,7 +42,7 @@ export async function sendMessage({
       },
     ] as OpenAI.ChatCompletionMessageParam[];
 
-    const aiResponse = await getAIResponse(messages );
+    const aiResponse = await getAIResponse(messages);
     if (!aiResponse) throw new Error("No response from AI");
     await saveMessages(conversationId, content, aiResponse);
 

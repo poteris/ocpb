@@ -1,39 +1,38 @@
 import { supabase } from "./init";
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
-import { Result } from "@/types/result";
+import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
 
-export async function getAllScenarios(): Promise<Result<TrainingScenario[]>> {
-  
-    const { data, error } = await supabase.from("scenarios").select(`
-        id,
-        title,
-        description,
-        context,
-        scenario_objectives (objective)
-      `);
+export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
+  const { data, error } = await supabase.from("scenarios").select(`
+    id,
+    title,
+    description,
+    context,
+    scenario_objectives (objective)
+  `);
 
-      if (error) {
-        console.error("Error fetching scenarios:", error);
-        return { success: false, error: error.message };
-      }
+  if (error) {
+    console.error("Error fetching scenarios:", error);
+    return err(error.message);
+  }
+  // we need to add the objectives to the scenario object
+  const scenarios = data.map((scenario) => ({
+    ...scenario,
+    objectives: scenario.scenario_objectives?.map((obj) => obj.objective) || [],
+  }));
 
-      const validationResult = z.array(TrainingScenarioSchema).safeParse(data);
-      if (!validationResult.success) {
-        console.error("Error validating scenarios data:", validationResult.error);
-        return { success: false, error: "Error validating data" };
-      }
+  const validationResult = z.array(TrainingScenarioSchema).safeParse(scenarios);
+  if (!validationResult.success) {
+    console.error("Error validating scenarios data:", validationResult.error);
+    return err("Error validating data");
+  }
 
-      return { success: true, data: validationResult.data };
-      
-
+  return ok(validationResult.data);
 }
 
-
-export async function getScenario(
-  scenarioId: string
-): Promise<TrainingScenario> {
+export async function getScenario(scenarioId: string): Promise<TrainingScenario> {
   const { data, error } = await supabase
     .from("scenarios")
     .select(
@@ -52,19 +51,12 @@ export async function getScenario(
 
   return {
     ...data,
-    objectives: data.scenario_objectives.map(
-      (obj: { objective: string }) => obj.objective
-    ),
+    objectives: data.scenario_objectives.map((obj: { objective: string }) => obj.objective),
   };
 }
 
-
 export async function retrievePersona(personaId: string) {
-  const { data: personas, error } = await supabase
-    .from("personas")
-    .select("*")
-    .eq("id", personaId)
-    .single();
+  const { data: personas, error } = await supabase.from("personas").select("*").eq("id", personaId).single();
 
   if (error) {
     console.error("Error fetching persona:", error);
@@ -73,7 +65,6 @@ export async function retrievePersona(personaId: string) {
 
   return personas;
 }
-
 
 export async function getSystemPrompt(promptId: number): Promise<string> {
   try {
@@ -116,12 +107,7 @@ export async function getConversationContext(conversationId: string) {
   return { scenario, persona, systemPrompt };
 }
 
-
-export async function saveMessages(
-  conversationId: string,
-  userMessage: string,
-  aiResponse: string
-) {
+export async function saveMessages(conversationId: string, userMessage: string, aiResponse: string) {
   const { error } = await supabase.from("messages").insert([
     { conversation_id: conversationId, role: "user", content: userMessage },
     { conversation_id: conversationId, role: "assistant", content: aiResponse },
@@ -130,18 +116,14 @@ export async function saveMessages(
   if (error) throw error;
 }
 
-
 export async function upsertPersona(persona: Persona) {
-  const { error } = await supabase
-    .from("personas")
-    .upsert(persona, { onConflict: "id" });
+  const { error } = await supabase.from("personas").upsert(persona, { onConflict: "id" });
 
   if (error) {
     console.error("Error upserting persona:", error);
     throw error;
   }
 }
-
 
 export async function insertConversation(
   conversationId: string,
@@ -184,7 +166,6 @@ export async function getAllChatMessages(conversationId: string) {
     return null;
   }
 }
-
 
 export async function getConversationById(conversationId: string) {
   return await supabase

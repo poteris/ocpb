@@ -1,40 +1,31 @@
 import { supabase } from "@/lib/init";
-import { PromptData } from "@/types/prompt";
-import { PromptDataSchema } from "@/types/prompt";
+import { PromptData, PromptDataSchema } from "@/types/prompt";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Result, err, ok } from "@/types/result";
 
-export async function getFeedbackPrompts(): Promise<{
-  data: PromptData[] | null;
-  error?: string;
-}> {
-  const { data, error } = await supabase
-    .from("feedback_prompts")
-    .select("*")
-    .order("created_at", { ascending: true });
+export async function getFeedbackPrompts(): Promise<Result<PromptData[], string>> {
+  const { data, error } = await supabase.from("feedback_prompts").select("*").order("created_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching feedback prompts:", error);
-    return { data: null, error: "Error fetching feedback prompts" };
+    return err("Error fetching feedback prompts");
   }
   const validationResult = z.array(PromptDataSchema).safeParse(data);
 
   if (!validationResult.success) {
-    console.error(
-      "Error validating feedback prompts data:",
-      validationResult.error
-    );
-    return { data: null, error: "Error validating feedback prompts data" };
+    console.error("Error validating feedback prompts data:", validationResult.error);
+    return err("Error validating feedback prompts data");
   }
-  return { data: validationResult.data };
+  return ok(validationResult.data);
 }
 
 export async function GET() {
-  const { data, error } = await getFeedbackPrompts();
+  const result = await getFeedbackPrompts();
 
-  if (error || !data) {
-    return NextResponse.json({ message: error }, { status: 500 });
+  if (!result.isOk) {
+    return NextResponse.json({ message: result.error }, { status: 500 });
   }
 
-  return NextResponse.json(data, { status: 200 });
+  return NextResponse.json(result.value, { status: 200 });
 }
