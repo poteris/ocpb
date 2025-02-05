@@ -10,6 +10,7 @@ jobs:
   e2e-nightly-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    environment: develop
     env: 
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
