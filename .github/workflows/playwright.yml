@@ -23,8 +23,8 @@ jobs:
       run: |
         echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
         echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
-        echo "E2E_TEST_BASE_URL=${{ env.E2E_TEST_BASE_URL }}" >> $GITHUB_ENV
-        echo "NODE_ENV=${{ env.NODE_ENV }}" >> $GITHUB_ENV
+        echo "E2E_TEST_BASE_URL=${{ vars.E2E_TEST_BASE_URL }}" >> $GITHUB_ENV
+        echo "NODE_ENV=${{ vars.NODE_ENV }}" >> $GITHUB_ENV
         printenv
     - name: Print environment variables (for debugging)
       run: |
