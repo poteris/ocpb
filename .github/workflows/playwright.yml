@@ -43,3 +43,5 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    - name: Clean up
+      run: kill $(jobs -p) # Stop the Next.js server
