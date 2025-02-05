@@ -12,10 +12,12 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
+      working-directory: ./frontend/e2e
     - name: Install Playwright Browsers
-      run: cd frontend/e2e && pnpm exec playwright install --with-deps
+      run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
-      run: pnpm exec playwright test e2e
+      working-directory: ./frontend/e2e
+      run: pnpm exec playwright test
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
