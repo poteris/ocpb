@@ -1,6 +1,5 @@
-import { conversationDataSchema, messageDataSchema, MessageData } from "./types";
-import {getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById} from "@/lib/db";
-
+import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
+import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/db";
 
 type FeedbackPrompt = {
   content: string;
@@ -13,12 +12,13 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
       getConversationById(conversationId),
       getFeedbackPromptFromDb(),
     ]);
- 
+
     if (conversationResult.error || feedbackPromptResult.error) {
-      throw new Error(`Error fetching data: ${conversationResult.error?.message || feedbackPromptResult.error?.message}`);
+      throw new Error(
+        `Error fetching data: ${conversationResult.error?.message || feedbackPromptResult.error?.message}`
+      );
     }
 
- 
     const conversation = conversationDataSchema.parse(conversationResult.data);
     const feedbackPrompt = feedbackPromptResult.data as FeedbackPrompt;
 
@@ -26,13 +26,9 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
       throw new Error("Feedback prompt content not found or empty.");
     }
 
-    const messages = (conversation?.messages ?? []).map((msg: unknown) =>
-      messageDataSchema.parse(msg),
-    );
+    const messages = (conversation?.messages ?? []).map((msg: unknown) => messageDataSchema.parse(msg));
 
-    const conversationHistory = messages
-      .map((msg: MessageData) => `${msg.role}: ${msg.content}`)
-      .join("\n");
+    const conversationHistory = messages.map((msg: MessageData) => `${msg.role}: ${msg.content}`).join("\n");
 
     console.log(conversationHistory);
     const basePrompt = `

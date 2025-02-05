@@ -1,8 +1,7 @@
 import OpenAI from "openai";
-import { getFeedbackPrompt } from "./feedbackPrompt";
+import { getFeedbackPrompt } from "../../../../src/lib/services/feedback/feedbackPrompt";
 import { openaiClient } from "@/lib/init";
-import {tools} from "@/utils/openaiTools";
-
+import { tools } from "@/utils/openaiTools";
 
 export async function generateFeedbackUsingLLM(conversationId: string) {
   const feedbackPrompt = await getFeedbackPrompt(conversationId);
@@ -13,12 +12,11 @@ export async function generateFeedbackUsingLLM(conversationId: string) {
     messages: messages,
     tools: tools,
     store: true,
-    tool_choice: { "type": "function", "function": { "name": "generate_feedback" } },
-
+    tool_choice: { type: "function", function: { name: "generate_feedback" } },
   });
 
   const toolCall = completion.choices[0]?.message?.tool_calls?.[0];
-  // 
+  //
   if (!toolCall || toolCall.function.name !== "generate_feedback") {
     throw new Error("Function call missing or incorrect.");
   }

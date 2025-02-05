@@ -1,4 +1,4 @@
-import { getScenarios } from "@/lib/services/scenarios";
+import { getScenarios } from "@/lib/services/scenarios/scenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/init";
