@@ -1,44 +1,39 @@
 import { supabase } from "@/lib/init";
 import { NextRequest, NextResponse } from "next/server";
-import { Result } from "@/types/result";
-import { TrainingScenario } from "@/types/scenarios";
+import { Result, err, ok, Option } from "@/types/result";
 
-export async function updateScenarioObjectives(scenarioId: string, objectives: string[]) {
-  try {
-    // First delete existing objectives
-    const { error: deleteError } = await supabase
-      .from("scenario_objectives")
-      .delete()
-      .eq("scenario_id", scenarioId);
+export async function updateScenarioObjectives(
+  scenarioId: string,
+  objectives: string[]
+): Promise<Result<Option<void>, string>> {
+  // First delete existing objectives
+  const { error: deleteError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
 
-    if (deleteError) {
-      console.error("Error deleting existing objectives:", deleteError);
-      throw deleteError;
-    }
-
-    // Then insert new objectives if there are any
-    if (objectives.length > 0) {
-      // Generate unique IDs for each objective
-      const objectivesData = objectives.map((objective, index) => ({
-        id: `${scenarioId}-${index + 1}`, // Create a unique ID combining scenario ID and index
-        scenario_id: scenarioId,
-        objective,
-      }));
-
-      const { error: insertError } = await supabase
-        .from("scenario_objectives")
-        .insert(objectivesData);
-
-      if (insertError) {
-        console.error("Error creating new objectives:", insertError);
-        throw insertError;
-      }
-    }
-  } catch (error) {
-    console.error("Error in updateScenarioObjectives:", error);
-    throw error;
+  if (deleteError) {
+    console.error("Error deleting existing objectives:", deleteError);
+    return err(deleteError.message);
   }
+
+  // Then insert new objectives if there are any
+  if (objectives.length > 0) {
+    // Generate unique IDs for each objective
+    const objectivesData = objectives.map((objective, index) => ({
+      id: `${scenarioId}-${index + 1}`, // Create a unique ID combining scenario ID and index
+      scenario_id: scenarioId,
+      objective,
+    }));
+
+    const { error: insertError } = await supabase.from("scenario_objectives").insert(objectivesData);
+
+    if (insertError) {
+      console.error("Error creating new objectives:", insertError);
+      return err(insertError.message);
+    }
+  }
+
+  return ok({ isSome: false });
 }
+
 export async function updateScenarioDetails(
   scenarioId: string,
   updates: {
@@ -47,10 +42,10 @@ export async function updateScenarioDetails(
     context?: string;
     objectives?: string[];
   }
-): Promise<Result<TrainingScenario>> {
- 
+): Promise<Result<Option<void>, string>> {
+  // Update scenario details if provided
   if (updates.title || updates.description || updates.context) {
-    const { data, error } = await supabase
+    const { error: scenarioError } = await supabase
       .from("scenarios")
       .update({
         ...(updates.title && { title: updates.title }),
@@ -59,34 +54,61 @@ export async function updateScenarioDetails(
       })
       .eq("id", scenarioId);
 
-
-
-    if (error) {
-      console.error("Error updating scenario details:", error);
-      return { success: false, error: error.message };
+    if (scenarioError) {
+      console.error("Error updating scenario details:", scenarioError);
+      return err("Error updating scenario details");
     }
-    return { success: true, data: data };
-  
   }
 
   // Update objectives if provided
   if (updates.objectives) {
-    await updateScenarioObjectives(scenarioId, updates.objectives);
+    const result = await updateScenarioObjectives(scenarioId, updates.objectives);
+    if (!result.isOk) {
+      console.error("Error updating scenario objectives:", result.error);
+      return err("Error updating scenario objectives");
+    }
   }
-  
- 
+
+  return ok({ isSome: false });
+}
+export async function DELETE({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const result = await deleteScenario(id);
+  if (!result.isOk) {
+    console.error("Error deleting scenario:", result.error);
+    return NextResponse.json({ message: result.error }, { status: 500 });
+  }
+  return NextResponse.json({ success: true }, { status: 200 });
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const body = await req.json();
+  const { id } = await params;
+  const result = await updateScenarioDetails(id, body);
+  if (!result.isOk) {
+    console.error("Error updating scenario details:", result.error);
+    return NextResponse.json({ message: result.error }, { status: 500 });
+  }
+  return NextResponse.json({ success: true }, { status: 200 });
+}
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const body = await req.json();
-    await updateScenarioDetails(params.id, body);
-    return NextResponse.ok({ success: true });
-  } catch (error) {
-    console.error("Error updating scenario:", error);
-    return NextResponse.error({ message: "Error updating scenario" });
+export async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, string>> {
+  // First delete the objectives for this scenario
+  const { error: objectivesError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
+
+  if (objectivesError) {
+    console.error("Error deleting objectives:", objectivesError);
+    return err(objectivesError.message);
   }
 
+  // Then delete the scenario
+  const { error: scenarioError } = await supabase.from("scenarios").delete().eq("id", scenarioId);
 
+  if (scenarioError) {
+    console.error("Error deleting scenario:", scenarioError);
+    return err(scenarioError.message);
+  }
+
+  // Return a successful result with an empty Option
+  return ok({ isSome: false });
 }

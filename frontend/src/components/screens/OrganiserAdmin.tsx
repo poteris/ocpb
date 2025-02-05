@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
-import { Modal } from "@/components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Modal } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
 import { TrainingScenario } from "@/types/scenarios";
 import axios from "axios";
@@ -23,26 +22,26 @@ async function getScenarios() {
 }
 
 async function createNewScenario(scenario: TrainingScenario) {
-  const response = await axios.post<TrainingScenario>("/api/scenarios/create-scenario", scenario);
+  const response = await axios.post<TrainingScenario>("/api/scenarios", scenario);
   return response.data;
 }
 
 async function updateScenarioDetails(
-  scenarioId: string,
+  id: string,
   updates: {
     title?: string;
     description?: string;
     context?: string;
     objectives?: string[];
-  },
+  }
 ) {
-  const response = await axios.patch(`/api/scenarios/${scenarioId}`, updates);
+  const response = await axios.patch(`/api/scenarios/${id}`, updates);
   return response.data;
 }
 
+async function deleteScenario(id: string) {
+  const response = await axios.delete(`/api/scenarios/${id}`);
 
-async function deleteScenario(scenarioId: string) {
-  const response = await axios.post("/api/scenarios/delete-scenario", scenarioId);
   return response.data;
 }
 
@@ -113,15 +112,11 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
   const renderScenarioSection = () => (
     <div className="space-y-4 border-b pb-6 mb-6">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Create New Scenario
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Scenario</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Title
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
             <Input
               type="text"
               value={scenarioForm.title}
@@ -138,9 +133,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             <Input
               type="textarea"
               value={scenarioForm.description}
@@ -155,9 +148,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Context
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context</label>
             <Input
               type="textarea"
               value={scenarioForm.context}
@@ -169,19 +160,15 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               }
               placeholder="Provide background context for this scenario..."
             />
-            <p className="text-sm text-gray-500 mt-1">
-              This context will help frame the scenario for the AI.
-            </p>
+            <p className="text-sm text-gray-500 mt-1">This context will help frame the scenario for the AI.</p>
           </div>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
-              Template Preview
-            </h3>
+            <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Template Preview</h3>
             <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
               Role play to help users to{" "}
-              <span className="font-bold">{scenarioForm.description || "{{description}}"}</span>.
-              The user is a trade union representative speaking to you about{" "}
+              <span className="font-bold">{scenarioForm.description || "{{description}}"}</span>. The user is a trade
+              union representative speaking to you about{" "}
               <span className="font-bold">{scenarioForm.title || "{{title}}"}</span>.
             </p>
           </div>
@@ -244,8 +231,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
             />
             {objectives.length > 0 && objectives.length < 3 && (
               <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 text-center">
-                Add {3 - objectives.length} more objective{3 - objectives.length === 1 ? "" : "s"}{" "}
-                to create
+                Add {3 - objectives.length} more objective{3 - objectives.length === 1 ? "" : "s"} to create
               </p>
             )}
           </div>
@@ -400,21 +386,16 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
       {scenarios.map((scenario) => (
         <div
           key={scenario.id}
-          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-        >
+          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           {editingScenarioId === scenario.id ? (
             // Edit Mode
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
-                  ID: {scenario.id}
-                </span>
+                <span className="text-xs font-mono text-gray-500 dark:text-gray-400">ID: {scenario.id}</span>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Title
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <Input
                   type="text"
                   value={editForm?.title}
@@ -428,9 +409,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                 <Input
                   type="textarea"
                   value={editForm?.description}
@@ -444,9 +423,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Context
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context</label>
                 <Input
                   type="textarea"
                   value={editForm?.context}
@@ -461,14 +438,10 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
 
               {/* Template Preview */}
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
-                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
-                  Template Preview
-                </h3>
+                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Template Preview</h3>
                 <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
-                  Role play to help users to{" "}
-                  <span className="font-bold">{editForm?.description}</span>. The user is a trade
-                  union representative speaking to you about{" "}
-                  <span className="font-bold">{editForm?.title}</span>.
+                  Role play to help users to <span className="font-bold">{editForm?.description}</span>. The user is a
+                  trade union representative speaking to you about <span className="font-bold">{editForm?.title}</span>.
                 </p>
                 {(editForm?.title || editForm?.description) && (
                   <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 italic">
@@ -556,38 +529,24 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-medium text-lg">{scenario.title}</h3>
-                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
-                    ID: {scenario.id}
-                  </span>
+                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">ID: {scenario.id}</span>
                 </div>
                 <div className="flex space-x-2">
                   <Button variant="options" text="Edit" onClick={() => handleEditClick(scenario)} />
-                  <Button
-                    variant="options"
-                    text="Duplicate"
-                    onClick={() => handleDuplicateScenario(scenario)}
-                  />
-                  <Button
-                    variant="destructive"
-                    text="Delete"
-                    onClick={() => handleDeleteScenarioClick(scenario.id)}
-                  />
+                  <Button variant="options" text="Duplicate" onClick={() => handleDuplicateScenario(scenario)} />
+                  <Button variant="destructive" text="Delete" onClick={() => handleDeleteScenarioClick(scenario.id)} />
                 </div>
               </div>
 
               <p className="text-gray-600 dark:text-gray-400 mb-4">{scenario.description}</p>
 
               <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Context:
-                </h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context:</h4>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">{scenario.context}</p>
               </div>
 
               <div className="space-y-1">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Learning Objectives:
-                </h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Learning Objectives:</h4>
                 {scenario.objectives.map((objective, index) => (
                   <div key={index} className="text-sm text-gray-600 dark:text-gray-400 pl-4">
                     {index + 1}. {objective}
@@ -607,15 +566,9 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         footer={
           <div className="flex justify-end space-x-4">
             <Button variant="default" text="Cancel" onClick={() => setShowDeleteModal(false)} />
-            <Button
-              variant="destructive"
-              text="Delete"
-              onClick={handleDeleteScenarioConfirm}
-              disabled={loading}
-            />
+            <Button variant="destructive" text="Delete" onClick={handleDeleteScenarioConfirm} disabled={loading} />
           </div>
-        }
-      >
+        }>
         <p className="text-lg text-gray-700 dark:text-gray-300">
           Are you sure you want to delete this scenario? This action cannot be undone.
         </p>
@@ -625,9 +578,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
 
   return (
     <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-        Scenario Management
-      </h1>
+      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Scenario Management</h1>
 
       {error && (
         <div
@@ -635,8 +586,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
             error.toLowerCase().includes("success")
               ? "bg-green-50 text-green-700 border border-green-200"
               : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
+          }`}>
           {error}
         </div>
       )}

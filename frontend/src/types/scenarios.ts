@@ -1,18 +1,22 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export type TrainingScenario = {
-    context: string;
-    description: string;
-    id: string;
-    objectives: string[];
-    title: string;
-  };
-  export const TrainingScenarioSchema = z.object({
-    context: z.string(),
-    description: z.string(),
-    id: z.string(),
-    objectives: z.array(z.string()),
-    title: z.string(),
-  });
+export const TrainingScenarioSchema = z.object({
+  id: z.string(),
+  context: z.string(),
+  description: z.string(),
+  objectives: z.array(z.string()),
+  title: z.string(),
+});
 
-  export type TrainingScenarioType = z.infer<typeof TrainingScenarioSchema>;
+interface Scenario {
+  id: string;
+  context: string;
+  description: string;
+  title: string;
+}
+
+interface CompleteTrainingScenario extends Scenario {
+  objectives: string[];
+}
+
+export type TrainingScenario = CompleteTrainingScenario;

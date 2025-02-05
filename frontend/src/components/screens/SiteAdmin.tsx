@@ -4,27 +4,27 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
-import { LoadingSpinner } from "@/components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger, LoadingSpinner } from "@/components/ui";
 import axios from "axios";
 import { PromptData, PromptWithDetails } from "@/types/prompt";
 
-async function getFeedbackPrompts() {
-  const response = await axios.get<PromptData>("/api/prompts/feedback");
+async function getFeedbackPrompts(): Promise<PromptData[]> {
+  const response = await axios.get<PromptData[]>("/api/prompts/feedback");
   return response.data;
 }
 
-async function getSystemPrompts() {
-  const response = await axios.get<PromptWithDetails>("/api/prompts/system");
+async function getSystemPrompts(): Promise<PromptWithDetails[]> {
+  const response = await axios.get<PromptWithDetails[]>("/api/prompts/system");
   return response.data;
 }
 
-async function getPersonaPrompts() {
-  const response = await axios.get<PromptData>("/api/prompts/persona");
+async function getPersonaPrompts(): Promise<PromptData[]> {
+  const response = await axios.get<PromptData[]>("/api/prompts/persona");
   return response.data;
 }
 async function updatePrompt(id: number, type: "system" | "feedback" | "persona", content: string) {
-  await axios.patch(`/api/prompts/${id}`, { type, content });
+  const response = await axios.patch(`/api/prompts/${id}`, { type, content });
+  return response.data;
 }
 
 interface PromptManagerProps {
@@ -32,9 +32,7 @@ interface PromptManagerProps {
 }
 
 const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
-  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    {message}
-  </div>
+  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{message}</div>
 );
 
 // Update template variables based on SQL schema
@@ -75,10 +73,7 @@ const AVAILABLE_VARIABLES = {
 };
 
 // Update the variables section in renderScenarioSection
-const renderVariableStatus = (
-  content: string,
-  variables: Array<{ name: string; description: string }>,
-) => (
+const renderVariableStatus = (content: string, variables: Array<{ name: string; description: string }>) => (
   <div className="space-y-2">
     {variables.map(({ name, description }) => {
       const variable = `{{${name}}}`;
@@ -86,24 +81,19 @@ const renderVariableStatus = (
       const isLongVariable = name.length > 20;
 
       return (
-        <div
-          key={name}
-          className={`flex ${isLongVariable ? "items-start" : "items-center"} space-x-2`}
-        >
+        <div key={name} className={`flex ${isLongVariable ? "items-start" : "items-center"} space-x-2`}>
           <div
             className={`w-2 h-2 rounded-full ${isLongVariable ? "mt-1.5" : ""} flex-shrink-0 ${isUsed ? "bg-green-500" : "bg-gray-300"
               }`}
           />
           <div className={`${isLongVariable ? "flex-1 min-w-0" : ""}`}>
             <code
-              className={`text-sm ${isLongVariable ? "break-all" : ""} ${isUsed ? "text-green-700 dark:text-green-400" : "text-gray-500"
-                }`}
-            >
+              className={`text-sm ${isLongVariable ? "break-all" : ""} ${
+                isUsed ? "text-green-700 dark:text-green-400" : "text-gray-500"
+              }`}>
               {variable}
             </code>
-            <span
-              className={`text-sm text-gray-600 dark:text-gray-400 ${isLongVariable ? "block" : "ml-2"}`}
-            >
+            <span className={`text-sm text-gray-600 dark:text-gray-400 ${isLongVariable ? "block" : "ml-2"}`}>
               - {description}
             </span>
           </div>
@@ -124,7 +114,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const fetchPrompt = useCallback(async () => {
     setLoading(true);
     try {
-      let prompt;
+      let prompt: PromptData | PromptData[] | PromptWithDetails[];
       switch (type) {
         case "system":
           prompt = await getSystemPrompts();
@@ -136,8 +126,8 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           prompt = await getPersonaPrompts();
           break;
       }
-      // Assuming the API returns an array with a single prompt
-      const content = prompt?.[0]?.content || "";
+      // Handle both single object and array cases
+      const content = Array.isArray(prompt) ? prompt[0]?.content || "" : prompt?.content || "";
       setPromptContent(content);
       setOriginalContent(content);
     } catch (error) {
@@ -163,7 +153,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
     try {
       // Assuming the API returns the prompt ID in the initial fetch
       const promptId = 1; // This should come from your API
-      await updatePrompt(type, promptId, promptContent);
+      await updatePrompt(promptId, type, promptContent);
       setOriginalContent(promptContent);
       setHasUnsavedChanges(false);
     } catch (error) {
@@ -192,18 +182,8 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           <div className="flex space-x-2">
             {hasUnsavedChanges && (
               <>
-                <Button
-                  variant="destructive"
-                  text="Discard"
-                  onClick={handleDiscard}
-                  disabled={loading}
-                />
-                <Button
-                  variant="progress"
-                  text="Save Changes"
-                  onClick={handleSave}
-                  disabled={loading}
-                />
+                <Button variant="destructive" text="Discard" onClick={handleDiscard} disabled={loading} />
+                <Button variant="progress" text="Save Changes" onClick={handleSave} disabled={loading} />
               </>
             )}
           </div>
@@ -215,19 +195,13 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
             <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4">
               {type === "system" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-4">
-                    Available Variables
-                  </h3>
+                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-4">Available Variables</h3>
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
-                      Scenario Variables
-                    </h4>
+                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Scenario Variables</h4>
                     {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.scenario)}
                   </div>
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
-                      Persona Variables
-                    </h4>
+                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Persona Variables</h4>
                     {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.persona)}
                   </div>
                 </>
@@ -235,9 +209,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
 
               {type === "feedback" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
-                    Feedback Guidelines
-                  </h3>
+                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Feedback Guidelines</h3>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     <ul className="list-disc list-inside space-y-1">
                       <li>Be specific and actionable</li>
@@ -252,9 +224,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
 
               {type === "persona" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">
-                    Available Variables
-                  </h3>
+                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Available Variables</h3>
                   {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.generation)}
                 </>
               )}
@@ -264,9 +234,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           {/* Right Column: Prompt Input */}
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Prompt Content
-              </label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt Content</label>
             </div>
             <div className="flex-grow h-full min-h-[400px]">
               <Input
@@ -298,9 +266,7 @@ export const SiteAdmin: React.FC = () => {
     <div className="flex flex-col h-full bg-white dark:bg-gray-900">
       <Header title="Site Admin - Prompts" variant="alt" />
       <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          Prompt Management
-        </h1>
+        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prompt Management</h1>
 
         <Tabs defaultValue="system" className="w-full">
           <TabsList>

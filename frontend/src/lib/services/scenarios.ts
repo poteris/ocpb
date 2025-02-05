@@ -1,17 +1,16 @@
 import { TrainingScenario } from "@/types/scenarios";
 import { getAllScenarios as getScenariosFromDb } from "@/lib/db";
-import {Result} from "@/types/result";
+import {Result, ok, err} from "@/types/result";
 
-
-export async function getScenarios(): Promise<Result<TrainingScenario[]>> {
+export async function getScenarios(): Promise<Result<TrainingScenario[], string>> {
   const result = await getScenariosFromDb();
 
-  if (!result.success ) {
+  if (!result.isOk) {
     console.error("Error fetching scenarios:", result.error);
-    return { success: false, error: result.error };
+    return err(result.error);
   }
 
-  const scenarios = result.data?.map((data) => ({
+  const scenarios = result.value.map((data) => ({
     id: data.id,
     title: data.title,
     description: data.description,
@@ -19,7 +18,7 @@ export async function getScenarios(): Promise<Result<TrainingScenario[]>> {
     objectives: (data.objectives ?? []).map((obj) => obj),
   }));
 
-  return { success: true, data: scenarios };
+  return ok(scenarios);
 }
 
 

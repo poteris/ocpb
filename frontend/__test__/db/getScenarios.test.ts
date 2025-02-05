@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/init";
-import { getScenarios } from "../../app/api/scenarios/get-scenarios/fetchScenarios";
+import { getScenarios } from "@/lib/services/scenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
 
