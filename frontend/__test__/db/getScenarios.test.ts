@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/init";
-import { getScenarios } from "@/lib/services/scenarios";
+import { getScenarios } from "@/lib/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
 
@@ -21,12 +21,9 @@ describe("getScenarios", () => {
     expect(supabase.from).toHaveBeenCalledWith("scenarios");
 
     // using regex to match the fields in any order and ignoring whitespace
-    const expectedQueryString =
-      /id,\s*title,\s*description,\s*context,\s*scenario_objectives \(objective\)/;
+    const expectedQueryString = /id,\s*title,\s*description,\s*context,\s*scenario_objectives \(objective\)/;
 
-    expect(supabase.from("scenarios").select).toHaveBeenCalledWith(
-      expect.stringMatching(expectedQueryString),
-    );
+    expect(supabase.from("scenarios").select).toHaveBeenCalledWith(expect.stringMatching(expectedQueryString));
   });
 
   it("should return an empty array when there is an error", async () => {
@@ -52,7 +49,7 @@ describe("getScenarios", () => {
         details: mockError.details,
         hint: mockError.hint,
         code: mockError.code,
-      }),
+      })
     );
     expect(result).toEqual([]);
   });

@@ -1,4 +1,4 @@
-import { generateNewPersona as newPersona } from "./generateNewPersona";
+import { generateNewPersona as newPersona } from "@/lib/services/persona/generateNewPersona";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

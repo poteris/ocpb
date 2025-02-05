@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import {  personaSchema } from "@/types/persona";
-import{createConversation} from "./createNewChat";
+import { personaSchema } from "@/types/persona";
+import { createConversation } from "../../../../src/lib/services/chat/createNewChat";
 import { z } from "zod";
 
 const createNewChatRequestSchema = z.object({
@@ -23,18 +23,13 @@ export async function POST(req: NextRequest) {
 
     const parsedBody = createNewChatRequestSchema.parse(body);
 
-  
     const response = await createConversation(parsedBody);
 
-  
     const parsedResponse = conversationResponseSchema.parse(response);
 
     return NextResponse.json(parsedResponse, { status: 200 });
   } catch (error) {
     console.error("Error creating new chat:", error);
-    return NextResponse.json(
-      { error: "Failed to create new chat" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create new chat" }, { status: 500 });
   }
 }

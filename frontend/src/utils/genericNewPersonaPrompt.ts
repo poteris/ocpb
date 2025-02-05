@@ -1,4 +1,4 @@
-export const genericPersonaPrompt = `Based on the below information about segments (Young Worker, Former Member, Reluctant Worker, Non-member), generate a coherent persona for a workplace conversation with a trade union representative. Workplaces are in the civil service in the UK, in places such as government departments, offices, and non-departmental public bodies.
+export const genericNewPersonaPrompt = `Based on the below information about segments (Young Worker, Former Member, Reluctant Worker, Non-member), generate a coherent persona for a workplace conversation with a trade union representative. Workplaces are in the civil service in the UK, in places such as government departments, offices, and non-departmental public bodies.
 
 Use the following traits:
 Name: {{name}}
@@ -33,4 +33,4 @@ Reluctant Worker
 This person may or may not be in the union. They will not be active, but might be following what issues there are, and what is going on in the workplace. However, the person is essentially on the fence when it come to actions and issues, and have concerns that are holding them back.
 There could be a range of issues that they are worried about. Examples could include: speaking out or taking part in union activity and management thinking they are causing trouble: thinking they do not have enough money to go out on strike; not believing there is a credible plan to win a campaign or strike.
 The issue this person will have is that they are not likely to share their concern immediately with the rep speaking to them. They may not have the level of trust between them, or just a bit nervous about revealing their doubts or concerns as they rep might judge them or berate them.
-This person is there to be persuaded, but the person speaking to them needs to be patient but also challenge their assumptions at the correct moment.`
+This person is there to be persuaded, but the person speaking to them needs to be patient but also challenge their assumptions at the correct moment.`;

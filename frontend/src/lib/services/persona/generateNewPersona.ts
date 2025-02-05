@@ -1,14 +1,12 @@
 import OpenAI from "openai";
-import { genericPersonaPrompt } from "./genericPrompt";
+import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
 import { openaiClient } from "@/lib/init";
 
-const generateNewPersona = async () => {
-  const messages: OpenAI.ChatCompletionMessageParam[] = [
-    { role: "user", content: genericPersonaPrompt },
-  ];
-  const llm = process.env.LLM_MODEL || "gpt-4o";
+export const generateNewPersona = async () => {
+  const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: "user", content: genericNewPersonaPrompt }];
+  const llm = process.env.LLM_MODEL ?? "gpt-4o";
   const completion = await openaiClient.chat.completions.create({
     model: llm,
     messages: messages,
@@ -27,5 +25,3 @@ const generateNewPersona = async () => {
 
   return generatedPersona;
 };
-
-export { generateNewPersona };
