@@ -23,13 +23,6 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-    devDependencies:
-      '@playwright/test':
-        specifier: ^1.50.1
-        version: 1.50.1
-      '@types/node':
-        specifier: 20.16.11
-        version: 20.16.11
 
   backend:
     devDependencies:
@@ -5798,6 +5791,7 @@ snapshots:
   '@playwright/test@1.50.1':
     dependencies:
       playwright: 1.50.1
+    optional: true
 
   '@radix-ui/number@1.1.0': {}
 
@@ -8903,13 +8897,15 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.50.1: {}
+  playwright-core@1.50.1:
+    optional: true
 
   playwright@1.50.1:
     dependencies:
       playwright-core: 1.50.1
     optionalDependencies:
       fsevents: 2.3.2
+    optional: true
 
   possible-typed-array-names@1.0.0: {}
 
