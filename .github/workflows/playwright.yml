@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  e2e-nightly-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +18,21 @@ jobs:
     - name: Install Playwright Browsers
       working-directory: ./frontend
       run: pnpm exec playwright install --with-deps
+    - name: Set up environment variables
+      run: |
+        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+        echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+        echo "E2E_TEST_BASE_URL=${{ secrets.E2E_TEST_BASE_URL }}" >> $GITHUB_ENV
+        echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> $GITHUB_ENV
+    - name: Start Next.js app
+      run: |
+        pnpm run dev & # Start Next.js app in the background
+        echo "Waiting for Next.js app to start..."
+        until curl -s --head --request GET http://localhost:3000 | grep "200 OK"; do
+          echo "Waiting for Next.js to be available..."
+          sleep 5
+        done
+        echo "Next.js app is up and running!"
     - name: Run Playwright tests
       working-directory: ./frontend
       run: pnpm exec playwright test e2e
