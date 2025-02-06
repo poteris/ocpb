@@ -2,7 +2,7 @@ import { supabase } from "@/lib/init";
 import { NextRequest, NextResponse } from "next/server";
 import { Result, err, ok, Option } from "@/types/result";
 
-export async function updateScenarioObjectives(
+async function updateScenarioObjectives(
   scenarioId: string,
   objectives: string[]
 ): Promise<Result<Option<void>, string>> {
@@ -34,7 +34,7 @@ export async function updateScenarioObjectives(
   return ok({ isSome: false });
 }
 
-export async function updateScenarioDetails(
+async function updateScenarioDetails(
   scenarioId: string,
   updates: {
     title?: string;
@@ -71,8 +71,11 @@ export async function updateScenarioDetails(
 
   return ok({ isSome: false });
 }
-export async function DELETE({ params }: { params: { id: string } }) {
-  const { id } = params;
+
+// NOTE: don't remove the unused req param because Next expects the first param to be a NextRequest or Request
+// https://stackoverflow.com/questions/79124951/type-error-in-next-js-route-type-params-id-string-does-not-satis
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id;
   const result = await deleteScenario(id);
   if (!result.isOk) {
     console.error("Error deleting scenario:", result.error);
@@ -83,7 +86,7 @@ export async function DELETE({ params }: { params: { id: string } }) {
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const body = await req.json();
-  const { id } = await params;
+  const id = (await params).id;
   const result = await updateScenarioDetails(id, body);
   if (!result.isOk) {
     console.error("Error updating scenario details:", result.error);
@@ -92,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json({ success: true }, { status: 200 });
 }
 
-export async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, string>> {
+async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, string>> {
   // First delete the objectives for this scenario
   const { error: objectivesError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
 
@@ -109,6 +112,5 @@ export async function deleteScenario(scenarioId: string): Promise<Result<Option<
     return err(scenarioError.message);
   }
 
-  // Return a successful result with an empty Option
   return ok({ isSome: false });
 }
