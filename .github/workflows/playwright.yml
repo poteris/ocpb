@@ -45,11 +45,17 @@ jobs:
     - name: Run Playwright tests
       working-directory: ./frontend
       run: pnpm exec playwright test e2e
-    - name: Upload Playwright JUnit XML Report as Artifact
-      uses: actions/upload-artifact@v4
+#    - name: Upload Playwright JUnit XML Report as Artifact
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: playwright-junit-report
+#        path: frontend/playwright-report/results.xml
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
       with:
-        name: playwright-junit-report
-        path: frontend/playwright-report/results.xml
+        files: |
+          frontend/playwright-report/*.xml
     - name: Publish JUnit Test Results to GitHub Checks
       uses: actions/upload-test-results@v2
       with:
