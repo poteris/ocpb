@@ -62,4 +62,5 @@ jobs:
     - name: Summarize Playwright Report with github-test-reporter
       uses: ctrf-io/github-test-reporter@v1.0.3
       with:
-        test-report: frontend/playwright-report/results.json
+        report-path: frontend/playwright-report/results.json
+      if: always()
