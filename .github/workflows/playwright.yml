@@ -61,7 +61,7 @@ jobs:
         fi
     - name: Convert JUnit output to CTRF
       working-directory: ./frontend
-      run: pnpm exec junit-to-ctrf frontend/playwright-report/results.xml -o frontend/playwright-report/results.json
+      run: pnpm exec junit-to-ctrf playwright-report/results.xml -o playwright-report/results.json
     - name: Publish Test Report
       uses: ctrf-io/github-test-reporter@v1
       with:
