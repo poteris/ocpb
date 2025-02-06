@@ -45,12 +45,6 @@ jobs:
     - name: Run Playwright tests
       working-directory: ./frontend
       run: pnpm exec playwright test e2e
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: |
-          frontend/playwright-report/*.xml
     - name: Clean up
       run: |
         if [ -n "$NEXTJS_PID" ]; then
