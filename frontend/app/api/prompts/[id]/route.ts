@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { Result, Option, err, ok } from "@/types/result";
 import { z } from "zod";
 
-export async function updatePrompt(
+async function updatePrompt(
   id: number,
   type: "system" | "feedback" | "persona",
   content: string
@@ -18,15 +18,15 @@ export async function updatePrompt(
   return ok({ isSome: false });
 }
 
-export const UpdatePromptSchema = z.object({
+const UpdatePromptSchema = z.object({
   type: z.enum(["system", "feedback", "persona"]),
   content: z.string().min(1, "Content cannot be empty"),
 });
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = parseInt(params.id, 10);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = parseInt((await params).id, 10);
   if (isNaN(id)) {
-    console.warn("Invalid ID:", params.id);
+    console.warn("Invalid ID:", id);
     return NextResponse.json({ error: "Server returned an error" }, { status: 400 });
   }
 

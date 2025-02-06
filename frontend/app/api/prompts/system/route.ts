@@ -4,7 +4,7 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import { Result, err, ok } from "@/types/result";
 
-export async function getSystemPrompts(): Promise<Result<PromptWithDetails[], string>> {
+async function getSystemPrompts(): Promise<Result<PromptWithDetails[], string>> {
   const { data, error } = await supabase.from("system_prompts").select("*").order("created_at", { ascending: true });
 
   if (error) {

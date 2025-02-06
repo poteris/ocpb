@@ -4,7 +4,7 @@ import { supabase } from "@/lib/init";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 
-export async function getPersonaPrompts(): Promise<Result<PromptData[], string>> {
+async function getPersonaPrompts(): Promise<Result<PromptData[], string>> {
   const { data, error } = await supabase.from("persona_prompts").select("*").order("created_at", { ascending: true });
 
   if (error) {
