@@ -25,7 +25,6 @@ export default defineConfig({
   reporter: [
     ['line'],
     ['html', {  outputFile: 'playwright-report/results.html' }],
-    ['json', {  outputFile: 'playwright-report/results.json' }],
     ['junit', { outputFile: 'playwright-report/results.xml' }]
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
