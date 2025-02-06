@@ -44,13 +44,18 @@ jobs:
         echo "Next.js app is up and running!"
     - name: Run Playwright tests
       working-directory: ./frontend
-      run: pnpm exec playwright test e2e
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+      run: pnpm exec playwright test e2e --reporter=junit --output=playwright-report
+
+    - name: Upload Playwright JUnit XML Report as Artifact
+      uses: actions/upload-artifact@v3
       with:
-        name: playwright-report
-        path: frontend/playwright-report/
-        retention-days: 30
+        name: playwright-junit-report
+        path: playwright-report/results.xml
+
+    - name: Publish JUnit Test Results to GitHub Checks
+      uses: actions/upload-test-results@v2
+      with:
+        test-results: playwright-report/results.xml  # Path to the JUnit XML file
     - name: Clean up
       run: |
         if [ -n "$NEXTJS_PID" ]; then
@@ -59,8 +64,3 @@ jobs:
         else
           echo "No Next.js process found."
         fi
-    - name: Summarize Playwright Report with github-test-reporter
-      uses: ctrf-io/github-test-reporter@v1.0.3
-      with:
-        report-path: frontend/playwright-report/results.json
-      if: always()
