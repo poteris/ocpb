@@ -59,3 +59,7 @@ jobs:
         else
           echo "No Next.js process found."
         fi
+    - name: Summarize Playwright Report with github-actions-ctrf
+      uses: antonbabenko/github-actions-ctrf@v1.0.0
+      with:
+        test-report: frontend/playwright-report
