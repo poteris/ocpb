@@ -95,6 +95,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json({ success: true }, { status: 200 });
 }
 
+// NOTE: currently returns true if there are no errors and the scenario is deleted or if there are no objectives to delete
+// i.e. the scenario id is not found
+// TODO: Update to handle the case where the scenario id is not found
 async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, string>> {
   // First delete the objectives for this scenario
   const { error: objectivesError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
