@@ -60,6 +60,7 @@ jobs:
           echo "No Next.js process found."
         fi
     - name: Convert JUnit output to CTRF
+      working-directory: ./frontend
       run: pnpm exec junit-to-ctrf frontend/playwright-report/results.xml -o frontend/playwright-report/results.json
     - name: Publish Test Report
       uses: ctrf-io/github-test-reporter@v1
