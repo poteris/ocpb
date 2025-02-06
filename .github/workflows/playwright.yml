@@ -56,10 +56,10 @@ jobs:
       with:
         files: |
           frontend/playwright-report/*.xml
-    - name: Publish JUnit Test Results to GitHub Checks
-      uses: actions/upload-test-results@v2
-      with:
-        test-results: frontend/playwright-report/results.xml  
+#    - name: Publish JUnit Test Results to GitHub Checks
+#      uses: actions/upload-test-results@v2
+#      with:
+#        test-results: frontend/playwright-report/results.xml  
     - name: Clean up
       run: |
         if [ -n "$NEXTJS_PID" ]; then
