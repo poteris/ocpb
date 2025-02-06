@@ -33,6 +33,9 @@ jobs:
     - name: Start Next.js app
       run: |
         pnpm run dev & # Start Next.js app in the background
+        NEXTJS_PID=$!  # Capture the PID of the Next.js process
+        echo "Started Next.js with PID $NEXTJS_PID"
+        echo "NEXTJS_PID=$NEXTJS_PID" >> $GITHUB_ENV  # Store the PID for later use
         echo "Waiting for Next.js app to start..."
         until curl -s --head --request GET http://localhost:3000 | grep "200 OK"; do
           echo "Waiting for Next.js to be available..."
@@ -50,8 +53,9 @@ jobs:
         retention-days: 30
     - name: Clean up
       run: |
-        if jobs -p; then
-          kill $(jobs -p) # Stop the Next.js server
+        if [ -n "$NEXTJS_PID" ]; then
+          kill $NEXTJS_PID
+          echo "Killed Next.js process with PID $NEXTJS_PID"
         else
-          echo "No background jobs to kill."
+          echo "No Next.js process found."
         fi
