@@ -49,4 +49,9 @@ jobs:
         path: playwright-report/
         retention-days: 30
     - name: Clean up
-      run: kill $(jobs -p) # Stop the Next.js server
+      run: |
+        if jobs -p; then
+          kill $(jobs -p) # Stop the Next.js server
+        else
+          echo "No background jobs to kill."
+        fi
