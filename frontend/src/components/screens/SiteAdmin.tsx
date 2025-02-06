@@ -83,8 +83,9 @@ const renderVariableStatus = (content: string, variables: Array<{ name: string; 
       return (
         <div key={name} className={`flex ${isLongVariable ? "items-start" : "items-center"} space-x-2`}>
           <div
-            className={`w-2 h-2 rounded-full ${isLongVariable ? "mt-1.5" : ""} flex-shrink-0 ${isUsed ? "bg-green-500" : "bg-gray-300"
-              }`}
+            className={`w-2 h-2 rounded-full ${isLongVariable ? "mt-1.5" : ""} flex-shrink-0 ${
+              isUsed ? "bg-green-500" : "bg-gray-300"
+            }`}
           />
           <div className={`${isLongVariable ? "flex-1 min-w-0" : ""}`}>
             <code
@@ -114,7 +115,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const fetchPrompt = useCallback(async () => {
     setLoading(true);
     try {
-      let prompt: PromptData | PromptData[] | PromptWithDetails[];
+      let prompt: PromptData[] | PromptWithDetails[];
       switch (type) {
         case "system":
           prompt = await getSystemPrompts();
@@ -125,9 +126,11 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
         case "persona":
           prompt = await getPersonaPrompts();
           break;
+        default:
+          prompt = [];
       }
       // Handle both single object and array cases
-      const content = Array.isArray(prompt) ? prompt[0]?.content || "" : prompt?.content || "";
+      const content = prompt.length > 0 ? prompt[0].content : "";
       setPromptContent(content);
       setOriginalContent(content);
     } catch (error) {
