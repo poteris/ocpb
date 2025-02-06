@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 import { ScenarioProvider } from "@/context/ScenarioContext";
-import { robotoSlab } from './fonts';
+import { Poppins } from "next/font/google";
 import "./globals.css";
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Union Training Bot",
+  title: "Rep Coach",
   description: "Training scenarios for union representatives",
 };
 
@@ -15,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${robotoSlab.variable} font-sans`}>
+    <html lang="en" className={poppins.variable}>
       <body className="antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <ScenarioProvider>
           {children}

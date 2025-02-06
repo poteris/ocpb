@@ -9,8 +9,7 @@
    Root Variables Custom Theme
 =================== */
 :root {
-  /* Font Variables */
-  --font-roboto-slab: "Roboto Slab", serif;
+
 
   /* Primary Colors */
   --pcsprimary-01: 190 73% 40%;
@@ -211,8 +210,6 @@ button:focus-visible {
   }
 }
 
-
-@import url("https://fonts.googleapis.com/css?family=Roboto+Slab:500,400,700");
 
 @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
 

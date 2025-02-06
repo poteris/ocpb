@@ -67,9 +67,6 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
-      fontFamily: {
-        "roboto-slab": ["var(--font-roboto-slab)", "serif"],
-      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
