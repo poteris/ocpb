@@ -95,23 +95,31 @@ export const ScenarioSetup = ({ scenarioId }: ScenarioSetupProps) => {
     }
   }, [selectedPersona, scenario, router]);
 
-  const renderSkeleton = (
-    <div className="grid gap-12 lg:grid-cols-2">
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-5/6 mb-2" />
-        <Skeleton className="h-4 w-4/5" />
-      </div>
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
-          <Skeleton className="h-6 w-1/2 mb-4" />
+      try {
+        setSelectedPersona(currentPersona);
+        // Wait for exit animation
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        router.push(`/${screen}?scenarioId=${scenario?.id}`);
+      } catch (error) {
+        console.error("Error navigating:", error);
+        setIsNavigating(!isNavigating);
+        setIsExiting(!isExiting);
+      }
+    },
+    [currentPersona, router, scenario?.id, setSelectedPersona, isExiting, isNavigating]
+  );
+
+  const renderSkeleton = useMemo(
+    () => (
+      <div className="grid gap-12 lg:grid-cols-2">
+        <div>
+          <Skeleton className="h-8 w-3/4 mb-6" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-5/6" />
         </div>
       </div>
-    </div>
+    ),
+    []
   );
 
   return (
@@ -119,9 +127,11 @@ export const ScenarioSetup = ({ scenarioId }: ScenarioSetupProps) => {
       <Header title={scenario?.title || "Loading..."} variant="default" />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
         <div className="max-w-4xl mx-auto py-12 sm:py-20">
-          <Button onClick={() => router.back()} className="mb-8">
-            Back to Scenarios
-          </Button>
+          <div>
+            <Button onClick={() => router.back()} className="mb-8">
+              Back to Scenarios
+            </Button>
+          </div>
 
           {!scenario ? (
             renderSkeleton
@@ -147,9 +157,9 @@ export const ScenarioSetup = ({ scenarioId }: ScenarioSetupProps) => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
           <div className="max-w-md mx-auto">
             <Button
-              onClick={navigateToChat}
+              onClick={() => navigateTo("initiate-chat")}
               className="w-full py-3"
-              disabled={!selectedPersona || !scenario || isNavigating || isGeneratingPersona}>
+              disabled={isLoading || !currentPersona || isNavigating}>
               {isNavigating ? (
                 <>
                   <Loader className="animate-spin mr-2" size={20} />
