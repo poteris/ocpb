@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import { Modal, InfoPopover, Skeleton } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { FeedbackPopover } from "./screens/FeedbackScreen";
-import { ScenarioInfo } from "@/context/ScenarioContext";
+// import { ScenarioInfo } from "@/context/ScenarioContext";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import { Persona } from "@/types/persona";
+import { useAtom } from "jotai";
+import { scenarioAtom, selectedPersonaAtom } from "@/store";
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -19,8 +21,6 @@ interface ChatModalsProps {
   showFeedbackPopover: boolean;
   setShowFeedbackPopover: (show: boolean) => void;
   handleFeedbackClose: () => void;
-  scenarioInfo: ScenarioInfo | null;
-  persona: Persona | null;
   conversationId: string | null;
 }
 
@@ -39,12 +39,12 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   showFeedbackPopover,
   setShowFeedbackPopover,
   handleFeedbackClose,
-  scenarioInfo,
-  persona,
   conversationId,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+  const [scenarioInfo] = useAtom(scenarioAtom);
+  const [persona] = useAtom(selectedPersonaAtom);
 
   const renderPersonaDetails = (persona: Persona) => {
     return `
