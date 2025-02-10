@@ -13,7 +13,8 @@
     "db:pull": "pnpm --filter backend supabase db pull",
     "db:reset": "pnpm --filter backend supabase db reset",
     "functions:serve": "pnpm --filter  backend supabase functions serve",
-    "functions:deploy": "pnpm --filter backend supabase functions deploy"
+    "functions:deploy": "pnpm --filter backend supabase functions deploy",
+    "prepare": "husky"
   },
   "dependencies": {
     "concurrently": "^6.2.0",
@@ -22,5 +23,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint",
+    "*.{json,js,ts,jsx,tsx,html}": "prettier --write --ignore-unknown"
+  }
 }
