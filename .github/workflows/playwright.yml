@@ -1,10 +1,18 @@
-name: Nightly Playwright Dev Tests
+name: Nightly Playwright Tests
 on:
-  pull_request:
-  schedule:
-    - cron: '0 23 * * *'
-  workflow_dispatch:
-  issue_comment:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+        description: The branch to run the tests on
+    secrets: 
+       #SLACK_WEBHOOK:
+        # required: true
+       SUPABASE_URL:
+         required: true
+       SUPABASE_ANON_KEY:
+         required: true
 
 jobs:
   e2e-nightly-test:
