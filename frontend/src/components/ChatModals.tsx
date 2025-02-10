@@ -10,8 +10,7 @@ import { markdownStyles } from "@/utils/markdownStyles";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import { Persona } from "@/types/persona";
-import { useAtom } from "jotai";
-import { scenarioAtom, selectedPersonaAtom } from "@/store";
+import { TrainingScenario } from "@/types/scenarios";
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -22,6 +21,8 @@ interface ChatModalsProps {
   setShowFeedbackPopover: (show: boolean) => void;
   handleFeedbackClose: () => void;
   conversationId: string | null;
+  scenarioInfo: TrainingScenario | null;
+  persona: Persona | null;
 }
 
 async function generateFeedbackOnConversation(conversationId: string) {
@@ -40,11 +41,11 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   setShowFeedbackPopover,
   handleFeedbackClose,
   conversationId,
+  scenarioInfo,
+  persona,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
-  const [scenarioInfo] = useAtom(scenarioAtom);
-  const [persona] = useAtom(selectedPersonaAtom);
 
   const renderPersonaDetails = (persona: Persona) => {
     return `
