@@ -1,7 +1,8 @@
 import { supabase } from "@/lib/init";
 import { NextRequest, NextResponse } from "next/server";
 import { Result, err, ok, Option } from "@/types/result";
-
+import { getScenarioById } from "@/lib/services/scenarios/getScenarios";
+import { TrainingScenario } from "@/types/scenarios";
 async function updateScenarioObjectives(
   scenarioId: string,
   objectives: string[]
@@ -116,4 +117,15 @@ async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, 
   }
 
   return ok({ isSome: false });
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id;
+  const scenario = await getScenarioById(id);
+
+  if (!scenario.isOk) {
+    return NextResponse.json({ message: scenario.error }, { status: scenario.error.includes("not found") ? 404 : 500 });
+  }
+
+  return NextResponse.json(scenario.value);
 }

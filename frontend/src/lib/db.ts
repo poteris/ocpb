@@ -185,3 +185,26 @@ export async function getConversationById(conversationId: string) {
 export async function getFeedbackPrompt() {
   return await supabase.from("feedback_prompts").select("content").single();
 }
+
+export async function getScenarioById(scenarioId: string): Promise<Result<TrainingScenario, string>> {
+  const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
+
+  if (error) {
+    return err(`Error fetching scenario: ${error.message}`);
+  }
+
+  if (!scenario) {
+    return err("Scenario not found");
+  }
+
+  const { data: objectives, error: objectivesError } = await supabase
+    .from("scenario_objectives")
+    .select("objective")
+    .eq("scenario_id", scenarioId);
+
+  if (objectivesError) {
+    return err(`Error fetching objectives: ${objectivesError.message}`);
+  }
+
+  return ok({ ...scenario, objectives: objectives.map((obj) => obj.objective) });
+}
