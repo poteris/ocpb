@@ -5,16 +5,10 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { TrainingScenario } from "@/types/scenarios";
 import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { scenarioAtom } from "@/store";
+import Link from "next/link";
 
 export const Welcome = () => {
   const [scenarios, setScenarios] = useState<TrainingScenario[]>([]);
-  const [, setScenario] = useAtom(scenarioAtom);
-
-  const router = useRouter();
-
   useEffect(() => {
     async function fetchScenarios() {
       try {
@@ -26,16 +20,6 @@ export const Welcome = () => {
     }
     fetchScenarios();
   }, []);
-
-  async function handleScenarioSelect(scenarioId: string) {
-    const selected = scenarios.find((scenario) => scenario.id === scenarioId);
-    if (selected) {
-      setScenario(selected);
-    }
-
-    router.push(`/scenario-setup?scenarioId=${scenarioId}`);
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <Header title="Union Training Bot" variant="alt" />
@@ -56,9 +40,9 @@ export const Welcome = () => {
                     className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                     <h2 className="text-2xl font-semibold mb-3 text-gray-900 dark:text-gray-100">{scenario.title}</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">{scenario.description}</p>
-                    <Button onClick={() => handleScenarioSelect(scenario.id)} className="w-full py-3">
-                      Start Scenario
-                    </Button>
+                    <Link href={`/scenario-setup?scenarioId=${scenario.id}`}>
+                      <Button className="w-full py-3">Start Scenario</Button>
+                    </Link>
                   </div>
                 ))}
               </div>
