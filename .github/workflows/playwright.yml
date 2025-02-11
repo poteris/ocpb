@@ -7,8 +7,8 @@ on:
         type: string
         description: The branch to run the tests on
     secrets: 
-       #SLACK_WEBHOOK:
-        # required: true
+       SLACK_WEBHOOK:
+         required: true
        SUPABASE_URL:
          required: true
        SUPABASE_ANON_KEY:
@@ -69,3 +69,16 @@ jobs:
       with:
         report-path: 'frontend/playwright-report/*.json'
       if: always()
+    - name: Notify Slack
+      if: always()
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      run: |
+        STATUS="Success"
+        if [ "${{ job.status }}" != "success" ]; then
+          STATUS="@channel Failure"
+        fi
+        curl -X POST \
+           -H 'Content-type: application/json' \
+           --data "{\"text\":\"Nightly Playwright Tests: $STATUS\"}" \
+           $SLACK_WEBHOOK   
