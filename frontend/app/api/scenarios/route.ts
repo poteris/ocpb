@@ -2,8 +2,8 @@ import { getScenarios } from "@/lib/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
 import { supabase } from "@/lib/init";
-import { Result, err, ok } from "@/types/result";
-
+import { ApiError, ErrorContext, ErrorStatusCode, ApiErrorMessage, DatabaseError } from "@/utils/errors";
+import { unknown } from "zod";
 export async function GET() {
   const result = await getScenarios();
   if (!result.isOk) {
@@ -12,7 +12,7 @@ export async function GET() {
   return NextResponse.json(result.value, { status: 200 });
 }
 
-async function createScenarioWithObjectives(scenario: TrainingScenario): Promise<Result<TrainingScenario, string>> {
+async function createScenarioWithObjectives(scenario: TrainingScenario) {
   const { data, error } = await supabase
     .from("scenarios")
     .insert({
@@ -25,8 +25,7 @@ async function createScenarioWithObjectives(scenario: TrainingScenario): Promise
     .single();
 
   if (error) {
-    console.error("Error creating scenario:", error);
-    return err(error.message);
+    throw new DatabaseError("Error creating scenario", ErrorContext.CreateScenario, error);
   }
 
   const objectivesString = (objectives: string[]) => {
@@ -45,8 +44,8 @@ async function createScenarioWithObjectives(scenario: TrainingScenario): Promise
     if (objectivesError) {
       // If objectives creation fails, clean up the scenario
       await supabase.from("scenarios").delete().eq("id", scenario.id);
-      console.error("Error creating objectives:", objectivesError);
-      return err("Failed to create objectives");
+      throw new DatabaseError("Error creating objectives", ErrorContext.CreateScenario, objectivesError);
+    }
     }
   }
 

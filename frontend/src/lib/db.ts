@@ -1,10 +1,12 @@
 import { supabase } from "./init";
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
-import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
+import { DatabaseError, isError } from "@/utils/errors";
 
-export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
+
+export async function getAllScenarios(): Promise<TrainingScenario[]> {
+  try {
   const { data, error } = await supabase.from("scenarios").select(`
     id,
     title,
@@ -14,8 +16,7 @@ export async function getAllScenarios(): Promise<Result<TrainingScenario[], stri
   `);
 
   if (error) {
-    console.error("Error fetching scenarios:", error);
-    return err(error.message);
+    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", error);
   }
   // we need to add the objectives to the scenario object
   const scenarios = data.map((scenario) => ({
@@ -25,11 +26,13 @@ export async function getAllScenarios(): Promise<Result<TrainingScenario[], stri
 
   const validationResult = z.array(TrainingScenarioSchema).safeParse(scenarios);
   if (!validationResult.success) {
-    console.error("Error validating scenarios data:", validationResult.error);
-    return err("Error validating data");
+    throw new DatabaseError("Error validating scenarios data", "getAllScenarios", validationResult.error);
   }
 
-  return ok(validationResult.data);
+  return validationResult.data;
+  } catch (error:unknown) {
+    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", isError(error) ? error : "Unexpected error");
+  }
 }
 
 export async function getScenario(scenarioId: string): Promise<TrainingScenario> {
@@ -186,15 +189,16 @@ export async function getFeedbackPrompt() {
   return await supabase.from("feedback_prompts").select("content").single();
 }
 
-export async function getScenarioById(scenarioId: string): Promise<Result<TrainingScenario, string>> {
-  const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
+export async function getScenarioById(scenarioId: string): Promise<TrainingScenario> {
+  try {
+    const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
 
   if (error) {
-    return err(`Error fetching scenario: ${error.message}`);
+    throw new DatabaseError("Error fetching scenario", "getScenarioById", error);
   }
 
   if (!scenario) {
-    return err("Scenario not found");
+    throw new DatabaseError("Scenario not found", "getScenarioById", "Scenario not found");
   }
 
   const { data: objectives, error: objectivesError } = await supabase
@@ -203,8 +207,11 @@ export async function getScenarioById(scenarioId: string): Promise<Result<Traini
     .eq("scenario_id", scenarioId);
 
   if (objectivesError) {
-    return err(`Error fetching objectives: ${objectivesError.message}`);
+    throw new DatabaseError("Error fetching objectives", "getScenarioById", objectivesError);
   }
 
-  return ok({ ...scenario, objectives: objectives.map((obj) => obj.objective) });
+  return { ...scenario, objectives: objectives.map((obj) => obj.objective) };
+} catch (error: unknown) {
+  throw new DatabaseError("Error fetching scenario", "getScenarioById", isError(error) ? error as Error : "Unexpected error");
+}
 }
