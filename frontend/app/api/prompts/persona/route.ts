@@ -1,33 +1,35 @@
 import { PromptData, PromptDataSchema } from "@/types/prompt";
-import { Result, err, ok } from "@/types/result";
-import { supabase } from "../../init";
-
+import { supabase } from "@/lib/init";
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { DatabaseError, isDatabaseError } from "@/utils/errors";
 
-async function getPersonaPrompts(): Promise<Result<PromptData[], string>> {
-  const { data, error } = await supabase.from("persona_prompts").select("*").order("created_at", { ascending: true });
+async function getPersonaPrompts(): Promise<PromptData[]> {
+  const { data, error } = await supabase.from("persona_prompts").select("id, content, scenario_id, persona_id, created_at").order("created_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching persona prompts:", error);
-    return err(error.message);
+    throw new DatabaseError("Error fetching persona prompts", "getPersonaPrompts", error);
   }
 
   const validationResult = z.array(PromptDataSchema).safeParse(data);
   if (!validationResult.success) {
     console.error("Error validating persona prompts data:", validationResult.error);
-    return err("Error validating data");
+    throw new DatabaseError("Error validating persona prompts data", "getPersonaPrompts", validationResult.error);
   }
 
-  return ok(validationResult.data);
+  return validationResult.data;
 }
 
 export async function GET() {
-  const result = await getPersonaPrompts();
-
-  if (!result.isOk) {
-    return NextResponse.json({ message: result.error }, { status: 500 });
+  try {
+    const result = await getPersonaPrompts();
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: unknown) {
+    if (isDatabaseError(error)) {
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+    console.error("Internal server error", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json(result.value, { status: 200 });
 }

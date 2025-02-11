@@ -2,32 +2,36 @@
 import { PromptData, PromptDataSchema } from "@/types/prompt";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { Result, err, ok } from "@/types/result";
-import { supabase } from "../../init";
+import { DatabaseError, isDatabaseError } from "@/utils/errors";
 
 
-async function getFeedbackPrompts(): Promise<Result<PromptData[], string>> {
-  const { data, error } = await supabase.from("feedback_prompts").select("*").order("created_at", { ascending: true });
+
+async function getFeedbackPrompts(): Promise<PromptData[]> {
+  const { data, error } = await supabase.from("feedback_prompts").select("id, content, scenario_id, persona_id, created_at").order("created_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching feedback prompts:", error);
-    return err("Error fetching feedback prompts");
+    throw new DatabaseError("Error fetching feedback prompts", "getFeedbackPrompts", error);
   }
   const validationResult = z.array(PromptDataSchema).safeParse(data);
 
   if (!validationResult.success) {
-    console.error("Error validating feedback prompts data:", validationResult.error);
-    return err("Error validating feedback prompts data");
+    console.error ("Error validating feedback prompts data:", validationResult.error);
+    throw new DatabaseError("Error validating feedback prompts data", "getFeedbackPrompts", validationResult.error);
   }
-  return ok(validationResult.data);
+  return validationResult.data;
 }
 
 export async function GET() {
-  const result = await getFeedbackPrompts();
+  try {
+    const result = await getFeedbackPrompts();
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: unknown) {
+    if (isDatabaseError(error)) {
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+    console.error("Internal server error", error);
 
-  if (!result.isOk) {
-    return NextResponse.json({ message: result.error }, { status: 500 });
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json(result.value, { status: 200 });
 }
