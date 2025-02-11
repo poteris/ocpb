@@ -91,6 +91,23 @@ jobs:
               | (grep '✖' || echo "No errors found") | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"
             echo -e "\n$delimiter\n"
           } | tee -a "$GITHUB_OUTPUT"
+          - name: Notify Slack
+          uses: slackapi/slack-github-action@v1.26.0
+          if: ${{ !cancelled() }}
+          with:
+            # This data can be any valid JSON from a previous step in the GitHub Action.
+            # The toJSON function in "errors" should automatically quote the errors appropriately.
+            payload: |
+              {
+                "branch": "${{ inputs.branch }}",
+                "type": "${{ inputs.type || 'Nightly' }}",
+                "commit": "${{ github.sha }}",
+                "run_id": "${{ github.run_id }}",
+                "status": "${{ needs.e2e-nightly-test.outputs.status }}",
+                "errors": ${{ toJSON(steps.failure-info.outputs.ERRORS_OUTPUT) }}
+              }
+          env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}           
 #      - name: Notify Slack
 #      if: always()
 #      env:
