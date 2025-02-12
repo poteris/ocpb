@@ -25,7 +25,8 @@ jobs:
         E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         NODE_ENV: ${{ vars.NODE_ENV }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
       with:
         ref: ${{ inputs.branch }}
     - uses: actions/setup-node@v4
