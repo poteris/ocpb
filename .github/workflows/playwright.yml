@@ -105,7 +105,7 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                    text: "See run results, [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) ${{ needs.e2e-nightly-test.result == 'failure' && '\n<!channel>' || '' }}" 
+                    text: "See run results, <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>" 
 #      - name: Notify Slack
 #      if: always()
 #      env:
