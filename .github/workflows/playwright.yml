@@ -102,5 +102,7 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Nightly e2e dev test result*: ${{ needs.e2e-nightly-test.result}}\n See the report <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here> ${{ needs.e2e-nightly-test.result == 'failure' && '\n<!channel>' || '' }}"
+                  text: "*Nightly e2e dev test result*: ${{ needs.e2e-nightly-test.result}}\n 
+                    See the report <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here> 
+                    ${{ needs.e2e-nightly-test.result == 'failure' && '<!channel>' || '' }}"
  
