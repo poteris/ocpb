@@ -4,12 +4,12 @@ import React, { useState } from "react";
 import { Modal, InfoPopover, Skeleton } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { FeedbackPopover } from "./screens/FeedbackScreen";
-import { ScenarioInfo } from "@/context/ScenarioContext";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import { Persona } from "@/types/persona";
+import { TrainingScenario } from "@/types/scenarios";
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -19,9 +19,9 @@ interface ChatModalsProps {
   showFeedbackPopover: boolean;
   setShowFeedbackPopover: (show: boolean) => void;
   handleFeedbackClose: () => void;
-  scenarioInfo: ScenarioInfo | null;
-  persona: Persona | null;
   conversationId: string | null;
+  scenarioInfo: TrainingScenario | null;
+  persona: Persona | null;
 }
 
 async function generateFeedbackOnConversation(conversationId: string) {
@@ -39,9 +39,9 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   showFeedbackPopover,
   setShowFeedbackPopover,
   handleFeedbackClose,
+  conversationId,
   scenarioInfo,
   persona,
-  conversationId,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -86,14 +86,11 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
     setShowFeedbackPopover(true);
 
     try {
-      // NOTE: generating feedback on conversation
-      // const feedback = await getFeedback(conversationId);
       const feedback = await generateFeedbackOnConversation(conversationId);
 
       setFeedbackData(feedback);
     } catch (error) {
       console.error("Error fetching feedback:", error);
-      // Handle error (e.g., show an error message to the user)
     } finally {
       setIsLoadingFeedback(false);
     }

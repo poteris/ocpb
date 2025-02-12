@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "../../Header";
-// import { getScenarios, Scenario } from '@/utils/supabaseQueries';
+
 
 import { Loader } from "react-feather";
 
@@ -14,7 +14,7 @@ import axios from "axios";
 import ScenarioDescription from "./ScenarioDescription";
 import { useAtom } from "jotai";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";
-
+import { TrainingScenario } from "@/types/scenarios";
 import PersonaDetails from "./PersonaDetails";
 
 interface ScenarioSetupProps {
@@ -27,39 +27,66 @@ async function generatePersona(): Promise<Persona> {
   return persona.data;
 }
 
-// async function getScenarios() {
-//   const scenarios = await axios.get<TrainingScenario[]>("/api/scenarios/get-scenarios");
-//   return scenarios.data;
-// }
-
 export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentPersona, setCurrentPersona] = useState<Persona | null>(null);
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [scenario] = useAtom(scenarioAtom);
+  const [scenario, setScenario] = useAtom(scenarioAtom);
   const [selectedPersona, setSelectedPersona] = useAtom(selectedPersonaAtom);
 
+  async function getSelectedScenario(scenarioId: string) {
+    try {
+      const response = await axios.get<TrainingScenario>(`/api/scenarios/${scenarioId}`);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching scenario:", error);
+      router.push("/");
+      return null;
+    }
+  }
+
   useEffect(() => {
-    const initializePersonas = async () => {
-      setIsLoading(true);
-      try {
-        if (!currentPersona) {
+    const scenarioId = searchParams.get("scenarioId");
+    if (scenarioId && (!scenario || scenario.id !== scenarioId)) {
+      const fetchScenario = async () => {
+        try {
+          const fetchedScenario = await getSelectedScenario(scenarioId);
+          if (fetchedScenario) {
+            setScenario(fetchedScenario);
+          }
+        } catch (error) {
+          console.error("Error fetching scenario:", error);
+        }
+      };
+
+      fetchScenario();
+    }
+  }, [searchParams, scenario?.id, setScenario, scenario]);
+
+  useEffect(() => {
+    const initializePersona = async () => {
+      if (!selectedPersona && !currentPersona && !isGeneratingPersona) {
+        setIsLoading(true);
+        try {
           const newPersona = await generatePersona();
           if (newPersona) {
-            // setCurrentPersona(newPersona);
             setSelectedPersona(newPersona);
           }
+        } catch (error) {
+          console.error("Error generating initial persona:", error);
+        } finally {
+          setIsLoading(false);
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    initializePersonas();
-  }, [scenario, currentPersona, setSelectedPersona]);
+    initializePersona();
+  }, [selectedPersona, currentPersona, isGeneratingPersona, setSelectedPersona]);
 
   const handleGenerateNewPersona = async () => {
     setIsGeneratingPersona(true);

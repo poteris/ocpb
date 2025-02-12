@@ -1,13 +1,16 @@
 import { supabase } from "@/lib/init";
 import { NextRequest, NextResponse } from "next/server";
 import { Result, err, ok, Option } from "@/types/result";
-
+import { getScenarioById } from "@/lib/services/scenarios/getScenarios";
 async function updateScenarioObjectives(
   scenarioId: string,
-  objectives: string[]
+  objectives: string[],
 ): Promise<Result<Option<void>, string>> {
   // First delete existing objectives
-  const { error: deleteError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
+  const { error: deleteError } = await supabase
+    .from("scenario_objectives")
+    .delete()
+    .eq("scenario_id", scenarioId);
 
   if (deleteError) {
     console.error("Error deleting existing objectives:", deleteError);
@@ -23,7 +26,9 @@ async function updateScenarioObjectives(
       objective,
     }));
 
-    const { error: insertError } = await supabase.from("scenario_objectives").insert(objectivesData);
+    const { error: insertError } = await supabase
+      .from("scenario_objectives")
+      .insert(objectivesData);
 
     if (insertError) {
       console.error("Error creating new objectives:", insertError);
@@ -41,7 +46,7 @@ async function updateScenarioDetails(
     description?: string;
     context?: string;
     objectives?: string[];
-  }
+  },
 ): Promise<Result<Option<void>, string>> {
   // Update scenario details if provided
   if (updates.title || updates.description || updates.context) {
@@ -100,7 +105,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 // TODO: Update to handle the case where the scenario id is not found
 async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, string>> {
   // First delete the objectives for this scenario
-  const { error: objectivesError } = await supabase.from("scenario_objectives").delete().eq("scenario_id", scenarioId);
+  const { error: objectivesError } = await supabase
+    .from("scenario_objectives")
+    .delete()
+    .eq("scenario_id", scenarioId);
 
   if (objectivesError) {
     console.error("Error deleting objectives:", objectivesError);
@@ -116,4 +124,18 @@ async function deleteScenario(scenarioId: string): Promise<Result<Option<void>, 
   }
 
   return ok({ isSome: false });
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const id = (await params).id;
+  const scenario = await getScenarioById(id);
+
+  if (!scenario.isOk) {
+    return NextResponse.json(
+      { message: scenario.error },
+      { status: scenario.error.includes("not found") ? 404 : 500 },
+    );
+  }
+
+  return NextResponse.json(scenario.value);
 }
