@@ -53,6 +53,11 @@ jobs:
     - name: Run Playwright tests
       working-directory: ./frontend
       run: pnpm exec playwright test e2e
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: playwright-report/      
     - name: Clean up
       run: |
         if [ -n "$NEXTJS_PID" ]; then
