@@ -25,8 +25,7 @@ jobs:
         E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         NODE_ENV: ${{ vars.NODE_ENV }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.branch }}
     - uses: actions/setup-node@v4
@@ -71,13 +70,13 @@ jobs:
         report-path: 'frontend/playwright-report/*.json'
       if: always()
     - name: Clean up
-    run: |
-      if [ -n "$NEXTJS_PID" ]; then
-        kill $NEXTJS_PID
-        echo "Killed Next.js process with PID $NEXTJS_PID"
-      else
-        echo "No Next.js process found."
-      fi      
+      run: |
+        if [ -n "$NEXTJS_PID" ]; then
+          kill $NEXTJS_PID
+          echo "Killed Next.js process with PID $NEXTJS_PID"
+        else
+          echo "No Next.js process found."
+        fi      
   slack-notifier:
     runs-on: ubuntu-latest
     if: ${{ !cancelled() }}
