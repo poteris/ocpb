@@ -26,8 +26,9 @@ jobs:
         NODE_ENV: ${{ vars.NODE_ENV }}
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.branch }}
+      # TODO: Reinstate when based off develop
+      #with:
+      #  ref: ${{ inputs.branch }}
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
