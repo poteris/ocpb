@@ -18,7 +18,7 @@ jobs:
   e2e-nightly-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    environment: develop # TODO - this should come out of this config and env specific configs should provide it as input
+    environment: develop # The github environment to use
     env: 
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
