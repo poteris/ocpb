@@ -102,7 +102,7 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Nightly e2e dev test result*: ${{ needs.e2e-nightly-test.result}}\n 
+                  text: "*Nightly e2e dev test result*: ${{ needs.e2e-nightly-test.result == 'failure' && '❌ *FAILURE*' || '✓ Success' }} \n
                     See the report <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here> 
                     ${{ needs.e2e-nightly-test.result == 'failure' && '<!channel>' || '' }}\n
                     ${{ steps.failure-info.outputs.ERRORS_OUTPUT }}"
