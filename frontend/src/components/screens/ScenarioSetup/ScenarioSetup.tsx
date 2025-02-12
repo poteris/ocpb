@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "../../Header";
-// import { getScenarios, Scenario } from '@/utils/supabaseQueries';
+
 
 import { Loader } from "react-feather";
 
@@ -40,7 +40,6 @@ export const ScenarioSetup: React.FC<ScenarioSetupProps> = () => {
 
   async function getSelectedScenario(scenarioId: string) {
     try {
-      console.log("scenarioId", scenarioId);
       const response = await axios.get<TrainingScenario>(`/api/scenarios/${scenarioId}`);
 
       return response.data;
