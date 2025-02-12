@@ -100,12 +100,12 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
-              text: "Nightly Playwright Tests: ${{ needs.e2e-nightly-test.result }}", 
-              blocks:
+            text: "Nightly Playwright Tests: ${{ needs.e2e-nightly-test.result }}", 
+            blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                    text: "See run results, [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" 
+                    text: "See run results, [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) ${{ needs.e2e-nightly-test.result == 'failure' && '\n<!channel>' || '' }}" 
 #      - name: Notify Slack
 #      if: always()
 #      env:
