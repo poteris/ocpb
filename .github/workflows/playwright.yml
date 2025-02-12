@@ -105,17 +105,4 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                    text: "See run results, <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>" 
-#      - name: Notify Slack
-#      if: always()
-#      env:
-#        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#      run: |
-#        STATUS="Success"
-#        if [ "${{ job.status }}" != "success" ]; then
-#          STATUS="@channel Failure"
-#        fi
-#        curl -X POST \
-#           -H 'Content-type: application/json' \
-#           --data "{\"text\":\"Nightly Playwright Tests: $STATUS\"}" \
-#           $SLACK_WEBHOOK   
+                    text: "See run results here>" 
