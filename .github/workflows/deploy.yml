@@ -1,6 +1,7 @@
 name: Deploy Supabase Functions and Migrations
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main 

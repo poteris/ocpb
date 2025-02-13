@@ -1,13 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Modal, InfoPopover, Button } from '@/components/ui';
-import { FeedbackPopover } from './screens/FeedbackScreen';
-import { ScenarioInfo } from '@/context/ScenarioContext';
-import { Persona, getFeedback, FeedbackData } from '@/utils/api';
-import ReactMarkdown from 'react-markdown';
-import { markdownStyles } from '@/utils/markdownStyles';
-import { Skeleton } from '@/components/ui';
+import React, { useState } from "react";
+import { Modal, InfoPopover, Skeleton } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { FeedbackPopover } from "./screens/FeedbackScreen";
+import ReactMarkdown from "react-markdown";
+import { markdownStyles } from "@/utils/markdownStyles";
+import axios from "axios";
+import { FeedbackData } from "@/types/feedback";
+import { Persona } from "@/types/persona";
+import { TrainingScenario } from "@/types/scenarios";
 
 interface ChatModalsProps {
   showEndChatModal: boolean;
@@ -17,9 +19,16 @@ interface ChatModalsProps {
   showFeedbackPopover: boolean;
   setShowFeedbackPopover: (show: boolean) => void;
   handleFeedbackClose: () => void;
-  scenarioInfo: ScenarioInfo | null;
-  persona: Persona | null;
   conversationId: string | null;
+  scenarioInfo: TrainingScenario | null;
+  persona: Persona | null;
+}
+
+async function generateFeedbackOnConversation(conversationId: string) {
+  const feedbackResponse = await axios.post<FeedbackData>("/api/feedback/generate-feedback", {
+    conversationId,
+  });
+  return feedbackResponse.data;
 }
 
 export const ChatModals: React.FC<ChatModalsProps> = ({
@@ -30,9 +39,9 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   showFeedbackPopover,
   setShowFeedbackPopover,
   handleFeedbackClose,
+  conversationId,
   scenarioInfo,
   persona,
-  conversationId
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -58,15 +67,17 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
   };
 
   const formatObjectives = (objectives: string[]) => {
-    return objectives.map(objective => {
-      const [header, ...bullets] = objective.split('\n');
-      return `> ${header}\n${bullets.join('\n')}`;
-    }).join('\n\n');
+    return objectives
+      .map((objective) => {
+        const [header, ...bullets] = objective.split("\n");
+        return `> ${header}\n${bullets.join("\n")}`;
+      })
+      .join("\n\n");
   };
 
   const handleEndChat = async () => {
     if (!conversationId) {
-      console.error('No conversation ID available');
+      console.error("No conversation ID available");
       return;
     }
 
@@ -75,11 +86,11 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
     setShowFeedbackPopover(true);
 
     try {
-      const feedback = await getFeedback(conversationId);
+      const feedback = await generateFeedbackOnConversation(conversationId);
+
       setFeedbackData(feedback);
     } catch (error) {
-      console.error('Error fetching feedback:', error);
-      // Handle error (e.g., show an error message to the user)
+      console.error("Error fetching feedback:", error);
     } finally {
       setIsLoadingFeedback(false);
     }
@@ -112,11 +123,10 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
         title="End Chat"
         footer={
           <div className="flex justify-end space-x-4">
-            <Button variant="default" text="Cancel" onClick={() => setShowEndChatModal(false)} />
-            <Button variant="destructive" text="End Chat" onClick={handleEndChat} />
+            <Button onClick={() => setShowEndChatModal(false)}>Cancel</Button>
+            <Button onClick={handleEndChat}>End Chat</Button>
           </div>
-        }
-      >
+        }>
         <p className="text-lg text-gray-700 dark:text-gray-300">Are you sure you want to end this chat?</p>
       </Modal>
 
@@ -133,7 +143,7 @@ ${scenarioInfo.description}
 
 ${formatObjectives(scenarioInfo.objectives)}
 
-${persona ? renderPersonaDetails(persona) : ''}
+${persona ? renderPersonaDetails(persona) : ""}
               `.trim()}
             </ReactMarkdown>
           </div>
@@ -144,8 +154,7 @@ ${persona ? renderPersonaDetails(persona) : ''}
         <FeedbackPopover
           onClose={handleFeedbackClose}
           score={feedbackData?.score || 0}
-          analysisData={feedbackData || undefined}
-        >
+          analysisData={feedbackData || undefined}>
           {isLoadingFeedback ? renderFeedbackSkeleton() : null}
         </FeedbackPopover>
       )}

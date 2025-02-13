@@ -1,4 +1,4 @@
-export interface Message {
+export interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
@@ -7,5 +7,5 @@ export interface Message {
 export interface ChatSession {
   id: string;
   conversationId: string;
-  messages: Message[];
+  messages: ChatMessage[];
 }
