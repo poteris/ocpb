@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      concurrently:
-        specifier: ^6.2.0
-        version: 6.5.1
       eslint-config-next:
         specifier: ^15.0.1
         version: 15.1.5(eslint@8.57.1)(typescript@5.7.3)
@@ -57,7 +54,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       dotenv:
-        specifier: ^16.4.5
+        specifier: ^16.4.7
         version: 16.4.7
       framer-motion:
         specifier: ^11.11.9

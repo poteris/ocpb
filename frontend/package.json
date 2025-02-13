@@ -20,7 +20,7 @@
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "framer-motion": "^11.11.9",
     "handlebars": "^4.7.8",
     "jotai": "^2.11.1",
