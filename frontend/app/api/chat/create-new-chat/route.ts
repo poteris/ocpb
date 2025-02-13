@@ -19,7 +19,6 @@ const conversationResponseSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log(body);
 
     const parsedBody = createNewChatRequestSchema.parse(body);
 
