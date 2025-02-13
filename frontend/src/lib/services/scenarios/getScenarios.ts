@@ -22,7 +22,6 @@ export async function getScenarios(): Promise<Result<TrainingScenario[], string>
 }
 
 export async function getScenarioById(scenarioId: string): Promise<Result<TrainingScenario, string>> {
-  // TODO: validate with Zod before returning
   const result = await getScenarioByIdFromDb(scenarioId);
   if (!result.isOk) {
     console.error("Error fetching scenario:", result.error);

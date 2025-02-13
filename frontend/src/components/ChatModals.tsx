@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { Modal, InfoPopover, Skeleton } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import { FeedbackPopover } from "./screens/FeedbackScreen";
-// import { ScenarioInfo } from "@/context/ScenarioContext";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
 import axios from "axios";
@@ -87,14 +86,11 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
     setShowFeedbackPopover(true);
 
     try {
-      // NOTE: generating feedback on conversation
-      // const feedback = await getFeedback(conversationId);
       const feedback = await generateFeedbackOnConversation(conversationId);
 
       setFeedbackData(feedback);
     } catch (error) {
       console.error("Error fetching feedback:", error);
-      // Handle error (e.g., show an error message to the user)
     } finally {
       setIsLoadingFeedback(false);
     }
