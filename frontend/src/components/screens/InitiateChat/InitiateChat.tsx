@@ -85,10 +85,10 @@ const InitiateChatContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!persona) {
-      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
+    if (!persona || !scenarioInfo) {
+      router.push(`/`);
     }
-  }, [persona, router, scenarioId]);
+  }, [persona, router, scenarioId, scenarioInfo]);
 
 
 
@@ -110,9 +110,10 @@ const InitiateChatContent: React.FC = () => {
 
       const chatId = conversationResponse.id;
 
-
-      const url = `/chat-screen?conversationId=${chatId}`;
-      router.push(url);
+      if (conversationResponse) {
+        const url = `/chat-screen?conversationId=${chatId}`;
+        router.push(url);
+      }
       // await storePersona(persona); // we are doing this in create chat function anyway
     } catch (error: unknown) {
       console.error("Error starting conversation:", error instanceof Error ? error.message : "Unknown error");
