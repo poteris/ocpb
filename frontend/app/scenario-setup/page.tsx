@@ -1,19 +1,18 @@
-'use client';
+"use client";
 
-import React, { Suspense } from 'react';
-import { ScenarioSetup } from '@/components/screens/ScenarioSetup/ScenarioSetup';
-import {  useSearchParams } from 'next/navigation';
+import React, { Suspense } from "react";
+import { ScenarioSetup } from "@/components/screens/ScenarioSetup/ScenarioSetup";
+import { useSearchParams } from "next/navigation";
 
 function ScenarioSetupContent() {
   const searchParams = useSearchParams();
-  const scenarioId = searchParams.get('scenarioId');
+  const scenarioId = searchParams.get("scenarioId");
 
   if (!scenarioId) {
     return <div>Error: Scenario ID is missing</div>;
   }
 
-
-  return <ScenarioSetup scenarioId={scenarioId}  />;
+  return <ScenarioSetup scenarioId={scenarioId} />;
 }
 
 export default function ScenarioSetupPage() {
