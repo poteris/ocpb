@@ -2,9 +2,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { Send, Loader } from 'lucide-react';
+import { SendIcon } from 'lucide-react';
 import { useSearchParams } from "next/navigation";
-import { Input } from '@/components/ui/Input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/Input"
+import { useRouter } from "next/navigation"
+// import { v4 as uuidv4 } from 'uuid';
+
 
 export interface ConversationData {
   messages: Message[];
@@ -31,6 +42,14 @@ const ChatScreen = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversationId");
+  const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
+
+  const router = useRouter()
+
+
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setInput(e.target.value)
+  // }
 
   // Fetch initial chat data
   useEffect(() => {
@@ -43,6 +62,7 @@ const ChatScreen = () => {
         setConversationData(response.data);
       } catch (error) {
         console.error('Error fetching chat:', error);
+
       } finally {
         setIsLoading(false);
       }
@@ -57,7 +77,12 @@ const ChatScreen = () => {
   }, [conversationData?.messages]);
 
   // Send message handler
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+
     if (!inputMessage.trim() || !conversationData?.conversationId || isLoading) return;
 
     try {
@@ -98,68 +123,67 @@ const ChatScreen = () => {
       // Remove the failed message from the state
       setConversationData(prev => ({
         ...prev!,
-        messages: prev!.messages.slice(0, -1) // Remove the last message
+        messages: prev!.messages.slice(0, -1) 
       }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Enter key
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const handleEndChat = () => {
+    setIsEndChatModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsEndChatModalOpen(false)
+  }
+
+  const handleConfirmEndChat = () => {
+    setIsEndChatModalOpen(false)
+    router.push("/feedback")
+  }
+
+
+
 
   return (
-    <div className="flex flex-col h-screen bg-white w-1/2 mx-auto">
-      <header className="p-4 border-b">
-        <h1 className="text-xl font-semibold">Rep Coach</h1>
-      </header>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 ">
-        {conversationData?.messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
+    <div className="flex-grow overflow-auto mb-4">
+      {conversationData?.messages.map((m) => (
+        <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
+          <span
+            className={` inline-block p-2 rounded-lg ${m.role === "user" ? "bg-slate-50 text-black" : "bg-primary text-white"}`}
           >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === 'user'
-                  ? 'bg-slate-50 text-black'
-                  : 'bg-primary text-white'
-              }`}
-            >
-              {message.content}
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="border-t p-4">
-        <div className="flex gap-2">
-          <Input
-            value={inputMessage}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            className="flex-1 min-h-[40px] max-h-[160px] p-2 border rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isLoading}
-            className="h-10 px-4"
-          >
-            {isLoading ? <Loader className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-          </Button>
+            {m.content}
+          </span>
         </div>
-      </div>
+      ))}
     </div>
+    <form onSubmit={handleSendMessage} className="flex space-x-2 rounded-lg " >
+      <Input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} placeholder="Type your message..." className="flex-grow" />
+      <Button type="submit" size="icon">
+        <SendIcon className="h-4 w-4" />
+      </Button>
+      <Button onClick={handleEndChat} variant="destructive">
+        End Chat
+      </Button>
+    </form>
+
+    <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>End Chat</DialogTitle>
+          <DialogDescription>Are you sure you want to end this chat?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCloseModal}>
+            No
+          </Button>
+          <Button onClick={handleConfirmEndChat}>Yes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
   );
 };
 
