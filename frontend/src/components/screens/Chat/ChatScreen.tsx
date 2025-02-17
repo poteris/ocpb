@@ -140,7 +140,7 @@ const ChatScreen = () => {
 
   const handleConfirmEndChat = () => {
     setIsEndChatModalOpen(false)
-    router.push("/feedback")
+    router.push(`/feedback?conversationId=${conversationData?.conversationId}`)
   }
 
 
