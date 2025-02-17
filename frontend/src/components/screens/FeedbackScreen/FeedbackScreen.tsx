@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import {useState, useEffect } from "react";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
-import FeedbackSkeleton from "./FeedbackScreen/FeedbackSkeleton";
-
+import FeedbackSkeleton from "./FeedbackSkeleton";
+import { useRouter } from "next/navigation";
 
 interface AnalysisData {
   summary: string;
@@ -42,7 +42,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     setIsLoadingFeedback(true);
     generateFeedbackOnConversation(conversationId).then((data) => {
@@ -50,6 +50,11 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
       setIsLoadingFeedback(false);
     });
   }, [conversationId]);
+
+  function onFeedbackClose () {
+
+    router.push("/");
+  }
 
   return (
     isLoadingFeedback ? (
@@ -60,7 +65,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Feedback</h2>
           <button
-            onClick={onClose}
+            onClick={onFeedbackClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <X size={24} />
           </button>
