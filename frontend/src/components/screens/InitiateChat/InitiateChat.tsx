@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState,  useEffect } from "react";
 import { Header } from "../../Header";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChatModals } from "../../ChatModals";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -221,18 +220,6 @@ const InitiateChatContent: React.FC = () => {
           </div>
         </main>
 
-        <ChatModals
-          showInfoPopover={showInfoPopover}
-          setShowInfoPopover={setShowInfoPopover}
-          scenarioInfo={scenarioInfo}
-          persona={persona}
-          showEndChatModal={false}
-          setShowEndChatModal={() => {}}
-          showFeedbackPopover={false}
-          setShowFeedbackPopover={() => {}}
-          handleFeedbackClose={() => {}}
-          conversationId={""}
-        />
       </motion.div>
     </AnimatePresence>
   );
