@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Modal, InfoPopover, Skeleton } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { FeedbackPopover } from "./screens/FeedbackScreen";
+import { FeedbackPopover } from "./screens/FeedbackScreen/FeedbackScreen";
 import ReactMarkdown from "react-markdown";
 import { markdownStyles } from "@/utils/markdownStyles";
 import axios from "axios";

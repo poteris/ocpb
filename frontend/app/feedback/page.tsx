@@ -1,8 +1,6 @@
-"use client"
-
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { FeedbackPopover as FeedbackScreen } from "@/components/screens/FeedbackScreen/FeedbackScreen";
+import { useRouter } from "next/router";
+import { FeedbackPopover as FeedbackView } from "@/components/screens/FeedbackScreen/FeedbackScreen";
 
 export default function FeedbackPage() {
   const searchParams = useSearchParams();
@@ -14,5 +12,5 @@ export default function FeedbackPage() {
     return null;
   }
 
-  return <FeedbackScreen conversationId={conversationId} />;
+  return <FeedbackView conversationId={conversationId} />;
 }
