@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import Image from "next/image";
-import { Skeleton } from "@/components/ui";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Message {
   id: string;
