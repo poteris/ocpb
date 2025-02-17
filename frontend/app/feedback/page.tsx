@@ -1,5 +1,7 @@
+"use client"
+
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { FeedbackPopover as FeedbackView } from "@/components/screens/FeedbackScreen/FeedbackScreen";
 
 export default function FeedbackPage() {
