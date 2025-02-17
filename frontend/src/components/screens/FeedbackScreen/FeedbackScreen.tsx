@@ -7,18 +7,7 @@ import { FeedbackData } from "@/types/feedback";
 import FeedbackSkeleton from "./FeedbackSkeleton";
 import { useRouter } from "next/navigation";
 
-interface AnalysisData {
-  summary: string;
-  strengths: { title: string; description: string }[];
-  areas_for_improvement: { title: string; description: string }[];
-}
-
 interface FeedbackPopoverProps {
-  onClose?: () => void;
-  onContinueChat?: () => void;
-  score?: number;
-  analysisData?: AnalysisData;
-  children?: React.ReactNode;
   conversationId: string;
 }
 
@@ -33,11 +22,6 @@ async function generateFeedbackOnConversation(conversationId: string) {
 
 
 export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
-  onClose,
-  onContinueChat,
-  score,
-  analysisData,
-  children,
   conversationId,
 }) => {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
@@ -51,9 +35,14 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
     });
   }, [conversationId]);
 
-  function onFeedbackClose () {
+  function onClose () {
 
     router.push("/");
+  }
+
+
+  const handleContinueChat = () => {
+    router.push(`/chat-screen?conversationId=${conversationId}`);
   }
 
   return (
@@ -65,7 +54,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
         <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Feedback</h2>
           <button
-            onClick={onFeedbackClose}
+            onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <X size={24} />
           </button>
@@ -74,13 +63,12 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
         {/* Scrollable content */}
         <div className="flex-grow overflow-y-auto">
           <div className="p-4">
-            {children || (
-              <>
-                <div className="bg-gradient-to-r from-orange-400 to-orange-600 rounded-lg p-4 mb-6 text-white">
-                  <h3 className="text-lg font-bold mb-2">Performance Score</h3>
+            <>
+              <div className="bg-gradient-to-r from-orange-400 to-orange-600 rounded-lg p-4 mb-6 text-white">
+                <h3 className="text-lg font-bold mb-2">Performance Score</h3>
                   <div className="flex">
                     {[...Array(5)].map((_, index) => (
-                      <Star key={index} size={24} fill={index < (score || 0) ? "white" : "none"} stroke="white" />
+                      <Star key={index} size={24} fill={index < (feedbackData?.score || 0) ? "white" : "none"} stroke="white" />
                     ))}
                   </div>
                 </div>
@@ -120,14 +108,13 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
                   </>
                 )}
               </>
-            )}
+          
           </div>
         </div>
 
         {/* Footer */}
         <div className="p-4 flex justify-between border-t border-gray-200 dark:border-gray-700">
-          {onContinueChat && <Button onClick={onContinueChat}>Continue Chatting</Button>}
-          <Button onClick={onClose}>Close</Button>
+          {<Button onClick={handleContinueChat}>Continue Chatting</Button>}
         </div>
       </div>
     )
