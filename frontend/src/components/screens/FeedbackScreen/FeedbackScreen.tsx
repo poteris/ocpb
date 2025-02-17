@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Star, CheckCircle, AlertCircle } from "react-feather";
+import { X, Star, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {useState, useEffect } from "react";
 import axios from "axios";
