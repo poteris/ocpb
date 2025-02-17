@@ -3,9 +3,6 @@
 import React from "react";
 import { Modal, InfoPopover } from "@/components/ui";
 import { Button } from "@/components/ui/button";
-import { markdownStyles } from "@/utils/markdownStyles";
-import axios from "axios";
-import { FeedbackData } from "@/types/feedback";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
 
@@ -19,12 +16,6 @@ interface ChatModalsProps {
   persona: Persona | null;
 }
 
-async function generateFeedbackOnConversation(conversationId: string) {
-  const feedbackResponse = await axios.post<FeedbackData>("/api/feedback/generate-feedback", {
-    conversationId,
-  });
-  return feedbackResponse.data;
-}
 
 export const ChatModals: React.FC<ChatModalsProps> = ({
   showEndChatModal,
