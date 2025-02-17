@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/Input"
+import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 // import { v4 as uuidv4 } from 'uuid';
 

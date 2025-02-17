@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Modal } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
 import { TrainingScenario } from "@/types/scenarios";
