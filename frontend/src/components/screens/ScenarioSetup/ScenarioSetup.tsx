@@ -1,165 +1,121 @@
-import React, { useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { Header } from "../../Header";
-import { Loader } from "react-feather";
-import { Skeleton } from "@/components/ui/skeleton";
-import axios from "axios";
-import ScenarioDescription from "./ScenarioDescription";
 import { useAtom } from "jotai";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";
-import PersonaDetails from "./PersonaDetails";
-import { useState } from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
+
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import PersonaDetailsComponent from "./PersonaDetails";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from 'uuid';
+import { TrainingScenario } from "@/types/scenarios";
+import { Persona } from "@/types/persona";
+import ScenarioObjectives from "./ScenarioObjectives";
+import ScenarioDescription from "./ScenarioDescription";
+interface ScenarioSetupComponentProps {
+    readonly scenarioId: string;
+}
+
+
+async function getSelectedScenario(scenarioId: string) {
+    try {
+        const response = await axios.get<TrainingScenario>(`/api/scenarios/${scenarioId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching scenario:", error);
+        return null;
+    }
+}
 
 async function generatePersona() {
-  try {
-    const response = await axios.get("/api/persona/generate-new-persona");
-    return response.data;
-  } catch (error) {
-    console.error("Error generating persona:", error);
-    return null;
-  }
-}
-
-interface ScenarioSetupProps {
-  scenarioId: string;
-}
-
-export const ScenarioSetup = ({ scenarioId }: ScenarioSetupProps) => {
-  const router = useRouter();
-  const [isNavigating, setIsNavigating] = React.useState(false);
-  const [scenario, setScenario] = useAtom(scenarioAtom);
-  const [selectedPersona, setSelectedPersona] = useAtom(selectedPersonaAtom);
-  const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
-
-  const getSelectedScenario = useCallback(
-    async (scenarioId: string) => {
-      try {
-        const response = await axios.get(`/api/scenarios/${scenarioId}`);
+    try {
+        const response = await axios.get<Persona>("/api/persona/generate-new-persona");
         return response.data;
-      } catch (error) {
-        console.error("Error fetching scenario:", error);
-        router.push("/");
+    } catch (error) {
+        console.error("Error generating persona:", error);
         return null;
-      }
-    },
-    [router]
-  );
+    }
+}
 
-  useEffect(() => {
-    if (scenarioId && (!scenario || scenario.id !== scenarioId)) {
-      getSelectedScenario(scenarioId).then((fetchedScenario) => {
-        if (fetchedScenario) {
-          setScenario(fetchedScenario);
+
+
+export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProps) {
+    const router = useRouter();
+    const [, setScenario] = useAtom(scenarioAtom);
+    const [persona, setPersona] = useAtom(selectedPersonaAtom);
+    const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
+
+    useEffect(() => {
+        async function fetchScenario() {
+            try {
+                const scenario = await getSelectedScenario(scenarioId);
+                if (scenario) {
+                    setScenario(scenario);
+                    setSelectedScenario(scenario);
+                }
+            } catch (error) {
+                console.error("Error fetching scenario:", error);
+            }
         }
-      });
-    }
-  }, [scenarioId, scenario, getSelectedScenario, setScenario]);
+        fetchScenario();
+    }, [scenarioId, setScenario]);
 
-  useEffect(() => {
-    if (!selectedPersona && !isGeneratingPersona) {
-      generatePersona().then((newPersona) => {
-        if (newPersona) {
-          setSelectedPersona(newPersona);
+    useEffect(() => {
+        async function fetchPersona() {
+            try {
+                const persona = await generatePersona();
+                if (persona) {
+                    setPersona(persona);
+                }
+            } catch (error) {
+                console.error("Error generating persona:", error);
+            }
         }
-      });
+        fetchPersona();
+    }, [setPersona]);
+
+    function handleStartChat() {
+        if (!selectedScenario || !persona) return;
+        router.push(`/initiate-chat?scenarioId=${selectedScenario.id}&personaId=${persona.id}`);
     }
-  }, [selectedPersona, setSelectedPersona, isGeneratingPersona]);
 
-  const handleGenerateNewPersona = async () => {
-    setIsGeneratingPersona(true);
-    try {
-      const newPersona = await generatePersona();
-      if (newPersona) {
-        setSelectedPersona(newPersona);
-        setIsGeneratingPersona(false);
-      }
-    } catch (error) {
-      console.error("Error generating persona:", error);
-      setIsGeneratingPersona(false);
-    }
-  };
-
-  const navigateToChat = useCallback(async () => {
-    if (!selectedPersona || !scenario) return;
-
-    setIsNavigating(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      router.push(`/initiate-chat?scenarioId=${scenario.id}`);
-    } catch (error) {
-      console.error("Error navigating:", error);
-      setIsNavigating(false);
-    }
-  }, [selectedPersona, scenario, router]);
-
-  const renderSkeleton = (
-    <div className="grid gap-12 lg:grid-cols-2">
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-5/6 mb-2" />
-        <Skeleton className="h-4 w-4/5" />
-      </div>
-      <div>
-        <Skeleton className="h-8 w-3/4 mb-6" />
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md mb-8">
-          <Skeleton className="h-6 w-1/2 mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-5/6" />
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <Header title={scenario?.title || "Loading..."} variant="default" />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-        <div className="max-w-4xl mx-auto py-12 sm:py-20">
-          <Button onClick={() => router.back()} className="mb-8">
-            Back to Scenarios
-          </Button>
-
-          {!scenario ? (
-            renderSkeleton
-          ) : (
-            <div className="grid gap-12 lg:grid-cols-2">
-              <ScenarioDescription scenario={scenario} />
-              {isGeneratingPersona ? (
-                <div className="flex justify-center items-center">
-                  <Loader className="animate-spin" size={32} />
-                </div>
-              ) : (
-                <PersonaDetails
-                  persona={selectedPersona}
-                  isGenerating={!selectedPersona}
-                  onGenerate={handleGenerateNewPersona}
+    return (
+        <>
+            {/* Scenario Header */}
+            <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
+                <ChevronLeft
+                    className="w-4 h-4 text-gray-900 dark:text-gray-100 hover:cursor-pointer"
+                    onClick={() => router.back()}
                 />
-              )}
+                <h1 className="text-xl md:text-2xl font-regular text-gray-900 dark:text-gray-100 ">
+                    {selectedScenario?.title}
+                </h1>
             </div>
-          )}
-        </div>
-      </main>
-      <footer className="bg-pcsprimary02-light dark:bg-pcsprimary-05 py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-          <div className="max-w-md mx-auto">
-            <Button
-              onClick={navigateToChat}
-              className="w-full py-3"
-              disabled={!selectedPersona || !scenario || isNavigating || isGeneratingPersona}>
-              {isNavigating ? (
-                <>
-                  <Loader className="animate-spin mr-2" size={20} />
-                  Preparing Chat...
-                </>
-              ) : (
-                "Start Chat with Current Persona"
-              )}
-            </Button>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
+
+            <div className="flex flex-col gap-3 md:gap-4 mx-4 md:m-14 min-h-screen relative pb-28 md:pb-24">
+                {/* Scenario Description */}
+                <ScenarioDescription selectedScenario={selectedScenario} />
+
+                {/* Scenario Objectives */}
+                <ScenarioObjectives selectedScenario={selectedScenario} />
+
+                {/* Persona Details */}
+                <PersonaDetailsComponent persona={persona} />
+
+
+                {/* Fixed Bottom Button */}
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-card-alt border-t">
+                    <div className="max-w-full md:max-w-[calc(100%-7rem)] mx-auto flex justify-end">
+                        <Button
+                            onClick={handleStartChat}
+                            className="w-full md:w-auto"
+                        >
+                            Start Chat
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
