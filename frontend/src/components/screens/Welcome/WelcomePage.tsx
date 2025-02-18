@@ -28,7 +28,7 @@ const Welcome = () => {
   const [scenarios, setScenarios] = useState<TrainingScenario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const handleScenarioSelect = (scenarioId: string) => {
-    router.push(`/chat/${scenarioId}`);
+    router.push(`/scenario-setup?scenarioId=${scenarioId}`);
   };
 
   useEffect(() => {
