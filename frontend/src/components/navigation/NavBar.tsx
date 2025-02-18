@@ -9,7 +9,7 @@ const NavBar = () => {
       
       <div className="relative h-12 w-12 md:h-16 md:w-16">
         <Image
-          src="/images/pcs-logo.svg"
+          src="/logo.svg"
           alt="Rep Coach Logo"
           fill
           className="object-contain"
