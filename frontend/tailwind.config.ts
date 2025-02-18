@@ -34,7 +34,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        cardalt: {
+        "card-alt": {
           DEFAULT: "hsl(var(--card-alt))",
         },
         popover: {
