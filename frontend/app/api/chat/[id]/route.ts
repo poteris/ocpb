@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/init";
+interface Message {
+    content: string;
+    conversation_id: string;
+    created_at: string;
+    id: string;
+    role: string;
+  }
+  
 
  interface ConversationData {
     messages: Message[];
