@@ -2,7 +2,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { v4 as uuidv4 } from 'uuid';
 import { TrainingScenario } from '@/types/scenario';
 
-export default function ScenarioObjectives({ selectedScenario }: { selectedScenario: TrainingScenario }) {
+export default function ScenarioObjectives({ selectedScenario }: { readonly selectedScenario: TrainingScenario }) {
     return (
         <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md">
             <Accordion type="single" collapsible className="mb-2 md:mb-6">
