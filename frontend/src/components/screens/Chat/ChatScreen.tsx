@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { SendIcon } from 'lucide-react';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/Input"
-import { useRouter } from "next/navigation"
-// import { v4 as uuidv4 } from 'uuid';
+import { Input } from "@/components/ui/input"
 
 
 export interface ConversationData {
@@ -46,10 +44,6 @@ const ChatScreen = () => {
 
   const router = useRouter()
 
-
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setInput(e.target.value)
-  // }
 
   // Fetch initial chat data
   useEffect(() => {
