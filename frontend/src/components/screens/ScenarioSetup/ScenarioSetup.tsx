@@ -3,20 +3,52 @@ import { scenarioAtom, selectedPersonaAtom } from "@/store";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import PersonaDetailsComponent from "./PersonaDetails";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { v4 as uuidv4 } from 'uuid';
 import { TrainingScenario } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import ScenarioObjectives from "./ScenarioObjectives";
 import ScenarioDescription from "./ScenarioDescription";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonBlock } from "./SkeletonBlock";
+
 interface ScenarioSetupComponentProps {
     readonly scenarioId: string;
 }
 
+const ScenarioSetupSkeleton = () => {
+    return (
+        <>
+            {/* Skeleton Header */}
+            <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
+                <ChevronLeft
+                    className="w-4 h-4 text-gray-900 dark:text-gray-100 hover:cursor-pointer"
+                />
+                <Skeleton className="h-8 w-48" />
+            </div>
+
+            <div className="flex flex-col gap-3 md:gap-4 mx-4 md:m-14 min-h-screen relative pb-28 md:pb-24">
+                {/* Description Card Skeleton */}
+                <SkeletonBlock />
+
+                {/* Objectives Card Skeleton */}
+                <SkeletonBlock />
+
+                {/* Persona Card Skeleton */}
+                <SkeletonBlock />
+
+                {/* Fixed Bottom Button Skeleton */}
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-card-alt border-t">
+                    <div className="max-w-full md:max-w-[calc(100%-7rem)] mx-auto flex justify-end">
+                        <Skeleton className="h-10 w-24" />
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
 
 async function getSelectedScenario(scenarioId: string) {
     try {
@@ -38,42 +70,41 @@ async function generatePersona() {
     }
 }
 
-
-
 export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProps) {
     const router = useRouter();
     const [, setScenario] = useAtom(scenarioAtom);
     const [persona, setPersona] = useAtom(selectedPersonaAtom);
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        async function fetchScenario() {
+        async function fetchData() {
             try {
-                const scenario = await getSelectedScenario(scenarioId);
-                if (scenario) {
-                    setScenario(scenario);
-                    setSelectedScenario(scenario);
-                }
-            } catch (error) {
-                console.error("Error fetching scenario:", error);
-            }
-        }
-        fetchScenario();
-    }, [scenarioId, setScenario]);
+                const [scenarioData, personaData] = await Promise.all([
+                    getSelectedScenario(scenarioId),
+                    generatePersona()
+                ]);
 
-    useEffect(() => {
-        async function fetchPersona() {
-            try {
-                const persona = await generatePersona();
-                if (persona) {
-                    setPersona(persona);
+                if (scenarioData) {
+                    setScenario(scenarioData);
+                    setSelectedScenario(scenarioData);
+                }
+
+                if (personaData) {
+                    setPersona(personaData);
                 }
             } catch (error) {
-                console.error("Error generating persona:", error);
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false);
             }
         }
-        fetchPersona();
-    }, [setPersona]);
+        fetchData();
+    }, [scenarioId, setScenario, setPersona]);
+
+    if (isLoading) {
+        return <ScenarioSetupSkeleton />;
+    }
 
     function handleStartChat() {
         if (!selectedScenario || !persona) return;
@@ -88,21 +119,19 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     className="w-4 h-4 text-gray-900 dark:text-gray-100 hover:cursor-pointer"
                     onClick={() => router.back()}
                 />
-                <h1 className="text-xl md:text-2xl font-regular text-gray-900 dark:text-gray-100 ">
+                <h1 className="text-xl md:text-2xl font-regular text-gray-900 dark:text-gray-100">
                     {selectedScenario?.title}
                 </h1>
             </div>
 
             <div className="flex flex-col gap-3 md:gap-4 mx-4 md:m-14 min-h-screen relative pb-28 md:pb-24">
-                {/* Scenario Description */}
-                <ScenarioDescription selectedScenario={selectedScenario} />
-
-                {/* Scenario Objectives */}
-                <ScenarioObjectives selectedScenario={selectedScenario} />
-
-                {/* Persona Details */}
-                <PersonaDetailsComponent persona={persona} />
-
+                {selectedScenario && (
+                    <>
+                        <ScenarioDescription selectedScenario={selectedScenario} />
+                        <ScenarioObjectives selectedScenario={selectedScenario} />
+                        <PersonaDetailsComponent persona={persona} />
+                    </>
+                )}
 
                 {/* Fixed Bottom Button */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-card-alt border-t">

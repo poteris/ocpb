@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { ScenarioSetup } from "@/components/screens/ScenarioSetup/ScenarioSetup";
+import ScenarioSetup from "@/components/screens/ScenarioSetup/ScenarioSetup";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";

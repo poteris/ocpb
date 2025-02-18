@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import  Welcome  from '@/components/screens/Welcome/WelcomePage';
+import Welcome from '@/components/screens/Welcome/WelcomePage';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
