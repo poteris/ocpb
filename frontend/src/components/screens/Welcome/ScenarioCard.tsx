@@ -10,7 +10,7 @@ const ScenarioCard = ({ scenario, onSelect }: {
     <Card key={scenario.id} className="border-none rounded-[20px] bg-card p-2 md:p-2">
       <CardHeader>
         <div className="flex flex-row justify-between">
-          <CardTitle className="font-normal">{scenario.title}</CardTitle> 
+          <CardTitle className="font-normal capitalize">{scenario.title}</CardTitle> 
           <Button 
             onClick={() => onSelect(scenario.id)} 
             className="w-24 py-3"
@@ -22,7 +22,7 @@ const ScenarioCard = ({ scenario, onSelect }: {
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
           <div className="w-full sm:w-2/3 flex flex-row">
-            <CardDescription>{scenario.description}</CardDescription>
+            <CardDescription className="first-letter:capitalize">{scenario.description}</CardDescription>
           </div>
           <div className="w-full sm:w-1/3 flex justify-start sm:justify-end" />
         </div>
