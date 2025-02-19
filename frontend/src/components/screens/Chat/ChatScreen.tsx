@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
 import { v4 as uuidv4 } from 'uuid';
-import { LogOut } from "lucide-react"
+import { LogOut, SendHorizontal } from "lucide-react"
 
 export interface ConversationData {
   messages: Message[];
@@ -181,19 +181,31 @@ const ChatScreen = () => {
         </div>
 
         <div className="flex items-center gap-3 w-full">
-          <div className="flex-1">
-            <ChatInput
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onSend={() => handleSendMessage()}
-              placeholder="Type your message..."
-              disabled={isLoading}
-            />
-          </div>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }} className="flex-1 flex items-center gap-3">
+            <div className="flex-1">
+              <ChatInput
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Type your message..."
+                disabled={isLoading}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
+              disabled={isLoading || !inputMessage}>
+              Send
+              <SendHorizontal className="w-4 h-4 ml-2" />
+            </Button>
+          </form>
 
           <Button
             onClick={handleEndChat}
-            className="bg-red-500 text-white hover:bg-red-600 flex-shrink-0 ml-2"
+            className="bg-red-500 text-white hover:bg-red-600 flex-shrink-0"
           >
             <LogOut />
           </Button>
