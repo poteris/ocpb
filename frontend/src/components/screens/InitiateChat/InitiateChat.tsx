@@ -152,7 +152,6 @@ const InitiateChatContent: React.FC = () => {
             title={scenarioInfo?.title || "Scenario"}
             variant="default"
             showInfoIcon={true}
-              onInfoClick={() => {}} // TODO should be removed after testing
           />
         </div>
 
