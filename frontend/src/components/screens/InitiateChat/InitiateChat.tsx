@@ -16,6 +16,7 @@ import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
 import { Badge } from "@/components/ui/badge";
 import { SendHorizontal } from "lucide-react";
+import { ChatInput } from "@/components/ChatInput/ChatInput";
 
 const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
