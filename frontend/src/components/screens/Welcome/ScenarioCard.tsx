@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrainingScenario } from "@/types/scenarios";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ScenarioCard = ({ scenario, onSelect }: { 
     scenario: TrainingScenario; 
