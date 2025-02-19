@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
 import { v4 as uuidv4 } from 'uuid';
+import { LogOut } from "lucide-react"
 
 export interface ConversationData {
   messages: Message[];
@@ -43,11 +44,12 @@ async function getConversationData(conversationId: string) {
   }
 }
 
-async function sendUserMessage(conversationId: string, content: string) {
+async function sendUserMessage(conversationId: string, content: string, scenarioId: string) {
   try {
     const response = await axios.post<Message>('/api/chat/send-user-message', {
       conversationId,
-      content
+      content,
+      scenario_id: scenarioId
     });
     return response.data;
   } catch (error) {
@@ -121,8 +123,7 @@ const ChatScreen = () => {
       }));
       setInputMessage('');
 
-      // Send to API
-      const response = await sendUserMessage(conversationData.conversationId, inputMessage);
+      const response = await sendUserMessage(conversationData.conversationId, inputMessage, conversationData.scenarioId);
 
       if (response) {
         // Fetch the updated conversation data after bot response
@@ -160,26 +161,44 @@ const ChatScreen = () => {
 
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
-      <div className="flex-grow overflow-auto mb-4">
-        {conversationData?.messages.map((m) => (
-          <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
-            <span
-              className={` inline-block p-2 rounded-lg ${m.role === "user" ? "bg-slate-50 text-black" : "bg-primary text-white"}`}
+    <div className="flex flex-col min-h-screen h-full p-4 md:p-6">
+      <div className="flex flex-col flex-grow max-w-4xl mx-auto w-full">
+        <div className="flex-grow overflow-auto mb-4 space-y-4">
+          {conversationData?.messages.map((m) => (
+            <div
+              key={m.id}
+              className={`mb-4 flex ${m.role === "user" ? "justify-end md:justify-end" : "justify-start"}`}
             >
-              {m.content}
-            </span>
-          </div>
-        ))}
-      </div>
+              <span
+                className={`inline-block p-4 rounded-lg text-sm max-w-[50%] ${m.role === "user" ? "bg-primary-light text-black" : "bg-primary text-white"
+                  }`}
+              >
+                {m.content}
+              </span>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
 
-      <ChatInput
-        value={inputMessage}
-        onChange={(e) => setInputMessage(e.target.value)}
-        onSend={() => handleSendMessage()}
-        placeholder="Type your message..."
-        disabled={isLoading}
-      />
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1">
+            <ChatInput
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onSend={() => handleSendMessage()}
+              placeholder="Type your message..."
+              disabled={isLoading}
+            />
+          </div>
+
+          <Button
+            onClick={handleEndChat}
+            className="bg-red-500 text-white hover:bg-red-600 flex-shrink-0 ml-2"
+          >
+            <LogOut />
+          </Button>
+        </div>
+      </div>
 
       <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
         <DialogContent>
