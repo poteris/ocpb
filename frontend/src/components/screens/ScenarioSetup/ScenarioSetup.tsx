@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Header } from "../../Header";
@@ -9,7 +9,6 @@ import ScenarioDescription from "./ScenarioDescription";
 import { useAtom } from "jotai";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";
 import PersonaDetails from "./PersonaDetails";
-import { useState } from "react";
 
 async function generatePersona() {
   try {
