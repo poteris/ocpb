@@ -161,16 +161,19 @@ const ChatScreen = () => {
 
 
   return (
-    <div className="flex flex-col min-h-screen h-full p-4 md:p-6">
-      <div className="flex flex-col flex-grow max-w-4xl mx-auto w-full">
-        <div className="flex-grow overflow-auto mb-4 space-y-4">
+    <div className="grid min-h-screen grid-rows-[1fr_auto] p-4 md:p-6">
+      <div className="max-w-[1200px] mx-auto w-full mt-10 grid grid-rows-[1fr_auto] gap-4 h-full">
+        {/* Messages Container */}
+        <div className="overflow-auto space-y-4">
           {conversationData?.messages.map((m) => (
             <div
               key={m.id}
-              className={`mb-4 flex ${m.role === "user" ? "justify-end md:justify-end" : "justify-start"}`}
+              className={`grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
             >
               <span
-                className={`inline-block p-4 rounded-lg text-sm max-w-[50%] ${m.role === "user" ? "bg-primary-light text-black" : "bg-primary text-white"
+                className={`p-4 rounded-lg text-sm max-w-[50%] ${m.role === "user"
+                  ? "bg-primary-light text-black"
+                  : "bg-primary text-white"
                   }`}
               >
                 {m.content}
@@ -180,24 +183,27 @@ const ChatScreen = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex items-center gap-3 w-full">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }} className="flex-1 flex items-center gap-3">
-            <div className="flex-1">
-              <ChatInput
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={isLoading}
-              />
-            </div>
+        {/* Input Container */}
+        <div className="grid grid-cols-[1fr_auto] gap-3 mb-10">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="grid grid-cols-[1fr_auto] gap-3"
+          >
+            <ChatInput
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Type your message..."
+              disabled={isLoading}
+            />
 
             <Button
               type="submit"
               className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
-              disabled={isLoading || !inputMessage}>
+              disabled={isLoading || !inputMessage}
+            >
               Send
               <SendHorizontal className="w-4 h-4 ml-2" />
             </Button>
@@ -205,7 +211,7 @@ const ChatScreen = () => {
 
           <Button
             onClick={handleEndChat}
-            className="bg-red-500 text-white hover:bg-red-600 flex-shrink-0"
+            className="bg-red-500 text-white hover:bg-red-600"
           >
             <LogOut />
           </Button>
