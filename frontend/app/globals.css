@@ -9,7 +9,11 @@
    Root Variables Custom Theme
 =================== */
 :root {
-
+  /* Update these background and foreground definitions */
+  --background: 0 0% 100%;
+  /* Changed to use HSL values */
+  --foreground: 0 0% 3.9%;
+  /* Changed to use HSL values */
 
   /* Primary Colors */
   --pcsprimary-01: 190 73% 40%;
@@ -29,13 +33,7 @@
   --pcssecondary-06: 64 99% 37%;
   --pcssecondary-07: 8 85% 48%;
   --pcssecondary-08: 231 25% 35%;
-
-  /* Default Background and Foreground */
-  --background: #ffffff;
-  --foreground: #000000;
 }
-
-
 
 /*=====================
     Shadcn Theme
@@ -101,8 +99,8 @@
 /* Dark Mode Colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 93.1%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
   }
 }
 
@@ -110,8 +108,8 @@
    Base Styles
 =================== */
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
   font-family: var(--font-roboto-slab);
   margin: 0;
   height: 100%;

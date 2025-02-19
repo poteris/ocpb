@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Header } from "../../Header";
 import { Loader } from "react-feather";
-import { Skeleton } from "../../ui/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 import ScenarioDescription from "./ScenarioDescription";
 import { useAtom } from "jotai";

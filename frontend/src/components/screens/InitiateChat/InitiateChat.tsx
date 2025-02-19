@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react";
+import React, { useState,  useEffect } from "react";
 import { Header } from "../../Header";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChatModals } from "../../ChatModals";
 import { motion, AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useAtom } from "jotai";
 import { selectedPersonaAtom, scenarioAtom } from "@/store";
@@ -52,7 +50,6 @@ export async function createNewChat({ initialMessage, scenarioId, persona }: Cre
 }
 
 const InitiateChatContent: React.FC = () => {
-  const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
@@ -155,7 +152,6 @@ const InitiateChatContent: React.FC = () => {
             title={scenarioInfo?.title || "Scenario"}
             variant="default"
             showInfoIcon={true}
-            onInfoClick={() => setShowInfoPopover(true)}
           />
         </div>
 
@@ -221,61 +217,16 @@ const InitiateChatContent: React.FC = () => {
           </div>
         </main>
 
-        <ChatModals
-          showInfoPopover={showInfoPopover}
-          setShowInfoPopover={setShowInfoPopover}
-          scenarioInfo={scenarioInfo}
-          persona={persona}
-          showEndChatModal={false}
-          setShowEndChatModal={() => {}}
-          showFeedbackPopover={false}
-          setShowFeedbackPopover={() => {}}
-          handleFeedbackClose={() => {}}
-          conversationId={""}
-        />
       </motion.div>
     </AnimatePresence>
   );
 };
 
-const InitiateChatSkeleton: React.FC = () => {
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="flex-shrink-0">
-        <Skeleton className="h-16 w-full" />
-      </div>
-
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-        <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
-          <div>
-            <Skeleton className="h-10 w-40 mb-8" />
-            <div className="flex flex-col items-center mb-12">
-              <Skeleton className="w-64 h-64 mb-8 rounded-full" />
-              <Skeleton className="h-10 w-3/4 mb-6" />
-              <Skeleton className="h-6 w-full mb-2" />
-              <Skeleton className="h-6 w-5/6 mb-8" />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 mb-12">
-              {[1, 2, 3, 4].map((index) => (
-                <Skeleton key={index} className="h-16 w-full rounded-lg" />
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <Skeleton className="h-12 w-full rounded-full" />
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
 
 export const InitiateChat: React.FC = () => {
   return (
-    <Suspense fallback={<InitiateChatSkeleton />}>
+   
       <InitiateChatContent />
-    </Suspense>
+   
   );
 };

@@ -49,7 +49,7 @@ const ChatScreen = () => {
   useEffect(() => {
     const fetchChat = async () => {
       if (!conversationId) return;
-      
+
       try {
         setIsLoading(true);
         const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
@@ -61,7 +61,7 @@ const ChatScreen = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchChat();
   }, [conversationId]);
 
@@ -75,13 +75,13 @@ const ChatScreen = () => {
     if (e) {
       e.preventDefault();
     }
-    
+
 
     if (!inputMessage.trim() || !conversationData?.conversationId || isLoading) return;
 
     try {
       setIsLoading(true);
-      
+
       // Create user message
       const userMessage: Message = {
         id: Date.now().toString(),
@@ -90,7 +90,7 @@ const ChatScreen = () => {
         created_at: new Date().toISOString(),
         role: 'user'
       };
-      
+
       // Update state with user message
       setConversationData(prev => ({
         ...prev!,
@@ -117,7 +117,7 @@ const ChatScreen = () => {
       // Remove the failed message from the state
       setConversationData(prev => ({
         ...prev!,
-        messages: prev!.messages.slice(0, -1) 
+        messages: prev!.messages.slice(0, -1)
       }));
     } finally {
       setIsLoading(false);
@@ -134,7 +134,7 @@ const ChatScreen = () => {
 
   const handleConfirmEndChat = () => {
     setIsEndChatModalOpen(false)
-    router.push("/feedback")
+    router.push(`/feedback?conversationId=${conversationData?.conversationId}`)
   }
 
 
@@ -142,42 +142,42 @@ const ChatScreen = () => {
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
-    <div className="flex-grow overflow-auto mb-4">
-      {conversationData?.messages.map((m) => (
-        <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
-          <span
-            className={` inline-block p-2 rounded-lg ${m.role === "user" ? "bg-slate-50 text-black" : "bg-primary text-white"}`}
-          >
-            {m.content}
-          </span>
-        </div>
-      ))}
-    </div>
-    <form onSubmit={handleSendMessage} className="flex space-x-2 rounded-lg " >
-      <Input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} placeholder="Type your message..." className="flex-grow" />
-      <Button type="submit" size="icon">
-        <SendIcon className="h-4 w-4" />
-      </Button>
-      <Button onClick={handleEndChat} variant="destructive">
-        End Chat
-      </Button>
-    </form>
+      <div className="flex-grow overflow-auto mb-4">
+        {conversationData?.messages.map((m) => (
+          <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
+            <span
+              className={` inline-block p-2 rounded-lg ${m.role === "user" ? "bg-slate-50 text-black" : "bg-primary text-white"}`}
+            >
+              {m.content}
+            </span>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={handleSendMessage} className="flex space-x-2 rounded-lg " >
+        <Input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} placeholder="Type your message..." className="flex-grow" />
+        <Button type="submit" size="icon">
+          <SendIcon className="h-4 w-4" />
+        </Button>
+        <Button onClick={handleEndChat} variant="destructive">
+          End Chat
+        </Button>
+      </form>
 
-    <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>End Chat</DialogTitle>
-          <DialogDescription>Are you sure you want to end this chat?</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCloseModal}>
-            No
-          </Button>
-          <Button onClick={handleConfirmEndChat}>Yes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </div>
+      <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End Chat</DialogTitle>
+            <DialogDescription>Are you sure you want to end this chat?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseModal}>
+              No
+            </Button>
+            <Button onClick={handleConfirmEndChat} className="bg-red-500 text-white hover:bg-red-600">Yes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

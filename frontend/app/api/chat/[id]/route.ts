@@ -9,6 +9,15 @@ interface Message {
   }
   
 
+
+interface Message {
+    content: string;
+    conversation_id: string;
+    created_at: string;
+    id: string;
+    role: string;
+  }
+  
  interface ConversationData {
     messages: Message[];
     conversationId: string;
