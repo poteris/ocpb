@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { SendIcon } from 'lucide-react';
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Dialog,
@@ -12,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-
+import { ChatInput } from "@/components/ChatInput/ChatInput"
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ConversationData {
   messages: Message[];
@@ -31,6 +30,30 @@ interface Message {
   created_at: string;
   id: string;
   role: string;
+}
+
+
+async function getConversationData(conversationId: string) {
+  try {
+    const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching chat:', error);
+    return null;
+  }
+}
+
+async function sendUserMessage(conversationId: string, content: string) {
+  try {
+    const response = await axios.post<Message>('/api/chat/send-user-message', {
+      conversationId,
+      content
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return null;
+  }
 }
 
 const ChatScreen = () => {
@@ -52,8 +75,8 @@ const ChatScreen = () => {
 
       try {
         setIsLoading(true);
-        const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
-        setConversationData(response.data);
+        const response = await getConversationData(conversationId);
+        setConversationData(response);
       } catch (error) {
         console.error('Error fetching chat:', error);
 
@@ -77,17 +100,17 @@ const ChatScreen = () => {
     }
 
 
-    if (!inputMessage.trim() || !conversationData?.conversationId || isLoading) return;
+    if (!inputMessage || !conversationData?.conversationId || isLoading) return;
 
     try {
       setIsLoading(true);
 
       // Create user message
       const userMessage: Message = {
-        id: Date.now().toString(),
+        id: uuidv4(), // NOTE: this should be set by the db
         content: inputMessage,
         conversation_id: conversationData.conversationId,
-        created_at: new Date().toISOString(),
+        created_at: new Date().toISOString(), // NOTE: this should be set by the db
         role: 'user'
       };
 
@@ -99,16 +122,12 @@ const ChatScreen = () => {
       setInputMessage('');
 
       // Send to API
-      const response = await axios.post<Message>('/api/chat/send-user-message', {
-        conversationId: conversationData.conversationId,
-        scenario_id: conversationData.scenarioId,
-        content: inputMessage
-      });
+      const response = await sendUserMessage(conversationData.conversationId, inputMessage);
 
-      if (response.status === 200) {
+      if (response) {
         // Fetch the updated conversation data after bot response
-        const updatedConversation = await axios.get<ConversationData>(`/api/chat/${conversationData.conversationId}`);
-        setConversationData(updatedConversation.data);
+        const updatedConversation = await getConversationData(conversationData.conversationId);
+        setConversationData(updatedConversation);
       }
 
       setIsLoading(false);
@@ -153,15 +172,14 @@ const ChatScreen = () => {
           </div>
         ))}
       </div>
-      <form onSubmit={handleSendMessage} className="flex space-x-2 rounded-lg " >
-        <Input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} placeholder="Type your message..." className="flex-grow" />
-        <Button type="submit" size="icon">
-          <SendIcon className="h-4 w-4" />
-        </Button>
-        <Button onClick={handleEndChat} variant="destructive">
-          End Chat
-        </Button>
-      </form>
+
+      <ChatInput
+        value={inputMessage}
+        onChange={(e) => setInputMessage(e.target.value)}
+        onSend={() => handleSendMessage()}
+        placeholder="Type your message..."
+        disabled={isLoading}
+      />
 
       <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
         <DialogContent>
@@ -173,7 +191,7 @@ const ChatScreen = () => {
             <Button variant="outline" onClick={handleCloseModal}>
               No
             </Button>
-            <Button onClick={handleConfirmEndChat} className="bg-red-500 text-white hover:bg-red-600">Yes</Button>
+            <Button onClick={handleConfirmEndChat}>Yes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
