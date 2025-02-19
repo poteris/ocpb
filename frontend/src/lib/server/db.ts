@@ -2,11 +2,10 @@
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { z } from "zod";
-import { DatabaseError, isError } from "@/utils/errors";
+import { DatabaseError, DatabaseErrorCodes, isError } from "@/utils/errors";
 
 
 export async function getAllScenarios(): Promise<TrainingScenario[]> {
-  try {
   const { data, error } = await supabase.from("scenarios").select(`
     id,
     title,
@@ -16,7 +15,9 @@ export async function getAllScenarios(): Promise<TrainingScenario[]> {
   `);
 
   if (error) {
-    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", error);
+    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", DatabaseErrorCodes.Select, {
+      error: error,
+    });
   }
   // we need to add the objectives to the scenario object
   const scenarios = data.map((scenario) => ({
@@ -26,17 +27,16 @@ export async function getAllScenarios(): Promise<TrainingScenario[]> {
 
   const validationResult = z.array(TrainingScenarioSchema).safeParse(scenarios);
   if (!validationResult.success) {
-    throw new DatabaseError("Error validating scenarios data", "getAllScenarios", validationResult.error);
+    throw new DatabaseError("Error validating scenarios data", "getAllScenarios", DatabaseErrorCodes.Select, {
+      error: validationResult.error,
+    });
   }
 
   return validationResult.data;
-  } catch (error:unknown) {
-    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", isError(error) ? error : "Unexpected error");
-  }
 }
 
 export async function getScenario(scenarioId: string): Promise<TrainingScenario> {
-  const { data, error } = await supabase
+    const { data, error } = await supabase
     .from("scenarios")
     .select(
       `
@@ -69,8 +69,8 @@ export async function retrievePersona(personaId: string) {
   return personas;
 }
 
+
 export async function getSystemPrompt(promptId: number): Promise<string> {
-  try {
     const { data: promptData, error: promptError } = await supabase
       .from("system_prompts")
       .select("content")
@@ -84,10 +84,6 @@ export async function getSystemPrompt(promptId: number): Promise<string> {
 
     // Return the content directly as a string
     return promptData.content;
-  } catch (error) {
-    console.error("Error in getSystemPrompt:", error);
-    return "You are an AI assistant helping with union conversations. Be helpful and professional.";
-  }
 }
 
 export async function getConversationContext(conversationId: string) {
@@ -97,18 +93,23 @@ export async function getConversationContext(conversationId: string) {
     .eq("conversation_id", conversationId)
     .single();
 
-  if (error) throw error;
+  if (error) throw new DatabaseError("Error fetching conversation context", "getConversationContext", DatabaseErrorCodes.Select, {
+    error: error,
+  });
 
   const scenario = await getScenario(data.scenario_id);
   const persona = await retrievePersona(data.persona_id);
   const systemPrompt = await getSystemPrompt(data.system_prompt_id);
 
   if (!scenario || !persona) {
-    throw new Error("Scenario or persona not found");
+    console.error("Scenario or persona not found", error);
+    throw new DatabaseError("Scenario or persona not found", "getConversationContext", DatabaseErrorCodes.Select, {
+      error: error,
+    });
   }
 
   return { scenario, persona, systemPrompt };
-}
+} 
 
 export async function saveMessages(conversationId: string, userMessage: string, aiResponse: string) {
   const { error } = await supabase.from("messages").insert([
@@ -116,7 +117,12 @@ export async function saveMessages(conversationId: string, userMessage: string, 
     { conversation_id: conversationId, role: "assistant", content: aiResponse },
   ]);
 
-  if (error) throw error;
+  if (error) {
+    console.error("Error saving messages:", error);
+    throw new DatabaseError("Error saving messages", "saveMessages", DatabaseErrorCodes.Insert, {
+      error: error,
+    });
+  }
 }
 
 export async function upsertPersona(persona: Persona) {
@@ -124,7 +130,9 @@ export async function upsertPersona(persona: Persona) {
 
   if (error) {
     console.error("Error upserting persona:", error);
-    throw error;
+    throw new DatabaseError("Error upserting persona", "upsertPersona", DatabaseErrorCodes.Insert, {
+      error: error,
+    });
   }
 }
 
@@ -147,13 +155,13 @@ export async function insertConversation(
 
   if (error) {
     console.error("Error inserting conversation:", error);
-    throw error;
+    throw new DatabaseError("Error inserting conversation", "insertConversation", DatabaseErrorCodes.Insert, {
+      error: error,
+    });
   }
 }
 
 export async function getAllChatMessages(conversationId: string) {
-  
-  try {
       const { data: messagesData, error: messagesError } = await supabase
       .from("messages")
       .select("role, content")
@@ -161,18 +169,18 @@ export async function getAllChatMessages(conversationId: string) {
       .order("created_at", { ascending: true });
 
     if (messagesError) {
-      throw messagesError;
+      throw new DatabaseError("Error fetching messages", "getAllChatMessages", DatabaseErrorCodes.Select, {
+        error: messagesError,
+      });
     }
 
     return messagesData;
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    return null;
   }
-}
+
 
 export async function getConversationById(conversationId: string) {
-  return await supabase
+  
+  const { data, error } = await supabase
     .from("conversations")
     .select(
       `
@@ -183,23 +191,44 @@ export async function getConversationById(conversationId: string) {
         `
     )
     .eq("conversation_id", conversationId)
-    .single();
+      .single();
+
+  if (error) {
+    throw new DatabaseError("Error fetching conversation", "getConversationById", DatabaseErrorCodes.Select, {
+      error: error,
+    });
+  }
+
+  return data;
+  
 }
 
 export async function getFeedbackPrompt() {
-  return await supabase.from("feedback_prompts").select("content").single();
+  const { data, error } = await supabase.from("feedback_prompts").select("content").single();
+
+  if (error) {
+    throw new DatabaseError("Error fetching feedback prompt", "getFeedbackPrompt", DatabaseErrorCodes.Select, {
+      error: error,
+    });
+  }
+
+  return data;
 }
 
 export async function getScenarioById(scenarioId: string): Promise<TrainingScenario> {
-  try {
+  
     const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
 
   if (error) {
-    throw new DatabaseError("Error fetching scenario", "getScenarioById", error);
+    throw new DatabaseError("Error fetching scenario", "getScenarioById", DatabaseErrorCodes.Select, {
+      error: error,
+    });
   }
 
   if (!scenario) {
-    throw new DatabaseError("Scenario not found", "getScenarioById", "Scenario not found");
+    throw new DatabaseError("Scenario not found", "getScenarioById", DatabaseErrorCodes.Select, {
+      error: "Scenario not found",
+    });
   }
 
   const { data: objectives, error: objectivesError } = await supabase
@@ -208,11 +237,10 @@ export async function getScenarioById(scenarioId: string): Promise<TrainingScena
     .eq("scenario_id", scenarioId);
 
   if (objectivesError) {
-    throw new DatabaseError("Error fetching objectives", "getScenarioById", objectivesError);
+    throw new DatabaseError("Error fetching objectives", "getScenarioById", DatabaseErrorCodes.Select, {
+      error: objectivesError,
+    });
   }
 
   return { ...scenario, objectives: objectives.map((obj) => obj.objective) };
-} catch (error: unknown) {
-  throw new DatabaseError("Error fetching scenario", "getScenarioById", isError(error) ? error as Error : "Unexpected error");
-}
 }

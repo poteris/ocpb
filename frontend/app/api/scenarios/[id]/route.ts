@@ -1,7 +1,7 @@
 import { supabase } from "../../init";
 import { NextRequest, NextResponse } from "next/server";
 import { getScenarioById } from "@/lib/services/scenarios/getScenarios";
-import { DatabaseError, isDatabaseError } from "@/utils/errors";
+import { DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
 import { z } from "zod";
 
 const UpdateScenarioSchema = z.object({
@@ -22,7 +22,9 @@ async function updateScenarioObjectives(scenarioId: string, objectives: string[]
     .delete()
     .eq("scenario_id", scenarioId);
 
-  if (deleteError) throw new DatabaseError("Error deleting existing objectives", "updateScenarioObjectives", deleteError);
+  if (deleteError) throw new DatabaseError("Error deleting existing objectives", "updateScenarioObjectives", DatabaseErrorCodes.Delete, {
+    error: deleteError,
+  });
 
   // Then insert new objectives if there are any
   if (objectives.length > 0) {
@@ -37,10 +39,14 @@ async function updateScenarioObjectives(scenarioId: string, objectives: string[]
       .from("scenario_objectives")
       .insert(objectivesData);
 
-    if (insertError) throw new DatabaseError("Error creating new objectives", "updateScenarioObjectives", insertError);
+    if (insertError) throw new DatabaseError("Error creating new objectives", "updateScenarioObjectives", DatabaseErrorCodes.Insert, {
+      error: insertError,
+    });
   }
   } catch (error: unknown) {
-    throw new DatabaseError("Failed to update scenario objectives", "updateScenarioObjectives", error as Error);
+    throw new DatabaseError("Failed to update scenario objectives", "updateScenarioObjectives", DatabaseErrorCodes.Update, {
+      error: error as Error,
+    });
   }
 
 }
@@ -58,7 +64,9 @@ async function updateScenarioDetails( scenarioId: string, updates: UpdateScenari
       })
       .eq("id", scenarioId);
 
-    if (scenarioError) throw new DatabaseError("Error updating scenario details", "updateScenarioDetails", scenarioError);
+    if (scenarioError) throw new DatabaseError("Error updating scenario details", "updateScenarioDetails", DatabaseErrorCodes.Update, {
+      error: scenarioError,
+    });
     
   }
 
@@ -67,11 +75,15 @@ async function updateScenarioDetails( scenarioId: string, updates: UpdateScenari
     try {
       await updateScenarioObjectives(scenarioId, updates.objectives);
     } catch (error: unknown) {
-      throw new DatabaseError("Error updating scenario objectives", "updateScenarioDetails", error as Error);
+      throw new DatabaseError("Error updating scenario objectives", "updateScenarioDetails", DatabaseErrorCodes.Update, {
+        error: error,
+      });
     }
   }
   } catch (error: unknown) {
-    throw new DatabaseError("Failed to update scenario details and objectives", "updateScenarioDetails", error as Error);
+    throw new DatabaseError("Failed to update scenario details and objectives", "updateScenarioDetails", DatabaseErrorCodes.Update, {
+      error: error,
+    });
   }
 }
 
@@ -87,16 +99,22 @@ async function deleteScenario(scenarioId: string): Promise<void> {
     .delete()
     .eq("scenario_id", scenarioId);
 
-  if (objectivesError) throw new DatabaseError("Error deleting objectives", "deleteScenario", objectivesError);
+  if (objectivesError) throw new DatabaseError("Error deleting objectives", "deleteScenario", DatabaseErrorCodes.Delete, {
+    error: objectivesError,
+  });
   
 
   // Then delete the scenario
   const { error: scenarioError } = await supabase.from("scenarios").delete().eq("id", scenarioId);
 
-  if (scenarioError) throw new DatabaseError("Error deleting scenario", "deleteScenario", scenarioError);
+  if (scenarioError) throw new DatabaseError("Error deleting scenario", "deleteScenario", DatabaseErrorCodes.Delete, {
+    error: scenarioError,
+  });
 
 } catch (error: unknown) {
-  throw new DatabaseError("Failed to delete scenario", "deleteScenario", error as Error);
+  throw new DatabaseError("Failed to delete scenario", "deleteScenario", DatabaseErrorCodes.Delete, {
+    error: error,
+  });
 }
 }
 
@@ -110,10 +128,7 @@ try {
   await deleteScenario(id);
   return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: unknown) {
-    if (isDatabaseError(error)) {
-      return NextResponse.json({ message: error.message }, { status: 500 });
-    }
-    console.error("Internal server error", error);
+    console.error("Error in DELETE scenarios:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
@@ -130,12 +145,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   await updateScenarioDetails(id, validationResult.data);
   return NextResponse.json({ success: true }, { status: 200 });
 } catch (error: unknown) {
-  if (isDatabaseError(error)) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  console.error("Error in PATCH scenarios:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-  console.error("Internal server error", error);
-  return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-}
 }
 
 
@@ -154,10 +166,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json(scenario);
 } catch (error: unknown) {
-  if (isDatabaseError(error)) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  console.error("Error in GET scenarios:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-  console.error("Internal server error", error);
-  return NextResponse.json({ message: "Internal server error" }, { status: 500 });
-}
 }
