@@ -11,9 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { ChatInput } from "@/components/ChatInput/ChatInput"
+// import { ChatInput } from "@/components/ChatInput/ChatInput"
 import { v4 as uuidv4 } from 'uuid';
 import { LogOut, SendHorizontal } from "lucide-react"
+import { ChatInput } from "@/components/ChatInput/ChatInput"
 
 export interface ConversationData {
   messages: Message[];
@@ -66,12 +67,14 @@ const ChatScreen = () => {
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversationId");
   const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter()
 
 
   // Fetch initial chat data
   useEffect(() => {
+
     const fetchChat = async () => {
       if (!conversationId) return;
 
@@ -84,6 +87,7 @@ const ChatScreen = () => {
 
       } finally {
         setIsLoading(false);
+     
       }
     };
 
@@ -93,6 +97,10 @@ const ChatScreen = () => {
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Refocus input after messages update
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, [conversationData?.messages]);
 
   // Send message handler
@@ -100,7 +108,6 @@ const ChatScreen = () => {
     if (e) {
       e.preventDefault();
     }
-
 
     if (!inputMessage || !conversationData?.conversationId || isLoading) return;
 
@@ -132,6 +139,10 @@ const ChatScreen = () => {
       }
 
       setIsLoading(false);
+      // Refocus input after sending message
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       // Remove the failed message from the state
@@ -193,6 +204,7 @@ const ChatScreen = () => {
             className="grid grid-cols-[1fr_auto] gap-3"
           >
             <ChatInput
+              ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
