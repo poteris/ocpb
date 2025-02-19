@@ -2,6 +2,7 @@ import { Persona } from "@/types/persona";
 import { getConversationContext, getSystemPrompt, saveMessages, upsertPersona, insertConversation} from "@/lib/db";
 import { createBasePromptForMessage, getAIResponse} from "@/lib/llm";
 import OpenAI from "openai";
+import { v4 as uuidv4 } from "uuid";
 
 
 
@@ -29,8 +30,6 @@ export async function createConversation({
     await upsertPersona(persona);
 
 
-    // TODO: use uuidv4
-    const conversationId = crypto.randomUUID();
 
 
     // TODO: remove if adding default to the function signature works
@@ -47,6 +46,7 @@ export async function createConversation({
     //   systemPromptId = defaultPrompt.id;
     // }
 
+    const conversationId = uuidv4();
     // Create conversation with system_prompt_id
     await insertConversation(conversationId, userId, scenarioId, persona.id, systemPromptId);
 

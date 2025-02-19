@@ -39,11 +39,11 @@ interface ConversationResponse {
 export async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
     const response = await axios.post<ConversationResponse>("/api/chat/create-new-chat", {
-      userId: uuidv4(), // TODO: currently we don't have a user based system
+      userId: uuidv4(), // NOTE: this should be set by db, currently we don't have a user based system
       initialMessage,
       scenarioId,
       persona,
-    } as CreateNewChatRequest);
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating new chat:", error);
@@ -55,19 +55,16 @@ const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
-  // const { scenarioInfo, persona, setPersona } = useScenario();
   const [isExiting, setIsExiting] = useState(false);
   const searchParams = useSearchParams();
-
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
-
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
 
   // State to store the randomly selected prompts
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
   const [persona] = useAtom(selectedPersonaAtom);
   const scenarioId = searchParams.get("scenarioId");
-  // TODO: fetch scenario info. Two ways to handle this - either fetch from db or use global context
+  // TODO: get this from db
   const [scenarioInfo] = useAtom(scenarioAtom);
 
   // Update prompts when screen size changes
@@ -88,14 +85,12 @@ const InitiateChatContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const storedPersona = persona;
-    if (storedPersona) {
-      // const parsedPersona: Persona = JSON.parse(storedPersona);
-      // setPersona(parsedPersona);
-    } else {
-      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
+    if (!persona || !scenarioInfo) {
+      router.push(`/`);
     }
-  }, [persona, router, scenarioId]);
+  }, [persona, router, scenarioId, scenarioInfo]);
+
+
 
   const startChat = async (message: string) => {
     if (isInitiatingChat || !persona) return;
@@ -105,70 +100,41 @@ const InitiateChatContent: React.FC = () => {
       setIsExiting(true);
       setIsNavigatingToChat(true);
 
-      // await storePersona(persona); // we are doing this in create chat function anyway
-      // const conversationResponse = await createConversation(
-      //   message,
-      //   scenarioId || "",
-      //   persona
-      // );
-      // createNewChat(message);
-
+      // create new chat
       const conversationResponse = await createNewChat({
         userId: uuidv4(),
         initialMessage: message,
-        scenarioId: scenarioId || "",
+        scenarioId: scenarioId!,
         persona,
       });
 
-      navigateToChat(conversationResponse, message);
-    } catch (error) {
-      handleChatError(error as ChatError);
+      const chatId = conversationResponse.id;
+
+      if (conversationResponse) {
+        const url = `/chat-screen?conversationId=${chatId}`;
+        router.push(url);
+      }
+      // await storePersona(persona); // we are doing this in create chat function anyway
+    } catch (error: unknown) {
+      console.error("Error starting conversation:", error instanceof Error ? error.message : "Unknown error");
+      setIsExiting(false);
+      setIsNavigatingToChat(false);
     } finally {
       setIsInitiatingChat(false);
     }
   };
 
-  // TODO: remove, unnecessary
-  // const createNewChat = async (message: string) => {
-  //   if (!persona) {
-  //     throw new Error("Persona is null");
-  //   }
-  //   return await createConversation(message, scenarioId || "", persona);
-  // };
 
-  const navigateToChat = (conversationResponse: ConversationResponse, message: string) => {
-    const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(
-      message
-    )}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
-    router.push(url);
-  };
-
-  interface ChatError {
-    message: string;
-  }
-
-  const handleChatError = (error: ChatError) => {
-    console.error("Error starting conversation:", error);
-    setIsExiting(false);
-    setIsNavigatingToChat(false);
-  };
-
-  // TODO combine the two functions
-  const handlePromptSelect = async (prompt: string) => {
-    startChat(prompt);
-  };
-
-  const handleStartChat = async () => {
-    if (inputMessage.trim()) {
+  const handleStartChat = async (prompt?:string) => {
+    if (prompt) {
+      startChat(prompt);
+    } else if (inputMessage) {
       startChat(inputMessage.trim());
     }
   };
 
   const handleBack = () => {
     setIsExiting(true);
-    // setTimeout(() => {
-    //   router.push(`/scenario-setup?scenarioId=${scenarioId}`);
-    // }, 300);
     router.back();
   };
 
@@ -223,7 +189,7 @@ const InitiateChatContent: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}>
                 {selectedPrompts.map((prompt, index) => (
                   <motion.div key={index} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button onClick={() => handlePromptSelect(prompt)} className=" py-4 px-6 text-left h-full w-full">
+                    <Button onClick={() => handleStartChat(prompt)} className=" py-4 px-6 text-left h-full w-full">
                       {prompt}
                     </Button>
                   </motion.div>
@@ -245,7 +211,7 @@ const InitiateChatContent: React.FC = () => {
                   placeholder="Start training..."
                 />
                 <Button
-                  onClick={handleStartChat}
+                  onClick={() => handleStartChat()}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
                   disabled={!inputMessage.trim()}>
                   Start
