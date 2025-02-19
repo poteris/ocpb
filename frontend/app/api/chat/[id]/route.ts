@@ -42,7 +42,7 @@ async function getConversationDataByConversationId(id: string) {
             console.error("Error fetching chat data:", chatDataError);
             return null;
         }
-        console.log(conversationData);
+
         return conversationData;
     } catch (error) {
         console.error("Error fetching conversation:", error);
@@ -52,13 +52,11 @@ async function getConversationDataByConversationId(id: string) {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const id = (await params).id;
-    console.log("Fetching chat:", id);
     if (!id) {
         console.warn("Invalid ID:", id);
         return NextResponse.json({ error: "Server returned an error" }, { status: 400 });
     }
 
-    console.log("Fetching chat:", id);
   const chat = await getConversationDataByConversationId(id);
   return NextResponse.json(chat);
 }
