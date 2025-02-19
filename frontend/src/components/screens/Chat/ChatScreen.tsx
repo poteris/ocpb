@@ -173,7 +173,7 @@ const ChatScreen = () => {
             <Button variant="outline" onClick={handleCloseModal}>
               No
             </Button>
-            <Button onClick={handleConfirmEndChat}>Yes</Button>
+            <Button onClick={handleConfirmEndChat} className="bg-red-500 text-white hover:bg-red-600">Yes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

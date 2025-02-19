@@ -3,7 +3,8 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}", // Generalized to include all necessary files in `src`
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
