@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)'],
+      },
       colors: {
         pcsprimary: {
           "01": "var(--pcsprimary-01)",

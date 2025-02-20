@@ -9,6 +9,7 @@
    Root Variables Custom Theme
 =================== */
 :root {
+  --font-poppins: 'Poppins', sans-serif;
   /* Update these background and foreground definitions */
   --background: 0 0% 100%;
   /* Changed to use HSL values */
@@ -111,7 +112,7 @@
 body {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
-  font-family: var(--font-roboto-slab);
+  font-family: var(--font-poppins);
   margin: 0;
   height: 100%;
   -webkit-font-smoothing: antialiased;
