@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)'],
+      },
       colors: {
         pcsprimary: {
           "01": "var(--pcsprimary-01)",
@@ -33,6 +36,9 @@ const config: Config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        "card-alt": {
+          DEFAULT: "hsl(var(--card-alt))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
