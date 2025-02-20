@@ -49,7 +49,7 @@ const Welcome = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
       {/* Main container*/}
-      <div className="container mx-auto px-4 py-6 md:py-12">
+      <div className="container mx-auto px-6 md:px-8 lg:px-12 py-6 md:py-12">
         <div className="flex flex-col lg:flex-row lg:gap-8">
           {/* Welcome Message */}
           <div className="w-full lg:w-1/3 mb-8 lg:mb-0">
@@ -59,7 +59,7 @@ const Welcome = () => {
           {/* Scenarios */}
 
           <div className="w-full lg:w-2/3">
-              <h1 className="text-2xl mb-6">Your Training Scenarios</h1>
+              <h1 className="text-2xl mb-6 font-light ml-2">Your Training Scenarios</h1>
             <div className="flex flex-col gap-4">
               {isLoading ? (
                 // display some skeletons while loading
