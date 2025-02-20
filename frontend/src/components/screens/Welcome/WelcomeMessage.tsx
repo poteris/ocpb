@@ -6,12 +6,13 @@ const WelcomeMessage = () => {
     
     <Card className="border-none rounded-[20px] bg-card-alt p-4 md:p-8 ">
       <CardHeader>
-        <CardTitle>Welcome</CardTitle>
-        <CardDescription>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam laoreet massa a tempus vehicula.
-          Suspendisse potenti. In efficitur sapien non odio feugiat vehicula. Donec vitae nisl lacinia dolor
-          sollicitudin bibendum et vitae sem. Proin eu tortor faucibus, efficitur sapien ullamcorper, sodales
-          risus. In augue turpis, elementum vel tempus in, vehicula at purus. Pellentesque vestibulum, lectus
+        <CardTitle className="text-2xl font-light mb-2">Welcome</CardTitle>
+        <CardDescription className="leading-relaxed space-y-4">
+        Welcome to RepCoach! This is a safe space where you can practice your conversation as a trade union representative, in different scenarios.
+For each scenario, you will be given objectives to achieve and details of the persona that you will be chatting with. When you have finished chatting, you will be presented with feedback that evaluates your performance against the objectives.
+<br />
+<br />
+Have fun!
         </CardDescription>
       </CardHeader>
     </Card>
