@@ -3,37 +3,35 @@ import { Persona } from "@/types/persona";
 import { FeedbackData } from "@/types/feedback";
 
 export const mockTrainingScenario: TrainingScenario = {
-  id: "loony-party-recruitment",
-  title: "The Official Loony Party Recruitment Drive",
+  id: "conflict-resolution-training",
+  title: "Workplace Conflict Resolution Workshop",
   context:
-    "The Official Loony Party is embarking on its most ambitious (and utterly nonsensical) campaign to date: “A Chicken in Every Bathtub, and Free Cheese for All Wednesdays!” As Chief Party Recruiter, you are tasked with finding kindred spirits who embrace our philosophy that politics is far too important to be taken seriously.",
+    "You are a department manager at a large technology company facing increasing interpersonal conflicts between team members. Recent organizational changes and high-pressure deadlines have created tension, affecting team productivity and morale.",
   description:
-    "Your mission is to traverse the whimsical world of tea-drinking ferrets, invisible bicycles, and sentient garden gnomes to uncover delightfully eccentric individuals who will bring unique energy and a touch of the absurd to our campaign.",
+    "Your task is to facilitate a conflict resolution workshop aimed at improving team dynamics and establishing better communication protocols. You need to address both immediate conflicts and implement long-term strategies for maintaining a healthy work environment.",
   objectives: [
-    "Identify potential party members with a knack for telling knock-knock jokes that make no sense but feel profound.",
-    "Explain the party’s “platform,” which includes mandatory naps for pets, free pogo sticks for all citizens, and the establishment of a Ministry of Silly Walks.",
-    "Address serious questions (e.g., fiscal policy) by diverting into poetic soliloquies about the moon’s feelings.",
-    "Successfully recruit at least one new member by convincing them to declare allegiance while wearing a cheese hat or waving a rubber chicken.",
+    "Identify and analyze the root causes of team conflicts using specific examples while maintaining confidentiality.",
+    "Demonstrate effective mediation techniques when addressing disagreements between team members.",
+    "Implement clear communication guidelines and feedback mechanisms to prevent future conflicts.",
+    "Create an action plan for regular team-building activities and stress management workshops.",
   ],
 };
 
 export const mockPersona: Persona = {
-  id: "loony-persona-id",
-  name: "Loony McLoonyface",
-  segment: "Whimsical",
-  age: 42,
-  gender: "Unicorn",
-  family_status: "Married to the Moon",
-  uk_party_affiliation: "The Official Loony Party",
-  workplace: "Candyland",
-  job: "Chief Whimsy Officer",
-  busyness_level: "Always on an Adventure",
-  major_issues_in_workplace: "Too much fun",
-  personality_traits: "Eccentric, Imaginative, Playful",
-  emotional_conditions: "Perpetually Joyful",
+  id: "tech-manager-persona",
+  name: "Sarah Chen",
+  segment: "Management",
+  age: 38,
+  gender: "Female",
+  family_status: "Married",
+  uk_party_affiliation: "Independent",
+  workplace: "Enterprise Software Company",
+  job: "Senior Development Manager",
+  busyness_level: "Very High",
+  major_issues_in_workplace: "Team conflicts, deadline pressure, communication gaps",
+  personality_traits: "Analytical, Direct, Solution-oriented",
+  emotional_conditions: "Stressed but composed",
 };
-
-
 
 export const mockFeedback: FeedbackData = {
         score: 3,
