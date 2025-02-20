@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/navigation/Navbar";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={poppins.variable}>
       <body className="antialiased bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <Navbar />
         {children}
         <Analytics />
       </body>
