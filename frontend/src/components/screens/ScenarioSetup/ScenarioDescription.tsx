@@ -1,10 +1,7 @@
-import { TrainingScenario } from "@/types/scenario";
+import { TrainingScenario } from "@/types/scenarios";
 
-interface ScenarioDescriptionProps {
-    selectedScenario: TrainingScenario;
-}
 
-const ScenarioDescription: React.FC<ScenarioDescriptionProps> = ({ selectedScenario }) => {
+ const ScenarioDescription = ({ selectedScenario }: { readonly selectedScenario: TrainingScenario }) => {
     return (
         <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md">
             <div className="p-3 md:p-4">

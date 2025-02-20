@@ -125,9 +125,13 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
             </div>
 
             <div className="flex flex-col gap-3 md:gap-4 mx-4 md:m-14 min-h-screen relative pb-28 md:pb-24">
-                <ScenarioDescription selectedScenario={selectedScenario} />
-                <ScenarioObjectives selectedScenario={selectedScenario} />
-                <PersonaDetailsComponent persona={persona} />
+                {selectedScenario && (
+                    <>
+                        <ScenarioDescription selectedScenario={selectedScenario} />
+                        <ScenarioObjectives selectedScenario={selectedScenario} />
+                        <PersonaDetailsComponent persona={persona} />
+                    </>
+                )}
 
                 {/* Fixed Bottom Button */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-card-alt border-t">

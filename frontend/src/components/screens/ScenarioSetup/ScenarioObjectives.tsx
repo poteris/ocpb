@@ -1,6 +1,6 @@
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { v4 as uuidv4 } from 'uuid';
-import { TrainingScenario } from '@/types/scenario';
+import { TrainingScenario } from '@/types/scenarios';
 
 export default function ScenarioObjectives({ selectedScenario }: { readonly selectedScenario: TrainingScenario }) {
     return (
