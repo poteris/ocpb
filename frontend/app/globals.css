@@ -184,6 +184,7 @@ button:focus-visible {
   .custom-scrollbar {
     scrollbar-width: thin; /* Firefox */
     scrollbar-color: #E5E7EB transparent; /* Firefox */
+    padding-right: 1rem;
   }
 
   /* Webkit browsers (Chrome, Safari, Edge) */
