@@ -18,14 +18,13 @@ async function ensureSingleAdmin() {
     await supabase.auth.admin.deleteUser(user.id);
   }
 
-  // Step 3: Create the new admin user
+  // Step 3: Create the new admin user WITHOUT password
   const { data, error } = await supabase.auth.admin.createUser({
     email: process.env.ADMIN_EMAIL!,
-    password: process.env.ADMIN_PASSWORD!,
     user_metadata: {
       role: 'admin'
     },
-    email_confirm: true
+    email_confirm: true  // This confirms the email without sending verification
   });
 
   if (error) {
