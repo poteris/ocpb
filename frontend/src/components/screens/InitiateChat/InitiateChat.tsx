@@ -143,7 +143,7 @@ const InitiateChatContent: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="flex-shrink-0 w-full" />
       <h3 className="text-center font-light text-sm mt-12">
-        Choose a prompt to below or start with your own message
+        Choose a prompt below or start with your own message
       </h3>
       <main className="flex-grow w-full px-4 flex flex-col md:container md:mx-auto md:px-6 lg:px-8 md:max-w-screen-xl">
         <div className="w-full flex-grow flex flex-col justify-between py-4 md:py-8 md:max-w-3xl md:mx-auto">
@@ -167,7 +167,7 @@ const InitiateChatContent: React.FC = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   className="w-full bg-slate-50 text-sm p-3 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0"
-                  placeholder="Start training..."
+                  placeholder="Start typing..."
                 />
 
                 <Button
