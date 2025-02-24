@@ -44,7 +44,7 @@ const config: Config = {
   			primary: {
   				DEFAULT: 'hsl(var(--pcsprimary-02))',
   				foreground: 'hsl(var(--primary-foreground))',
-				light: 'hsl(var(--pcsprimary-01-light))'
+  				light: 'hsl(var(--pcsprimary01-light))'
   			},
   			secondary: {
   				DEFAULT: 'hsl(var(--pcssecondary-01))',

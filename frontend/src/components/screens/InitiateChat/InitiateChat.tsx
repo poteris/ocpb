@@ -192,7 +192,7 @@ const InitiateChatContent: React.FC = () => {
                 <Badge
                   key={uuidv4()}
                   onClick={() => handleStartChat(prompt)}
-                  className="text-xs font-light rounded-full whitespace-nowrap bg-primary-light text-primary w-fit p-2 hover:bg-primary-light/80 hover:shadow-lg cursor-pointer"
+                  className="text-xs font-light rounded-full whitespace-nowrap bg-primary-light text-primary w-fit p-2 hover:bg-primary-light/80 hover:shadow-lg cursor-pointer transition-colors"
                 >
                   {prompt}
                 </Badge>

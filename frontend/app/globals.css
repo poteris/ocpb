@@ -23,7 +23,7 @@
   --pcsprimary-04: 0 0% 27%;
   --pcsprimary-05: 0 0% 73%;
   --pcsprimary-06: 0 0% 96%;
-  --pcsprimary01-light: 187 100% 97%;
+  --pcsprimary01-light: 187, 100%, 97%;
 
   /* Secondary Colors */
   --pcssecondary-01: 24 98% 47%;
