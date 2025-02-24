@@ -162,7 +162,15 @@ const InitiateChatContent: React.FC = () => {
 
           <div className="mt-auto">
             <div className="relative">
-              <div className="flex flex-col sm:flex-row items-center gap-3 p-2">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (inputMessage.trim()) {
+                    handleStartChat();
+                  }
+                }}
+                className="flex flex-col sm:flex-row items-center gap-3 p-2"
+              >
                 <Input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
@@ -171,14 +179,14 @@ const InitiateChatContent: React.FC = () => {
                 />
 
                 <Button
-                  onClick={() => handleStartChat()}
+                  type="submit"
                   className="w-full sm:w-auto text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
-                  disabled={!inputMessage}>
-
+                  disabled={!inputMessage}
+                >
                   Send
                   <SendHorizontal className="w-4 h-4 mr-2" />
                 </Button>
-              </div>
+              </form>
             </div>
           </div>
 
