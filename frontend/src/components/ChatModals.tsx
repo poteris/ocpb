@@ -52,7 +52,7 @@ export const ChatModals: React.FC<ChatModalsProps> = ({
             <Button onClick={handleEndChat}>End Chat</Button>
           </div>
         }>
-        <p className="text-lg text-gray-700 dark:text-gray-300">Are you sure you want to end this chat?</p>
+        <p className="text-lg text-gray-700 ">Are you sure you want to end this chat?</p>
       </Modal>
 
       {showInfoPopover && scenarioInfo && (

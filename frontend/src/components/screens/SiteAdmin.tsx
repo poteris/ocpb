@@ -90,11 +90,11 @@ const renderVariableStatus = (content: string, variables: Array<{ name: string; 
           <div className={`${isLongVariable ? "flex-1 min-w-0" : ""}`}>
             <code
               className={`text-sm ${isLongVariable ? "break-all" : ""} ${
-                isUsed ? "text-green-700 dark:text-green-400" : "text-gray-500"
+                isUsed ? "text-green-700" : "text-gray-500"
               }`}>
               {variable}
             </code>
-            <span className={`text-sm text-gray-600 dark:text-gray-400 ${isLongVariable ? "block" : "ml-2"}`}>
+            <span className={`text-sm text-gray-600 ${isLongVariable ? "block" : "ml-2"}`}>
               - {description}
             </span>
           </div>
@@ -175,9 +175,9 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   // Modified render functions to work with single prompt
   const renderPromptSection = () => (
     <div className="space-y-4 mb-4">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900">
             {type === "system" && "System Prompt"}
             {type === "feedback" && "Feedback Prompt"}
             {type === "persona" && "Persona Generation Prompt"}
@@ -199,16 +199,16 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Variables/Guidelines */}
           <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-md p-4">
+            <div className="bg-green-50 rounded-md p-4">
               {type === "system" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-4">Available Variables</h3>
+                  <h3 className="text-sm font-medium text-green-700 mb-4">Available Variables</h3>
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Scenario Variables</h4>
+                    <h4 className="text-sm font-medium text-green-700 mb-2">Scenario Variables</h4>
                     {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.scenario)}
                   </div>
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Persona Variables</h4>
+                    <h4 className="text-sm font-medium text-green-700 mb-2">Persona Variables</h4>
                     {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.persona)}
                   </div>
                 </>
@@ -216,8 +216,8 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
 
               {type === "feedback" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Feedback Guidelines</h3>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <h3 className="text-sm font-medium text-green-700 mb-2">Feedback Guidelines</h3>
+                  <div className="text-sm text-gray-600">
                     <ul className="list-disc list-inside space-y-1">
                       <li>Be specific and actionable</li>
                       <li>Balance positive feedback with areas for improvement</li>
@@ -231,7 +231,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
 
               {type === "persona" && (
                 <>
-                  <h3 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Available Variables</h3>
+                  <h3 className="text-sm font-medium text-green-700 mb-2">Available Variables</h3>
                   {renderVariableStatus(promptContent, AVAILABLE_VARIABLES.generation)}
                 </>
               )}
@@ -241,7 +241,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           {/* Right Column: Prompt Input */}
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt Content</label>
+              <label className="block text-sm font-medium text-gray-700">Prompt Content</label>
             </div>
             <div className="flex-grow h-full min-h-[400px]">
               <Input
@@ -270,10 +270,10 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
 // Update the SiteAdmin component to use the modified PromptManager
 export const SiteAdmin: React.FC = () => {
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-white">
       <Header title="Site Admin - Prompts" variant="alt" />
       <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prompt Management</h1>
+        <h1 className="text-3xl font-bold mb-4 text-gray-900">Prompt Management</h1>
 
         <Tabs defaultValue="system" className="w-full">
           <TabsList>
