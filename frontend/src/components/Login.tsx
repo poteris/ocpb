@@ -5,29 +5,13 @@ import { supabase } from "@/lib/init"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
-import { v4 as uuidv4 } from 'uuid' // You'll need to install this package
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [csrfToken, setCsrfToken] = useState('')
   const [countdown, setCountdown] = useState(0)
   const [isLinkSent, setIsLinkSent] = useState(false)
-
-  // Generate and store CSRF token on component mount
-  useEffect(() => {
-    // Generate a random token
-    const newCsrfToken = uuidv4()
-    
-    // Store it in localStorage and state
-    localStorage.setItem('csrf_token', newCsrfToken)
-    setCsrfToken(newCsrfToken)
-    
-    // Optional: Set expiry for the token
-    const expiryTime = Date.now() + 1000 * 60 * 15 // 15 minutes
-    localStorage.setItem('csrf_token_expiry', expiryTime.toString())
-  }, [])
 
   useEffect(() => {
     if (countdown > 0) {
@@ -36,30 +20,20 @@ export default function Login() {
     } else if (countdown === 0 && isLinkSent) {
       setIsLinkSent(false)
     }
-  }, [countdown])
+  }, [countdown, isLinkSent])
 
   async function handleLogin(e: React.MouseEvent<HTMLButtonElement>) {
     try {
       e.preventDefault()
       
-      // Validate CSRF token exists
-      if (!csrfToken) {
-        setMessage('Security verification failed. Please refresh the page.')
-        return
-      }
-      
       setIsLoading(true)
       
-      // Include the CSRF token in the redirectTo URL as a query parameter
       const redirectUrl = new URL(`${window.location.origin}/admin`)
-      redirectUrl.searchParams.append('csrf_token', csrfToken)
       
-      // Send a magic link to the admin email
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
           emailRedirectTo: redirectUrl.toString(),
-          // You can also pass additional metadata if needed
           data: {
             csrf_protection: true
           }
@@ -90,7 +64,6 @@ export default function Login() {
           <CardDescription className="text-center">Choose your preferred login method</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Card content remains the same */}
           <div className="space-y-2">
             <Button variant="outline" className="w-full">
               <Image src="/google-logo.svg" alt="Google" width={20} height={20} />
@@ -131,7 +104,7 @@ export default function Login() {
           <Button 
             onClick={handleLogin} 
             className="w-full" 
-            disabled={isLoading || !csrfToken || countdown > 0} 
+            disabled={isLoading || countdown > 0} 
           >
             {isLoading ? (
               <>
@@ -145,8 +118,6 @@ export default function Login() {
             )}
           </Button>
           {message && <p className="text-center text-sm text-gray-500 mt-2">{message}</p>}
-          {/* Hidden input field for CSRF token */}
-          <input type="hidden" name="csrf_token" value={csrfToken} />
         </CardContent>
       </Card>
     </div>
