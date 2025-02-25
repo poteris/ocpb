@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/lib/init"
 import { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { z } from "zod"
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [isLinkSent, setIsLinkSent] = useState(false)
+  const emailSchema = z.string().email("Invalid email address")
 
   useEffect(() => {
     if (countdown > 0) {
@@ -25,6 +27,12 @@ export default function Login() {
     try {
       e.preventDefault()
       
+      const validation = emailSchema.safeParse(email)
+      if (!validation.success) {
+        setMessage(validation.error.errors[0].message)
+        return
+      }
+
       setIsLoading(true)
       
       const redirectUrl = new URL(`${window.location.origin}/admin`)
