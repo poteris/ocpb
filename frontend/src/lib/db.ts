@@ -117,12 +117,14 @@ export async function saveMessages(conversationId: string, userMessage: string, 
 }
 
 export async function upsertPersona(persona: Persona) {
-  const { error } = await supabase.from("personas").upsert(persona, { onConflict: "id" });
+  const { data, error } = await supabase.from("personas").upsert(persona, { onConflict: "id" }).select("id").single();
 
   if (error) {
     console.error("Error upserting persona:", error);
     throw error;
   }
+
+  return data.id;
 }
 
 export async function insertConversation(
