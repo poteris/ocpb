@@ -76,6 +76,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
     const [persona, setPersona] = useAtom(selectedPersonaAtom);
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRegeneratingPersona, setIsRegeneratingPersona] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -101,6 +102,20 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
         }
         fetchData();
     }, [scenarioId, setScenario, setPersona]);
+
+    const handleRegeneratePersona = async () => {
+        try {
+            setIsRegeneratingPersona(true);
+            const newPersona = await generatePersona();
+            if (newPersona) {
+                setPersona(newPersona);
+            }
+        } catch (error) {
+            console.error("Error regenerating persona:", error);
+        } finally {
+            setIsRegeneratingPersona(false);
+        }
+    };
 
     if (isLoading) {
         return <ScenarioSetupSkeleton />;
@@ -129,7 +144,11 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     <>
                         <ScenarioDescription selectedScenario={selectedScenario} />
                         <ScenarioObjectives selectedScenario={selectedScenario} />
-                        <PersonaDetailsComponent persona={persona} />
+                        <PersonaDetailsComponent 
+                            persona={persona} 
+                            onRegeneratePersona={handleRegeneratePersona}
+                            isRegenerating={isRegeneratingPersona}
+                        />
                     </>
                 )}
 
