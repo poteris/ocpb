@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { supabase } from "@/lib/init"
-import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 
@@ -61,31 +60,14 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
-          <CardDescription className="text-center">Choose your preferred login method</CardDescription>
+          <CardDescription className="text-center">Enter your email to receive a login link</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Button variant="outline" className="w-full">
-              <Image src="/google-logo.svg" alt="Google" width={20} height={20} />
-              Sign in with Google
-            </Button>
-            <Button variant="outline" className="w-full">
-              <Image src="/microsoft-logo.svg" alt="Microsoft" width={20} height={20} />
-              Sign in with Microsoft
-            </Button>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
+          
           <div className="space-y-2">
             <label
               htmlFor="email"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ml-2"
             >
               Email address
             </label>
