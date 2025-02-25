@@ -140,7 +140,7 @@ const InitiateChatContent: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
       <div className="flex-shrink-0 w-full" />
       <h3 className="text-center font-light text-sm mt-12">
         Choose a prompt below or start with your own message
@@ -225,7 +225,7 @@ const InitiateChatContent: React.FC = () => {
 
 const InitiateChatSkeleton: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
       <div className="flex-shrink-0">
         <Skeleton className="h-12 md:h-16 w-full" />
       </div>

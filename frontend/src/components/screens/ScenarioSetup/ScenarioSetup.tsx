@@ -24,7 +24,7 @@ const ScenarioSetupSkeleton = () => {
             {/* Skeleton Header */}
             <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
                 <ChevronLeft
-                    className="w-4 h-4 text-gray-900 dark:text-gray-100 hover:cursor-pointer"
+                    className="w-4 h-4 text-gray-900  hover:cursor-pointer"
                 />
                 <Skeleton className="h-8 w-48" />
             </div>
@@ -116,10 +116,10 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
             {/* Scenario Header */}
             <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
                 <ChevronLeft
-                    className="w-4 h-4 text-gray-900 dark:text-gray-100 hover:cursor-pointer"
+                    className="w-4 h-4 text-gray-900 hover:cursor-pointer"
                     onClick={() => router.back()}
                 />
-                <h1 className="text-xl md:text-2xl font-regular text-gray-900 dark:text-gray-100">
+                <h1 className="text-xl md:text-2xl font-regular text-gray-900 ">
                     {selectedScenario?.title}
                 </h1>
             </div>

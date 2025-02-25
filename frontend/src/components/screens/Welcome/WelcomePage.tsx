@@ -47,7 +47,7 @@ const Welcome = () => {
   }, []);
   
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
       {/* Main container*/}
       <div className="container mx-auto px-6 md:px-8 lg:px-12 py-6 md:py-12">
         <div className="flex flex-col lg:flex-row lg:gap-8">

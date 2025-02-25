@@ -4,13 +4,13 @@ import { X } from 'lucide-react';
 
 const FeedbackSkeleton = () => {
   return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-white  z-50 flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex justify-between items-center p-4 border-b border-gray-200 ">
         <Skeleton className="h-8 w-32" />
         <button
 
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          className="text-gray-500 hover:text-gray-700 ">
           <X size={24} />
         </button>
       </div>
@@ -66,7 +66,7 @@ const FeedbackSkeleton = () => {
       </div>
 
       {/* Footer */}
-      <div className="p-4 flex justify-between border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 flex justify-between border-t border-gray-200 ">
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-10 w-32" />
       </div>

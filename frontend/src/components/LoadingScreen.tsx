@@ -10,7 +10,7 @@ interface LoadingScreenProps {
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ title, message }) => {
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800"
+      className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-white to-gray-100"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -22,12 +22,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ title, message }) 
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="mb-6"
         >
-          <Loader size={48} className="text-pcsprimary-02 dark:text-pcsprimary-01" />
+          <Loader size={48} className="text-pcsprimary-02 " />
         </motion.div>
-        <h2 className="text-2xl font-bold mb-4 text-pcsprimary-04 dark:text-pcsprimary-02">
+        <h2 className="text-2xl font-bold mb-4 text-pcsprimary-04 ">
           {title}
         </h2>
-        <p className="text-pcsprimary-03 dark:text-pcsprimary-05">
+        <p className="text-pcsprimary-03 ">
           {message}
         </p>
       </div>

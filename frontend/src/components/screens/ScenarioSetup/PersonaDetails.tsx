@@ -15,16 +15,16 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({ perso
     <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md">
       <Accordion type="single" collapsible defaultValue="persona" className="mb-2 md:mb-6">
         <AccordionItem value="persona" className="border-none">
-          <AccordionTrigger className="font-normal text-gray-900 dark:text-gray-100 hover:no-underline text-[20px] md:text-[24px] px-3 md:px-4">
+          <AccordionTrigger className="font-normal text-gray-900 hover:no-underline text-[20px] md:text-[24px] px-3 md:px-4">
             Who you&apos;ll be talking to
           </AccordionTrigger>
           <AccordionContent className="p-2 md:p-4">
-            <div className="bg-card-alt dark:bg-gray-800">
-              <h3 className="font-semibold text-lg md:text-lg text-gray-900 dark:text-gray-100 mb-4 md:mb-6">
+            <div className="bg-card-alt">
+              <h3 className="font-semibold text-lg md:text-lg text-gray-900 mb-4 md:mb-6">
                 {persona.name}
               </h3>
 
-              <div className="space-y-4 md:space-y-6 text-gray-700 dark:text-gray-300 text-sm md:text-base">
+              <div className="space-y-4 md:space-y-6 text-gray-700 text-sm md:text-base">
                 <section>
                   <h4 className="font-semibold text-base md:text-lg mb-2">Personal Background</h4>
                   <p className="leading-relaxed">
