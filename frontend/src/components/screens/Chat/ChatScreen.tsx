@@ -181,7 +181,7 @@ const ChatScreen = () => {
               className={`grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
             >
               <span
-                className={`p-4 rounded-lg text-sm max-w-[50%] ${m.role === "user"
+                className={`p-4 rounded-lg text-sm w-fit max-w-[600px] break-words ${m.role === "user"
                   ? "bg-primary-light text-black"
                   : "bg-primary text-white"
                   }`}
