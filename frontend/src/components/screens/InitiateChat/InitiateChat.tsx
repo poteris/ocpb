@@ -61,6 +61,17 @@ async function getScenario(scenarioId: string) {
   }
 }
 
+
+async function getPersona(personaId: string) {
+  try {
+    const response = await axios.get<Persona>(`/api/persona/${personaId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching persona:", error);
+    throw error;
+  }
+}
+
 const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
@@ -68,21 +79,26 @@ const InitiateChatContent: React.FC = () => {
   const searchParams = useSearchParams();
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
-  const [persona] = useAtom(selectedPersonaAtom);
   const scenarioId = searchParams.get("scenarioId");
+  const personaId = searchParams.get("personaId");
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [persona, setPersona] = useState<Persona | null>(null);
+
+
 
   useEffect(() => {
     const loadScenario = async () => {
       try {
-        if (!scenarioId || !persona) {
+        if (!scenarioId || !personaId) {
           router.push('/');
           return;
         }
 
         const scenario = await getScenario(scenarioId);
+        const persona = await getPersona(personaId);
         setScenarioInfo(scenario);
+        setPersona(persona);
       } catch (error) {
         console.error('Error loading scenario:', error);
         router.push('/');
@@ -92,7 +108,7 @@ const InitiateChatContent: React.FC = () => {
     };
 
     loadScenario();
-  }, [persona, router, scenarioId]);
+  }, [personaId, router, scenarioId]);
 
   const startChat = async (message: string) => {
     if (isInitiatingChat || !persona) return;
