@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-// import { ChatInput } from "@/components/ChatInput/ChatInput"
 import { v4 as uuidv4 } from 'uuid';
 import { LogOut, SendHorizontal } from "lucide-react"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
