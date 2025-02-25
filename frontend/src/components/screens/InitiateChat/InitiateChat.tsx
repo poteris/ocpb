@@ -8,8 +8,6 @@ import { ChatModals } from "../../ChatModals";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { useAtom } from "jotai";
-import { selectedPersonaAtom } from "@/store";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Persona } from "@/types/persona";
@@ -94,7 +92,6 @@ const InitiateChatContent: React.FC = () => {
           router.push('/');
           return;
         }
-
         const scenario = await getScenario(scenarioId);
         const persona = await getPersona(personaId);
         setScenarioInfo(scenario);
