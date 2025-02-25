@@ -19,7 +19,7 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(({
             ref={ref}
             value={value}
             onChange={onChange}
-            className="w-full bg-slate-50 text-sm p-3 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0"
+            className="w-full bg-slate-50 text-[14px] p-4 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0 placeholder:text-xs placeholder:px-2"
             placeholder={placeholder}
             disabled={disabled}
         />
