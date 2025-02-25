@@ -70,12 +70,23 @@ async function generatePersona() {
     }
 }
 
+async function savePersona(persona: Persona) {
+    try {
+        const response = await axios.post<{ id: string }>("/api/persona/", persona);
+        return response.data.id;
+    } catch (error) {
+        console.error("Error saving persona:", error);
+        throw error;
+    }
+}
+
 export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProps) {
     const router = useRouter();
     const [, setScenario] = useAtom(scenarioAtom);
     const [persona, setPersona] = useAtom(selectedPersonaAtom);
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isStartingChat, setIsStartingChat] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -106,9 +117,19 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
         return <ScenarioSetupSkeleton />;
     }
 
-    function handleStartChat() {
-        if (!selectedScenario || !persona) return;
-        router.push(`/initiate-chat?scenarioId=${selectedScenario.id}&personaId=${persona.id}`);
+    async function handleStartChat() {
+        try {
+            if (!selectedScenario || !persona) return;
+            setIsStartingChat(true);
+            // save persona in db 
+            const id = await savePersona(persona);
+            router.push(`/initiate-chat?scenarioId=${selectedScenario.id}&personaId=${id}`);
+        } catch (error) {
+            console.error("Error starting chat:", error);
+            // You might want to import and use your toast component here to show error
+        } finally {
+            setIsStartingChat(false);
+        }
     }
 
     return (
@@ -138,9 +159,17 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     <div className="max-w-full md:max-w-[calc(100%-7rem)] mx-auto flex justify-end">
                         <Button
                             onClick={handleStartChat}
+                            disabled={isStartingChat}
                             className="w-full md:w-auto"
                         >
-                            Start Chat
+                            {isStartingChat ? (
+                                <>
+                                    <span className="animate-spin mr-2">⏳</span>
+                                    Starting...
+                                </>
+                            ) : (
+                                'Start Chat'
+                            )}
                         </Button>
                     </div>
                 </div>
