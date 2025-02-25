@@ -109,7 +109,6 @@ const config: Config = {
   	}
   },
   plugins: [tailwindcssAnimate],
-  darkMode: "media",
 };
 
 export default config;

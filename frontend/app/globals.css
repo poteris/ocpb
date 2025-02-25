@@ -70,7 +70,7 @@
     --radius: 0.5rem;
   }
 
-  .dark {
+  /* .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -95,16 +95,16 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-  }
+  } */
 }
 
 /* Dark Mode Colors */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
   }
-}
+} */
 
 /* ===================
    Base Styles
