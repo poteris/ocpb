@@ -108,7 +108,7 @@ const ChatScreen = () => {
       e.preventDefault();
     }
 
-    if (!inputMessage || !conversationData?.conversationId || isLoading) return;
+    if (!inputMessage.trim() || !conversationData?.conversationId || isLoading) return;
 
     try {
       setIsLoading(true);
@@ -213,7 +213,7 @@ const ChatScreen = () => {
             <Button
               type="submit"
               className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
-              disabled={isLoading || !inputMessage}
+              disabled={isLoading || !inputMessage.trim()}
             >
               Send
               <SendHorizontal className="w-4 h-4 ml-2" />
