@@ -9,6 +9,9 @@ const nextConfig = {
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
+  compiler: {
+    reactRemoveProperties: false
+  }
 };
 
 export default nextConfig;

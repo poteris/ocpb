@@ -155,7 +155,7 @@ const ChatScreen = () => {
       </div>
       <form onSubmit={handleSendMessage} className="flex space-x-2 rounded-lg " >
         <Input value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} placeholder="Type your message..." className="flex-grow" />
-        <Button type="submit" size="icon">
+        <Button type="submit" size="icon" data-testid="sendMessageButton">
           <SendIcon className="h-4 w-4" />
         </Button>
         <Button onClick={handleEndChat} variant="destructive">
