@@ -1,0 +1,54 @@
+
+ocpb.code-workspace
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+# just to be sure
+node_modules 
+
+# testing
+/coverage
+
+# next.js
+frontend/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# yarn
+yarn.lock
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# vscode
+.vscode
+setup.code-workspace
+node_modules
+
+# Playwright
+/frontend/test-results/
+/playwright-report/
+/frontend/blob-report/
+/frontend/playwright/.cache/

@@ -1,0 +1,28 @@
+{
+  "name": "ocpb",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf backend/supabase/.temp backend/supabase/.branches node_modules",
+    "start": "pnpm --filter frontend dev",
+    "build": "pnpm --filter frontend build",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "pnpm --filter backend db:start",
+    "dev": "pnpm dev:backend && pnpm dev:frontend",
+    "lint": "pnpm --filter frontend lint",
+    "db:start": "pnpm --filter backend db:start",
+    "db:pull": "pnpm --filter backend db:pull",
+    "db:reset": "pnpm --filter backend db:reset",
+    "db:push": "pnpm --filter backend db:push",
+    "db:status": "pnpm --filter backend db:status",
+    "db:stop": "pnpm --filter backend db:stop",
+    "db:reset:all": "pnpm --filter backend db:reset && pnpm --filter backend db:pull && pnpm --filter backend db:push"
+  },
+  "dependencies": {
+    "eslint-config-next": "^15.0.1",
+    "next": "^15.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
+}

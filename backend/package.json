@@ -1,0 +1,18 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "supabase": "^2.6.8"
+  },
+  "scripts": {
+    "db:start": "supabase start",
+    "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase db status",
+    "db:stop": "supabase stop",
+    "db:reset:all": "supabase stop && supabase start && supabase db reset && supabase db pull && supabase db push"
+  }
+}
