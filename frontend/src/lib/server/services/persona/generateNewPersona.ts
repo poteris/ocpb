@@ -1,8 +1,11 @@
+'use server'
 import OpenAI from "openai";
 import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
-import { openaiClient } from "@/lib/init";
+import { openaiClient } from "../../../../../app/api/init";
+
+
 
 export const generateNewPersona = async () => {
   const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: "user", content: genericNewPersonaPrompt }];

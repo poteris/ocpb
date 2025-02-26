@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { Persona } from "@/types/persona";
 
-import { generateNewPersona } from "@/lib/services/persona/generateNewPersona";
+import { generateNewPersona } from "@/lib/server/services/persona/generateNewPersona";
 
 // https://community.openai.com/t/testing-application-around-api-calls-with-jest-in-typescript/567809/20
 jest.mock("openai", () => {

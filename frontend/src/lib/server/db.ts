@@ -1,8 +1,9 @@
-import { supabase } from "./init";
+'use server'
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
+import {supabase} from "../../../app/api/init"
 
 export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
   const { data, error } = await supabase.from("scenarios").select(`
@@ -149,8 +150,9 @@ export async function insertConversation(
 }
 
 export async function getAllChatMessages(conversationId: string) {
+  
   try {
-    const { data: messagesData, error: messagesError } = await supabase
+      const { data: messagesData, error: messagesError } = await supabase
       .from("messages")
       .select("role, content")
       .eq("conversation_id", conversationId)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/init";
+import { supabase } from "../../init";
 interface Message {
     content: string;
     conversation_id: string;

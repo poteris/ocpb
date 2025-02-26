@@ -1,11 +1,13 @@
+'use server'
 import OpenAI from "openai";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
-import { openaiClient } from "@/lib/init";
 import Handlebars from "handlebars";
+import { openaiClient } from "../../../app/api/init";
 
 
 const llm_model = process.env.LLM_MODEL || "gpt-4o";
+
 
 
 export async function getAIResponse(messages: OpenAI.ChatCompletionMessageParam[]): Promise<string | null> {
@@ -47,7 +49,6 @@ export async function createBasePromptForMessage(
       busyness_level: persona.busyness_level,
       workplace: persona.workplace,
     });
-    console.log(finalPrompt);
     return finalPrompt;
   } catch (error) {
     console.error("Error in createBasePromptForMessage:", error);

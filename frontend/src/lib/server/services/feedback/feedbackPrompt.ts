@@ -1,5 +1,6 @@
+'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
-import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/db";
+import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/server/db";
 
 type FeedbackPrompt = {
   content: string;
@@ -30,7 +31,6 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
 
     const conversationHistory = messages.map((msg: MessageData) => `${msg.role}: ${msg.content}`).join("\n");
 
-    console.log(conversationHistory);
     const basePrompt = `
 ${feedbackPrompt.content}
 
@@ -47,7 +47,6 @@ ${conversationHistory}
 Provide feedback based on the conversation above.
     `;
 
-    console.log(basePrompt);
 
     return basePrompt.trim();
   } catch (error) {

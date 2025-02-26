@@ -1,5 +1,6 @@
+'use server'
 import { TrainingScenario } from "@/types/scenarios";
-import { getAllScenarios as getScenariosFromDb, getScenarioById as getScenarioByIdFromDb } from "@/lib/db";
+import { getAllScenarios as getScenariosFromDb, getScenarioById as getScenarioByIdFromDb } from "@/lib/server/db";
 import { Result, ok, err } from "@/types/result";
 
 export async function getScenarios(): Promise<Result<TrainingScenario[], string>> {

@@ -1,5 +1,6 @@
-import { getAIResponse, createBasePromptForMessage } from "@/lib/llm";
-import { getConversationContext, saveMessages, getAllChatMessages } from "@/lib/db";
+'use server'
+import { getAIResponse, createBasePromptForMessage } from "@/lib/server/llm";
+import { getConversationContext, saveMessages, getAllChatMessages } from "@/lib/server/db";
 import OpenAI from "openai";
 
 export async function sendMessage({
