@@ -5,9 +5,7 @@ import { generateFeedbackUsingLLM } from "@/lib/server/services/feedback/feedbac
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log("Generating feedback for conversation:", body.conversationId);
     const feedback = await generateFeedbackUsingLLM(body.conversationId);
-    console.log("Generated feedback:", feedback);
 
     const parsedFeedback = feedbackDataSchema.parse(feedback);
 

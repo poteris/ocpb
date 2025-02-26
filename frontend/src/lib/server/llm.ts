@@ -49,7 +49,6 @@ export async function createBasePromptForMessage(
       busyness_level: persona.busyness_level,
       workplace: persona.workplace,
     });
-    console.log(finalPrompt);
     return finalPrompt;
   } catch (error) {
     console.error("Error in createBasePromptForMessage:", error);
