@@ -16,6 +16,7 @@ export const generateNewPersona = async () => {
     tools: openAifunctions,
     store: true,
     tool_choice: { type: "function", function: { name: "generate_persona" } },
+    temperature: 1.5,
   });
 
   const toolCall = completion.choices[0]?.message?.tool_calls?.[0];
