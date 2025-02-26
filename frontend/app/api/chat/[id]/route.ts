@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/server/initSupabase";
-const supabase = await getSupabaseClient();
+import { supabase } from "../../init";
 interface Message {
     content: string;
     conversation_id: string;

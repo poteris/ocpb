@@ -3,8 +3,8 @@ import { PromptData, PromptDataSchema } from "@/types/prompt";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Result, err, ok } from "@/types/result";
-import { getSupabaseClient } from "@/lib/server/initSupabase";
-const supabase = await getSupabaseClient();
+import { supabase } from "../../init";
+
 
 async function getFeedbackPrompts(): Promise<Result<PromptData[], string>> {
   const { data, error } = await supabase.from("feedback_prompts").select("*").order("created_at", { ascending: true });

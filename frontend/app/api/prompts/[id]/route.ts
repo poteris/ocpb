@@ -1,11 +1,8 @@
-import { getSupabaseClient } from "@/lib/server/initSupabase";
-
-
 import { NextResponse, NextRequest } from "next/server";
 import { Result, Option, err, ok } from "@/types/result";
 import { z } from "zod";
+import { supabase } from "../../init";
 
-const supabase = await getSupabaseClient();
 async function updatePrompt(
   id: number,
   type: "system" | "feedback" | "persona",

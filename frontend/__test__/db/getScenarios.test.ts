@@ -1,11 +1,9 @@
-import { getSupabaseClient } from "@/lib/server/initSupabase";
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
+import { supabase } from "../../app/api/init";
 
-const supabase = await getSupabaseClient();
-
-jest.mock("../../src/lib/supabaseClient");
+jest.mock("../../app/api/init");
 
 describe("getScenarios", () => {
   beforeEach(() => {

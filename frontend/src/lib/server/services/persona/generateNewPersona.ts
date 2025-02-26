@@ -3,9 +3,8 @@ import OpenAI from "openai";
 import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
-import { getOpenAIClient } from "@/lib/server/initOpenAi";
+import { openaiClient } from "../../../../../app/api/init";
 
-const openaiClient = await getOpenAIClient();
 
 
 export const generateNewPersona = async () => {
