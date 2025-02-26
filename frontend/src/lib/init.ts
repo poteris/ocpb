@@ -10,10 +10,12 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+let openaiClient: OpenAI;
 
-
-const openaiClient = new OpenAI({
+if (typeof window === 'undefined') {
+  openaiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
+}
 
 export { openaiClient };
