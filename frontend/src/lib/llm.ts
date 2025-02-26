@@ -2,11 +2,13 @@
 import OpenAI from "openai";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
-import { openaiClient } from "@/lib/init";
+import { getOpenAIClient } from "@/lib/initOpenAi";
 import Handlebars from "handlebars";
 
 
 const llm_model = process.env.LLM_MODEL || "gpt-4o";
+
+const openaiClient = await getOpenAIClient();
 
 
 export async function getAIResponse(messages: OpenAI.ChatCompletionMessageParam[]): Promise<string | null> {

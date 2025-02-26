@@ -1,11 +1,11 @@
 'use server'
-import { supabase } from "./init";
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
-
+import { getSupabaseClient } from "./initSupabase";
 export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase.from("scenarios").select(`
     id,
     title,
@@ -34,6 +34,7 @@ export async function getAllScenarios(): Promise<Result<TrainingScenario[], stri
 }
 
 export async function getScenario(scenarioId: string): Promise<TrainingScenario> {
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase
     .from("scenarios")
     .select(
@@ -57,6 +58,7 @@ export async function getScenario(scenarioId: string): Promise<TrainingScenario>
 }
 
 export async function retrievePersona(personaId: string) {
+  const supabase = await getSupabaseClient();
   const { data: personas, error } = await supabase.from("personas").select("*").eq("id", personaId).single();
 
   if (error) {
@@ -68,6 +70,7 @@ export async function retrievePersona(personaId: string) {
 }
 
 export async function getSystemPrompt(promptId: number): Promise<string> {
+  const supabase = await getSupabaseClient();
   try {
     const { data: promptData, error: promptError } = await supabase
       .from("system_prompts")
@@ -89,6 +92,7 @@ export async function getSystemPrompt(promptId: number): Promise<string> {
 }
 
 export async function getConversationContext(conversationId: string) {
+    const supabase = await getSupabaseClient();
   const { data, error } = await supabase
     .from("conversations")
     .select("scenario_id, persona_id, system_prompt_id")
@@ -109,6 +113,7 @@ export async function getConversationContext(conversationId: string) {
 }
 
 export async function saveMessages(conversationId: string, userMessage: string, aiResponse: string) {
+  const supabase = await getSupabaseClient();
   const { error } = await supabase.from("messages").insert([
     { conversation_id: conversationId, role: "user", content: userMessage },
     { conversation_id: conversationId, role: "assistant", content: aiResponse },
@@ -118,6 +123,7 @@ export async function saveMessages(conversationId: string, userMessage: string, 
 }
 
 export async function upsertPersona(persona: Persona) {
+  const supabase = await getSupabaseClient();
   const { error } = await supabase.from("personas").upsert(persona, { onConflict: "id" });
 
   if (error) {
@@ -134,6 +140,7 @@ export async function insertConversation(
   systemPromptId: number,
   feedback_prompt_id = 1
 ) {
+  const supabase = await getSupabaseClient();
   const { error } = await supabase.from("conversations").insert({
     conversation_id: conversationId,
     user_id: userId,
@@ -150,8 +157,10 @@ export async function insertConversation(
 }
 
 export async function getAllChatMessages(conversationId: string) {
+  
   try {
-    const { data: messagesData, error: messagesError } = await supabase
+    const supabase = await getSupabaseClient();
+      const { data: messagesData, error: messagesError } = await supabase
       .from("messages")
       .select("role, content")
       .eq("conversation_id", conversationId)
@@ -169,6 +178,7 @@ export async function getAllChatMessages(conversationId: string) {
 }
 
 export async function getConversationById(conversationId: string) {
+  const supabase = await getSupabaseClient();
   return await supabase
     .from("conversations")
     .select(
@@ -184,10 +194,12 @@ export async function getConversationById(conversationId: string) {
 }
 
 export async function getFeedbackPrompt() {
+  const supabase = await getSupabaseClient();
   return await supabase.from("feedback_prompts").select("content").single();
 }
 
 export async function getScenarioById(scenarioId: string): Promise<Result<TrainingScenario, string>> {
+  const supabase = await getSupabaseClient();
   const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
 
   if (error) {

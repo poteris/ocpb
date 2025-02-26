@@ -1,8 +1,10 @@
 'use server'
 import OpenAI from "openai";
 import { getFeedbackPrompt } from "../../../../src/lib/services/feedback/feedbackPrompt";
-import { openaiClient } from "@/lib/init";
+import { getOpenAIClient } from "@/lib/initOpenAi";
 import { tools } from "@/utils/openaiTools";
+
+const openaiClient = await getOpenAIClient();
 
 export async function generateFeedbackUsingLLM(conversationId: string) {
   const feedbackPrompt = await getFeedbackPrompt(conversationId);

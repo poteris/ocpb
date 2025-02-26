@@ -1,7 +1,9 @@
-import { supabase } from "@/lib/init";
+import { getSupabaseClient } from "@/lib/initSupabase";
 import { getScenarios } from "@/lib/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
+
+const supabase = await getSupabaseClient();
 
 jest.mock("../../src/lib/supabaseClient");
 

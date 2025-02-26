@@ -3,9 +3,13 @@ import OpenAI from "openai";
 import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
-import { openaiClient } from "@/lib/init";
+import { getOpenAIClient } from "@/lib/initOpenAi";
+
+const openaiClient = await getOpenAIClient();
+
 
 export const generateNewPersona = async () => {
+  console.log("generateNewPersona");
   const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: "user", content: genericNewPersonaPrompt }];
   const llm = process.env.LLM_MODEL ?? "gpt-4o";
   const completion = await openaiClient.chat.completions.create({
@@ -16,6 +20,7 @@ export const generateNewPersona = async () => {
     tool_choice: { type: "function", function: { name: "generate_persona" } },
   });
 
+  console.log("completion", completion);
   const toolCall = completion.choices[0]?.message?.tool_calls?.[0];
   if (!toolCall || toolCall.function.name !== "generate_persona") {
     throw new Error("Function call missing or incorrect.");
@@ -23,6 +28,7 @@ export const generateNewPersona = async () => {
 
   const generatedPersona = JSON.parse(toolCall.function.arguments);
   generatedPersona.id = uuidv4();
+  console.log("generatedPersona", generatedPersona);
 
   return generatedPersona;
 };

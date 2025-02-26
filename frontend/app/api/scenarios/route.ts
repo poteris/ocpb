@@ -1,8 +1,9 @@
 import { getScenarios } from "@/lib/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
-import { supabase } from "@/lib/init";
 import { Result, err, ok } from "@/types/result";
+import { getSupabaseClient } from "@/lib/initSupabase";
+
 
 export async function GET() {
   const result = await getScenarios();
@@ -13,6 +14,7 @@ export async function GET() {
 }
 
 async function createScenarioWithObjectives(scenario: TrainingScenario): Promise<Result<TrainingScenario, string>> {
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase
     .from("scenarios")
     .insert({

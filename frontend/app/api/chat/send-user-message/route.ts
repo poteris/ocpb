@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/init";
+import { getSupabaseClient } from "@/lib/initSupabase";
+const supabase = await getSupabaseClient();
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 import {  getAIResponse, createBasePromptForMessage } from "@/lib/llm";
