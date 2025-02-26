@@ -1,6 +1,6 @@
 import { PromptData, PromptDataSchema } from "@/types/prompt";
 import { Result, err, ok } from "@/types/result";
-import { getSupabaseClient } from "@/lib/initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
 
 import { z } from "zod";
 import { NextResponse } from "next/server";

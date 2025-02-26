@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
-import { getOpenAIClient } from "@/lib/initOpenAi";
+import { getOpenAIClient } from "@/lib/server/initOpenAi";
 
 const openaiClient = await getOpenAIClient();
 

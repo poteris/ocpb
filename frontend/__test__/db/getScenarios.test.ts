@@ -1,5 +1,5 @@
-import { getSupabaseClient } from "@/lib/initSupabase";
-import { getScenarios } from "@/lib/services/scenarios/getScenarios";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
+import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import "@testing-library/jest-dom";
 

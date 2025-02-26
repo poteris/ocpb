@@ -1,6 +1,6 @@
 'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
-import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/db";
+import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/server/db";
 
 type FeedbackPrompt = {
   content: string;

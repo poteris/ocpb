@@ -1,8 +1,8 @@
-import { getScenarios } from "@/lib/services/scenarios/getScenarios";
+import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
 import { Result, err, ok } from "@/types/result";
-import { getSupabaseClient } from "@/lib/initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
 
 
 export async function GET() {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { feedbackDataSchema } from "@/types/feedback";
-import { generateFeedbackUsingLLM } from "@/lib/services/feedback/feedbackCompletion";
+import { generateFeedbackUsingLLM } from "@/lib/server/services/feedback/feedbackCompletion";
 
 export async function POST(req: NextRequest) {
   try {

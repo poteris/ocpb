@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
 const supabase = await getSupabaseClient();
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
-import {  getAIResponse, createBasePromptForMessage } from "@/lib/llm";
-import { getConversationContext, saveMessages } from "@/lib/db";
+import {  getAIResponse, createBasePromptForMessage } from "@/lib/server/llm";
+import { getConversationContext, saveMessages } from "@/lib/server/db";
 import OpenAI from "openai";
 
 const userMessageResponseSchema = z.object({

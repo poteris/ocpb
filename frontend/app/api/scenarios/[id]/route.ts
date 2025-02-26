@@ -1,7 +1,7 @@
-import { getSupabaseClient } from "@/lib/initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
 import { NextRequest, NextResponse } from "next/server";
 import { Result, err, ok, Option } from "@/types/result";
-import { getScenarioById } from "@/lib/services/scenarios/getScenarios";
+import { getScenarioById } from "@/lib/server/db";
 async function updateScenarioObjectives(
   scenarioId: string,
   objectives: string[],

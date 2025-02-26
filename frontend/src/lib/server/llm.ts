@@ -2,7 +2,7 @@
 import OpenAI from "openai";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
-import { getOpenAIClient } from "@/lib/initOpenAi";
+import { getOpenAIClient } from "@/lib/server/initOpenAi";
 import Handlebars from "handlebars";
 
 

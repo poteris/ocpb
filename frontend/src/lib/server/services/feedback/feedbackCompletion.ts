@@ -1,7 +1,7 @@
 'use server'
 import OpenAI from "openai";
-import { getFeedbackPrompt } from "../../../../src/lib/services/feedback/feedbackPrompt";
-import { getOpenAIClient } from "@/lib/initOpenAi";
+import { getFeedbackPrompt } from "@/lib/server/services/feedback/feedbackPrompt";
+import { getOpenAIClient } from "@/lib/server/initOpenAi";
 import { tools } from "@/utils/openaiTools";
 
 const openaiClient = await getOpenAIClient();

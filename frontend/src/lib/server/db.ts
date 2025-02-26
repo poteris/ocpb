@@ -3,7 +3,8 @@ import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
-import { getSupabaseClient } from "./initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
+
 export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
   const supabase = await getSupabaseClient();
   const { data, error } = await supabase.from("scenarios").select(`

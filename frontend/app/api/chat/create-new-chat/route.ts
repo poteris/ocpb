@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { personaSchema } from "@/types/persona";
-import { createConversation } from "../../../../src/lib/services/chat/createNewChat";
+import { createConversation } from "@/lib/server/services/chat/createNewChat";
 import { z } from "zod";
 
 const createNewChatRequestSchema = z.object({

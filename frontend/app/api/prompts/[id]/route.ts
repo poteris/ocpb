@@ -1,4 +1,4 @@
-import { getSupabaseClient } from "@/lib/initSupabase";
+import { getSupabaseClient } from "@/lib/server/initSupabase";
 
 
 import { NextResponse, NextRequest } from "next/server";

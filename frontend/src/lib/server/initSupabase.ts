@@ -13,14 +13,3 @@ export async function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-export async function getUsers() {
-  const supabase = await getSupabaseClient();
-  
-  const { data, error } = await supabase.from('users').select('*');
-  
-  if (error) {
-    throw new Error(`Error fetching users: ${error.message}`);
-  }
-  
-  return data;
-}
