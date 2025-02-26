@@ -69,7 +69,7 @@ const InitiateChatContent: React.FC = () => {
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
   const [persona] = useAtom(selectedPersonaAtom);
-  const scenarioId = searchParams.get("scenarioId");
+  const scenarioId = searchParams ? searchParams.get('scenarioId') : null;
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

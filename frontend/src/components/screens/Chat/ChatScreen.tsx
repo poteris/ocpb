@@ -39,7 +39,7 @@ const ChatScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
-  const conversationId = searchParams.get("conversationId");
+  const conversationId = searchParams ? searchParams.get('conversationId') : null;
   const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
 
   const router = useRouter()

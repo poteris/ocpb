@@ -43,6 +43,7 @@ jobs:
         echo "E2E_TEST_BASE_URL is $E2E_TEST_BASE_URL"
         echo "SUPABASE_URL is $SUPABASE_URL"
     - name: Start Next.js app
+      working-directory: ./frontend
       run: |
         pnpm run build && pnpm start & # Run build and start Next.js app in the background if build succeeds
         NEXTJS_PID=$!  # Capture the PID of the Next.js process
