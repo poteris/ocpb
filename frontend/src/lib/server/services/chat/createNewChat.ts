@@ -53,31 +53,32 @@ export async function createConversation({
 
     
     let aiResponse = null;
-    const messageToSend = initialMessage || "Hi";
-    try {
-      // Get the conversation context first
-      const { scenario } = await getConversationContext(conversationId);
+    if (initialMessage) {
+      try {
+        // Get the conversation context first
+        const { scenario } = await getConversationContext(conversationId);
 
-      // Get and fill the system prompt template
-      const systemPromptTemplate = await getSystemPrompt(systemPromptId || 1);
-      const basePrompt = await createBasePromptForMessage(
-        persona,
-        scenario,
-        systemPromptTemplate
-      );
+        // Get and fill the system prompt template
+        const systemPromptTemplate = await getSystemPrompt(systemPromptId || 1);
+        const basePrompt = await createBasePromptForMessage(
+          persona,
+          scenario,
+          systemPromptTemplate
+        );
     
 
-      const messages: OpenAI.ChatCompletionMessageParam[] = [
-        { role: "system", content: basePrompt },
-        { role: "user", content: messageToSend},
-      ]
+        const messages: OpenAI.ChatCompletionMessageParam[] = [
+          { role: "system", content: basePrompt },
+          { role: "user", content: initialMessage},
+        ]
 
-      aiResponse = await getAIResponse(messages);
-      await saveMessages(conversationId, messageToSend, aiResponse || "");
-    } catch (error) {
-      console.error("Error processing initial message:", error);
-      aiResponse =
-        "I apologise, but I'm having trouble responding right now. Could you please try again?";
+        aiResponse = await getAIResponse(messages);
+        await saveMessages(conversationId, initialMessage, aiResponse || "");
+      } catch (error) {
+        console.error("Error processing initial message:", error);
+        aiResponse =
+          "I apologise, but I'm having trouble responding right now. Could you please try again?";
+      }
     }
 
     return { id: conversationId, aiResponse };
