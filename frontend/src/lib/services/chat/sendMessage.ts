@@ -1,3 +1,4 @@
+'use server'
 import { getAIResponse, createBasePromptForMessage } from "@/lib/llm";
 import { getConversationContext, saveMessages, getAllChatMessages } from "@/lib/db";
 import OpenAI from "openai";

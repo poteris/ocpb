@@ -1,3 +1,4 @@
+'use server'
 import { supabase } from "./init";
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";

@@ -1,3 +1,4 @@
+'use server'
 import { Persona } from "@/types/persona";
 import { getConversationContext, getSystemPrompt, saveMessages, upsertPersona, insertConversation} from "@/lib/db";
 import { createBasePromptForMessage, getAIResponse} from "@/lib/llm";

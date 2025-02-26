@@ -1,3 +1,4 @@
+'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
 import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/db";
 

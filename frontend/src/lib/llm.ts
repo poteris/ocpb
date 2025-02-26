@@ -1,3 +1,4 @@
+'use server'
 import OpenAI from "openai";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";

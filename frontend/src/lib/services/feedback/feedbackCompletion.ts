@@ -1,3 +1,4 @@
+'use server'
 import OpenAI from "openai";
 import { getFeedbackPrompt } from "../../../../src/lib/services/feedback/feedbackPrompt";
 import { openaiClient } from "@/lib/init";
