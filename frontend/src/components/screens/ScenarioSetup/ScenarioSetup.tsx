@@ -13,10 +13,15 @@ import ScenarioObjectives from "./ScenarioObjectives";
 import ScenarioDescription from "./ScenarioDescription";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonBlock } from "./SkeletonBlock";
+import { v4 as uuidv4 } from "uuid";
+import { initialiseChat } from "@/lib/server/services/chat/createNewChat";
+
+
 
 interface ScenarioSetupComponentProps {
     readonly scenarioId: string;
 }
+
 
 const ScenarioSetupSkeleton = () => {
     return (
@@ -70,6 +75,17 @@ async function generatePersona() {
     }
 }
 
+
+async function startChat( initialMessage: string, scenarioId: string, persona: Persona ) {
+    const response = await axios.post<{ id: string }>("/api/chat/initialise-chat", {
+        userId: uuidv4(),
+        scenarioId,
+        persona,
+      });
+      console.log("response", response.data.id);
+      return response.data.id;
+}
+
 export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProps) {
     const router = useRouter();
     const [, setScenario] = useAtom(scenarioAtom);
@@ -106,9 +122,11 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
         return <ScenarioSetupSkeleton />;
     }
 
-    function handleStartChat() {
+    async function handleStartChat() {
         if (!selectedScenario || !persona) return;
-        router.push(`/initiate-chat?scenarioId=${selectedScenario.id}&personaId=${persona.id}`);
+        const { id: conversationId } = await startChat(uuidv4(), scenarioId, persona);
+        // navigate to chat screen
+        router.push(`/chat/${conversationId}`);
     }
 
     return (
