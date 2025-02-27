@@ -3,10 +3,17 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { supabase } from "@/lib/init"
 import { useState, useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { z } from "zod"
+import axios from "axios"
+
+async function signInWithOtp(email: string) {
+  const redirectUrl = new URL(`${window.location.origin}/admin`)
+  const response = await axios.post('/api/signin', { email, redirectUrl: redirectUrl.toString() })
+  return response.data
+}
+
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -36,18 +43,8 @@ export default function Login() {
       }
 
       setIsLoading(true)
-      
-      const redirectUrl = new URL(`${window.location.origin}/admin`)
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email,
-        options: {
-          emailRedirectTo: redirectUrl.toString(),
-          data: {
-            csrf_protection: true
-          }
-        }
-      })
+      const { error } = await signInWithOtp(email)
+
       
       if (error) {
         setMessage('Failed to send login link')
