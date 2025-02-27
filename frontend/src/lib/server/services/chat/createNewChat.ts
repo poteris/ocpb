@@ -6,6 +6,28 @@ import OpenAI from "openai";
 import { v4 as uuidv4 } from "uuid";
 
 
+export async function initialiseChat(
+  userId: string,
+  scenarioId: string,
+  persona: Persona,
+  systemPromptId = 1) {
+  try {
+    if (!userId || !scenarioId || !persona) {
+      throw new Error("Missing userId, scenarioId, or persona");
+    }
+
+    await upsertPersona(persona);
+
+    const conversationId = await insertConversation(uuidv4(), userId, scenarioId, persona.id, systemPromptId);
+
+    return { id: conversationId };
+  } catch (error) {
+    console.error("Error in initialiseChat:", error);
+    throw new Error("Failed to initialise chat");
+  }
+}
+
+
 
 interface CreateNewChatRequest {
   userId: string;
@@ -14,6 +36,8 @@ interface CreateNewChatRequest {
   persona: Persona;
   systemPromptId?: number;
 }
+
+
 
 export async function createConversation({
   userId,
