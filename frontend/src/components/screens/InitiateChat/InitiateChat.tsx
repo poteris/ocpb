@@ -21,7 +21,6 @@ const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
   "Hey, how are you doing?",
   "Hey mate, sorry to bother you - how's it going?",
-  "What are you up to?",
 ];
 
 interface CreateNewChatRequest {
