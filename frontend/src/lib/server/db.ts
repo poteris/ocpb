@@ -133,20 +133,29 @@ export async function insertConversation(
   personaId: string,
   systemPromptId: number,
   feedback_prompt_id = 1
-) {
-  const { error } = await supabase.from("conversations").insert({
+): Promise<string> {
+  const {data,  error } = await supabase.from("conversations").insert({
     conversation_id: conversationId,
     user_id: userId,
     scenario_id: scenarioId,
     persona_id: personaId,
     feedback_prompt_id: feedback_prompt_id,
     system_prompt_id: systemPromptId,
-  });
+  }).select("id").single();
 
   if (error) {
     console.error("Error inserting conversation:", error);
     throw error;
   }
+
+  const parsedId = z.string().safeParse(data.id);
+
+  if (!parsedId.success) {
+    console.error("Error parsing conversation id:", parsedId.error);
+    throw new Error("Error parsing conversation id");
+  }
+
+  return parsedId.data;
 }
 
 export async function getAllChatMessages(conversationId: string) {
