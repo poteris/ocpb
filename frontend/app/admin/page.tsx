@@ -3,9 +3,15 @@
 import { useEffect, useState } from 'react'
 import { SiteAdmin } from '@/components/screens/SiteAdmin'
 import Login from '@/components/Login'
-import { supabase } from '@/lib/init'
 import { Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import axios from 'axios'
+
+
+async function getSession() {
+  const response = await axios.get('/api/session')
+  return response.data
+}
 
 export default function SiteAdminPage() {
   const [session, setSession] = useState<Session | null>(null)
@@ -19,7 +25,7 @@ export default function SiteAdminPage() {
       setLoading(true)
       
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const session = await getSession()
         
         if (session) {
           setSession(session)
@@ -37,13 +43,13 @@ export default function SiteAdminPage() {
 
     verifySession()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
+    // const {
+    //   data: { subscription },
+    //   } = supabase.auth.onAuthStateChange((_event, session) => {
+    //   setSession(session)
+    // })
 
-    return () => subscription.unsubscribe()
+    // return () => subscription.unsubscribe()
   }, [router])
 
   if (loading) {
