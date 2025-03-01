@@ -7,21 +7,26 @@ import { useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
 import Image from "next/image";
 
-interface Message {
-    text: string;
-    sender: string;
-    timestamp: Date;
-}
-
-export interface ConversationData {
-    messages: Message[];
+export interface Message {
+    content: string;
+    conversation_id: string;
+    created_at: string;
+    id: string;
+    role: string;
+  }
+  
+  
+  export interface ConversationData {
+    messages: Message[]
+    id: string;
     conversationId: string;
-    scenarioId: string;
     userId: string;
+    scenarioId: string;
     personaId: string;
     systemPromptId: string;
     feedbackPromptId: string;
-}
+  }
+
 
 async function getConversationData(conversationId: string) {
     try {
@@ -35,16 +40,15 @@ async function getConversationData(conversationId: string) {
 
 export default function ChatPage() {
     const { id } = useParams();
+    const [conversationData, setConversationData] = useState<ConversationData | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
     
-    const [conversations, setConversations] = useState<ConversationData[]>([]);
-    const [loading, setLoading] = useState<boolean>(true); // Add a loading state
-
     useEffect(() => {
         const fetchConversations = async () => {
             if (typeof id === 'string') {
                 try {
-                    const conversationData = await getConversationData(id);
-                    setConversations([conversationData]);
+                    const data = await getConversationData(id);
+                    setConversationData(data);
                 } catch (error) {
                     console.error("Failed to fetch conversation data", error);
                 } finally {
@@ -60,20 +64,24 @@ export default function ChatPage() {
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen">
-        <Image
+            <Image
                 width={200}
                 height={200}
                 alt="Union Training Bot"
                 src="/images/chat-bot.svg"
                 className="mb-6 md:mb-8 w-[150px] md:w-[250px]"
                 priority
-              />
-                      </div>;
+            />
+        </div>;
     }
 
     return (
         <div>
-            {conversations.length > 0 ? <StartChat conversationId={id as string} /> : <ChatComponent/>}  
+            {conversationData ? (
+                <StartChat chatData={conversationData} />
+            ) : (
+               <ChatComponent conversationData={conversationData}/>
+            )}
         </div>
     );
 }   

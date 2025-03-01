@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -11,28 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { v4 as uuidv4 } from 'uuid';
 import { LogOut, SendHorizontal } from "lucide-react"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
-
-export interface ConversationData {
-  messages: Message[];
-  conversationId: string;
-  scenarioId: string;
-  userId: string;
-  personaId: string;
-  systemPromptId: string;
-  feedbackPromptId: string;
-}
-
-interface Message {
-  content: string;
-  conversation_id: string;
-  created_at: string;
-  id: string;
-  role: string;
-}
-
+import { ConversationData, Message } from "./StartChat";
 
 async function getConversationData(conversationId: string) {
   try {
@@ -54,44 +35,23 @@ async function sendUserMessage(conversationId: string, content: string, scenario
     return response.data;
   } catch (error) {
     console.error('Error sending message:', error);
-    return null;
+    throw error; // Propagate error to be handled by the caller
   }
 }
 
-const ChatComponent = () => {
-  const [conversationData, setConversationData] = useState<ConversationData | null>(null);
+interface ChatComponentProps {
+  conversationData: ConversationData;
+}
+
+const ChatComponent = ({ conversationData: initialConversationData }: ChatComponentProps) => {
+  const [conversationData, setConversationData] = useState<ConversationData>(initialConversationData);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const searchParams = useSearchParams();
-  const conversationId = searchParams.get("conversationId");
-  const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
+  const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const router = useRouter()
-
-
-  // Fetch initial chat data
-  useEffect(() => {
-
-    const fetchChat = async () => {
-      if (!conversationId) return;
-
-      try {
-        setIsLoading(true);
-        const response = await getConversationData(conversationId);
-        setConversationData(response);
-      } catch (error) {
-        console.error('Error fetching chat:', error);
-
-      } finally {
-        setIsLoading(false);
-     
-      }
-    };
-
-    fetchChat();
-  }, [conversationId]);
+  const router = useRouter();
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -112,63 +72,46 @@ const ChatComponent = () => {
 
     try {
       setIsLoading(true);
-
-      // Create user message
-      const userMessage: Message = {
-        id: uuidv4(), // NOTE: this should be set by the db
-        content: inputMessage,
-        conversation_id: conversationData.conversationId,
-        created_at: new Date().toISOString(), // NOTE: this should be set by the db
-        role: 'user'
-      };
-
-      // Update state with user message
-      setConversationData(prev => ({
-        ...prev!,
-        messages: [...prev!.messages, userMessage]
-      }));
-      setInputMessage('');
-
-      const response = await sendUserMessage(conversationData.conversationId, inputMessage, conversationData.scenarioId);
-
-      if (response) {
-        // Fetch the updated conversation data after bot response
-        const updatedConversation = await getConversationData(conversationData.conversationId);
+      
+      // Send message to the API first
+      await sendUserMessage(
+        conversationData.conversationId, 
+        inputMessage, 
+        conversationData.scenarioId
+      );
+      
+      // Once successfully sent, fetch the updated conversation
+      const updatedConversation = await getConversationData(conversationData.conversationId);
+      
+      if (updatedConversation) {
         setConversationData(updatedConversation);
       }
-
+      
+      setInputMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Show error to the user (could implement a toast notification here)
+    } finally {
       setIsLoading(false);
       // Refocus input after sending message
       if (inputRef.current) {
         inputRef.current.focus();
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      // Remove the failed message from the state
-      setConversationData(prev => ({
-        ...prev!,
-        messages: prev!.messages.slice(0, -1)
-      }));
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleEndChat = () => {
-    setIsEndChatModalOpen(true)
+    setIsEndChatModalOpen(true);
   }
 
   const handleCloseModal = () => {
-    setIsEndChatModalOpen(false)
+    setIsEndChatModalOpen(false);
   }
 
   const handleConfirmEndChat = () => {
-    setIsEndChatModalOpen(false)
-    router.push(`/feedback?conversationId=${conversationData?.conversationId}`)
+    setIsEndChatModalOpen(false);
+    router.push(`/feedback?conversationId=${conversationData?.conversationId}`);
   }
-
-
-
 
   return (
     <div className="grid min-h-screen grid-rows-[1fr_auto] p-4 md:p-6">

@@ -1,19 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ChatModals } from "@/components/ChatModals";
-import { Input } from "@/components/ui/input";
-import { LoadingScreen } from "@/components/LoadingScreen";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
-import { Badge } from "@/components/ui/badge";
-import { SendHorizontal } from "lucide-react";
-
+import ChatComponent from "./ChatComponent";
+import InitChat from "./InitChat";
+import { Message, ConversationData } from "./page";
 const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
   "Hey, how are you doing?",
@@ -33,17 +28,9 @@ interface ConversationResponse {
   aiResponse: string;
 }
 
-
-interface ConversationData {
-  id: string;
-  conversationId: string;
-  userId: string;
-  scenarioId: string;
-  personaId: string;
-  systemPromptId: string;
-  feedbackPromptId: string;
+interface StartChatProps {
+  chatData: ConversationData;
 }
-
 
 export async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
@@ -90,86 +77,86 @@ async function getConversation(conversationId: string) {
   }
 }
 
-interface StartChatProps {
-  conversationId: string;
+
+async function sendUserMessage(conversationId: string, content: string, scenarioId: string) {
+  try {
+    const response = await axios.post<Message>('/api/chat/send-user-message', {
+      conversationId,
+      content,
+      scenario_id: scenarioId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return null;
+  }
 }
 
-const StartChat: React.FC<StartChatProps> = ({ conversationId }) => {
-  const [showInfoPopover, setShowInfoPopover] = useState(false);
+const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
-  const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
-  const [isInitiatingChat, setIsInitiatingChat] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [conversationData, setConversationData] = useState<ConversationData | null>(null);
-
+  const [loading, setLoading] = useState(false);
+  const [conversationData, setConversationData] = useState<ConversationData | null>(chatData);
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
-  const [persona, setPersona] = useState<Persona | null>(null);
- 
-
-
+  const [messages, setMessages] = useState<Message[] | null>(chatData?.messages || null);
 
   useEffect(() => {
-    const loadConversation = async () => {
-      try {
-        if (!conversationId) {
-          router.push('/');
-          return;
-        }
+    if (!chatData) {
+      router.push('/');
+    }
+  }, [chatData, router]);
 
-        const conversation = await getConversation(conversationId);
-        setConversationData(conversation);
-      } catch (error) {
-        console.error('Error loading scenario:', error);
-        router.push('/');
-      } finally {
-        setIsLoading(false);
+  useEffect(() => {
+    const loadScenarioAndPersona = async () => {
+      if (conversationData) {
+        const scenarioId = conversationData.scenarioId;
+        const personaId = conversationData.personaId;
+        const scenario = await getScenario(scenarioId);
+        const persona = await getPersona(personaId);
+        setScenarioInfo(scenario);
       }
     };
 
-    loadConversation();
-  }, [conversationId, router]);
-
-
-
-useEffect(() => {
-  const loadScenarioAndPersona = async () => {
-    if (conversationData) {
-      const scenarioId = conversationData.scenarioId;
-      const personaId = conversationData.personaId;
-      const scenario = await getScenario(scenarioId);
-      const persona = await getPersona(personaId);
-      setScenarioInfo(scenario);
-      setPersona(persona);
-    }
-  };
-
-  loadScenarioAndPersona();
-}, [conversationData]);
+    loadScenarioAndPersona();
+  }, [conversationData]);
 
   const startChat = async (message?: string) => {
-    if (isInitiatingChat || !conversationData) return;
+    if (!conversationData) return;
 
     try {
-      setIsInitiatingChat(true);
-      setIsNavigatingToChat(true);
+      setLoading(true);
 
       if (!scenarioInfo) {
         console.error("Scenario ID is missing.");
-        setIsNavigatingToChat(false);
         return;
       }
 
+      if (!message?.trim()) {
+        console.error("Message is missing.");
+        return;
+      }
+
+      const response = await sendUserMessage(
+        conversationData.conversationId,
+        message.trim(),
+        conversationData.scenarioId
+      );
+      
+      if (response) {
+        const updatedConversation = await getConversation("38100d01-542a-4c09-9ffe-8a0be28a26be");
+        setConversationData(updatedConversation);
+        setMessages(updatedConversation?.messages);
+      }
 
     } catch (error: unknown) {
       console.error("Error starting conversation:", error instanceof Error ? error.message : "Unknown error");
-      setIsNavigatingToChat(false);
     } finally {
-      setIsInitiatingChat(false);
+      setLoading(false);
     }
   };
 
   const handleStartChat = async (prompt?: string) => {
+    console.log("handleStartChat", prompt, inputMessage);
     if (prompt) {
       startChat(prompt);
     } else {
@@ -177,96 +164,19 @@ useEffect(() => {
     }
   };
 
-  if (isNavigatingToChat) {
-    return <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />;
-  }
-
-  if (isLoading) {
-    return <LoadingScreen title="Loading Scenario" message="Please wait..." />;
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputMessage(e.target.value);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
-      <div className="flex-shrink-0 w-full" />
-      <h3 className="text-center font-light text-sm mt-12">
-        Choose a prompt below or start with your own message
-      </h3>
-      <main className="flex-grow w-full px-4 flex flex-col md:container md:mx-auto md:px-6 lg:px-8 md:max-w-screen-xl">
-        <div className="w-full flex-grow flex flex-col justify-between py-4 md:py-8 md:max-w-3xl md:mx-auto">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center mb-8 md:mb-12">
-              <Image
-                width={200}
-                height={200}
-                alt="Union Training Bot"
-                src="/images/chat-bot.svg"
-                className="mb-6 md:mb-8 w-[150px] md:w-[250px]"
-                priority
-              />
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <div className="relative">
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (inputMessage.trim()) {
-                    handleStartChat();
-                  }
-                }}
-                className="flex flex-col sm:flex-row items-center gap-3 p-2"
-              >
-                <Input
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="w-full bg-slate-50 text-[14px] p-4 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0 placeholder:text-xs placeholder:px-2"
-                  placeholder="Start typing..."
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full sm:w-auto text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
-                  disabled={!inputMessage}
-                >
-                  Send
-                  <SendHorizontal className="w-4 h-4 mr-2" />
-                </Button>
-              </form>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 mt-4">
-            <p className="text-left font-regular text-xs ml-2">
-              Struggling to start?
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {PROMPTS.map((prompt) => (
-                <Badge
-                  key={uuidv4()}
-                  onClick={() => handleStartChat(prompt)}
-                  className="text-xs font-light rounded-full whitespace-nowrap bg-primary-light text-primary w-fit p-2 hover:bg-primary-light/80 hover:shadow-lg cursor-pointer transition-colors"
-                >
-                  {prompt}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <ChatModals
-        showInfoPopover={showInfoPopover}
-        setShowInfoPopover={setShowInfoPopover}
-        scenarioInfo={scenarioInfo}
-        persona={persona}
-        showEndChatModal={false}
-        setShowEndChatModal={() => { }}
-        conversationId={""}
-      />
-    </div>
-  );
-};
+    <>
+      {messages && messages.length > 0 ? (
+        <ChatComponent conversationData={conversationData} />
+      ) : (
+        <InitChat handleStartChat={handleStartChat} starterPrompts={PROMPTS} handleInputChange={handleInputChange} inputMessage={inputMessage} />
+      )}
+    </>
+  )
+}
 
 export default StartChat;
