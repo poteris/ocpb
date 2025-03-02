@@ -85,6 +85,7 @@ async function sendUserMessage(conversationId: string, content: string, scenario
       content,
       scenario_id: scenarioId
     });
+    console.log("SEND USER MESSAGE RESPONSE", response);
     return response.data;
   } catch (error) {
     console.error('Error sending message:', error);
@@ -121,15 +122,12 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   }, [conversationData]);
 
   const startChat = async (message?: string) => {
+    console.log("CONVERSATION DATA", conversationData);
     if (!conversationData) return;
 
     try {
       setLoading(true);
-
-      if (!scenarioInfo) {
-        console.error("Scenario ID is missing.");
-        return;
-      }
+      console.log("START CHAT", message);
 
       if (!message?.trim()) {
         console.error("Message is missing.");
@@ -141,6 +139,7 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
         message.trim(),
         conversationData.scenarioId
       );
+      console.log("RESPONSE", response);
       
       if (response) {
         const updatedConversation = await getConversation("38100d01-542a-4c09-9ffe-8a0be28a26be");
