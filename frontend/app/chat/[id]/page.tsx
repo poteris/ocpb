@@ -1,7 +1,6 @@
 "use client"
 import StartChat from "./StartChat";
 import ChatComponent from "./ChatComponent";
-// import { Message } from "./ChatComponent";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
@@ -34,7 +33,7 @@ async function getConversationData(conversationId: string) {
         return response.data;
     } catch (error) {
         console.error("Error fetching conversation data", error);
-        throw error; // Re-throw to handle it in the calling function
+        throw error;
     }
 }
 
@@ -60,7 +59,12 @@ export default function ChatPage() {
             }
         };
         fetchConversations();
+
     }, [id]);
+
+    useEffect(() => {
+        console.log("CONVERSATION DATA", conversationData);
+    }, [conversationData]);
 
     if (loading) {
         return <div className="flex justify-center items-center h-screen">
@@ -75,15 +79,15 @@ export default function ChatPage() {
         </div>;
     }
 
-    return (
-        <div>
-            {conversationData ? (
-                <StartChat chatData={conversationData} />
-            ) : (
-               <ChatComponent conversationData={conversationData}/>
-            )}
-        </div>
-    );
+    if (!conversationData) {
+        return <div>Loading conversation...</div>;
+    }
+
+    if (conversationData.messages && conversationData.messages.length > 0) {
+        return <ChatComponent conversationData={conversationData} />;
+    }
+
+    return <StartChat chatData={conversationData} />;
 }   
 
 
