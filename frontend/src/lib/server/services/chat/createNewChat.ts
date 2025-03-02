@@ -18,9 +18,9 @@ export async function initialiseChat(
 
     await upsertPersona(persona);
 
-    const conversationId = await insertConversation(uuidv4(), userId, scenarioId, persona.id, systemPromptId);
-
-    return { id: conversationId };
+    const id = await insertConversation(uuidv4(), userId, scenarioId, persona.id, systemPromptId);
+    console.log("INSERTED CONVERSATION", id);
+    return { id };
   } catch (error) {
     console.error("Error in initialiseChat:", error);
     throw new Error("Failed to initialise chat");
