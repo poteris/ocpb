@@ -5,6 +5,15 @@ import { Result, ok, err } from "@/types/result";
 import { z } from "zod";
 import {supabase} from "../../../app/api/init"
 
+// NOTE this takes in the id not conversation_id which is a different field
+export async function getConversationById(id: string) {
+  const { data, error } = await supabase.from("conversations").select("*").eq("id", id).single();
+
+  if (error) throw error;
+
+  return data;
+}
+
 export async function getAllScenarios(): Promise<Result<TrainingScenario[], string>> {
   const { data, error } = await supabase.from("scenarios").select(`
     id,
@@ -143,6 +152,8 @@ export async function insertConversation(
     system_prompt_id: systemPromptId,
   }).select("id").single();
 
+  console.log("INSERTED CONVERSATION", data);
+
   if (error) {
     console.error("Error inserting conversation:", error);
     throw error;
@@ -178,7 +189,8 @@ export async function getAllChatMessages(conversationId: string) {
   }
 }
 
-export async function getConversationById(conversationId: string) {
+// NOTE this takes in the conversation_id not id which isthe the standard field in a sql table
+export async function getConversationByConversationId(conversationId: string) {
   return await supabase
     .from("conversations")
     .select(

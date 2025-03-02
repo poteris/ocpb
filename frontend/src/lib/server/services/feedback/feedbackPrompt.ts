@@ -1,6 +1,6 @@
 'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
-import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/server/db";
+import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationByConversationId } from "@/lib/server/db";
 
 type FeedbackPrompt = {
   content: string;
@@ -10,7 +10,7 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
   try {
     // Fetch conversation (including scenario, persona, messages) and feedback prompt in parallel
     const [conversationResult, feedbackPromptResult] = await Promise.all([
-      getConversationById(conversationId),
+      getConversationByConversationId(conversationId),
       getFeedbackPromptFromDb(),
     ]);
 
