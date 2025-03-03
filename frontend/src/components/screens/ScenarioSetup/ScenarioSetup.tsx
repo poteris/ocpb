@@ -132,6 +132,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
             {/* Scenario Header */}
             <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
                 <ChevronLeft
+                    data-testid="backButton"
                     className="w-4 h-4 text-gray-900 hover:cursor-pointer"
                     onClick={() => router.back()}
                 />
@@ -159,6 +160,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                         <Button
                             onClick={handleStartChat}
                             className="w-full md:w-auto"
+                            data-testid="startChatButton"
                         >
                             Start Chat
                         </Button>

@@ -68,7 +68,7 @@ const InitiateChatContent: React.FC = () => {
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
   const [persona] = useAtom(selectedPersonaAtom);
-  const scenarioId = searchParams.get("scenarioId");
+  const scenarioId = searchParams ? searchParams.get('scenarioId') : null;
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -173,12 +173,14 @@ const InitiateChatContent: React.FC = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 className="w-full bg-slate-50 text-[14px] p-4 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0 placeholder:text-xs placeholder:px-2"
                 placeholder="Start typing..."
+                data-testid="startChatInput"
               />
 
               <Button
                 type="submit"
                 className="w-full sm:w-auto text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
                 disabled={!inputMessage}
+                data-testid="initiateSendButton"
               >
                 Send
                 <SendHorizontal className="w-4 h-4 mr-2" />

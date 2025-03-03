@@ -1,0 +1,17 @@
+name: Smoke test suite
+
+on:
+  pull_request: 
+    types: [ready_for_review]    
+  workflow_dispatch:
+
+jobs:
+  smoke-suite:
+    uses: ./.github/workflows/playwright.yml
+    with:
+      branch: ${{ github.event.pull_request.head.sha }}
+    secrets:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

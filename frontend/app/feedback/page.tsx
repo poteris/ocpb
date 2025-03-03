@@ -8,7 +8,7 @@ import FeedbackSkeleton from "@/components/screens/FeedbackScreen/FeedbackSkelet
 function FeedbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const conversationId = searchParams.get("conversationId");
+  const conversationId = searchParams ? searchParams.get('conversationId') : null;
 
   if (!conversationId) {
     router.push("/");

@@ -14,6 +14,7 @@ const ScenarioCard = ({ scenario, onSelect }: {
           <Button 
             onClick={() => onSelect(scenario.id)} 
             className="w-24 py-3"
+            data-testid="startScenarioButton"
           >
             Start Chat
           </Button>

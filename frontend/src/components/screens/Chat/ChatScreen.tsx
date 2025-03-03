@@ -64,7 +64,7 @@ const ChatScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
-  const conversationId = searchParams.get("conversationId");
+  const conversationId = searchParams ? searchParams.get('conversationId') : null;
   const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -204,6 +204,7 @@ const ChatScreen = () => {
             type="submit"
             className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
             disabled={isLoading || !inputMessage.trim()}
+            data-testid="sendMessageButton"
           >
             Send
             <SendHorizontal className="w-4 h-4 ml-2" />
@@ -213,6 +214,7 @@ const ChatScreen = () => {
         <Button
           onClick={handleEndChat}
           className="bg-red-500 text-white hover:bg-red-600"
+          data-testid="endChatButton"
         >
           <LogOut />
         </Button>
