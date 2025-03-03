@@ -76,9 +76,11 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
     const [persona, setPersona] = useAtom(selectedPersonaAtom);
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRegeneratingPersona, setIsRegeneratingPersona] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
+            setIsLoading(true);
             try {
                 const [scenarioData, personaData] = await Promise.all([
                     getSelectedScenario(scenarioId),
@@ -94,13 +96,27 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     setPersona(personaData);
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching initial data:", error);
             } finally {
                 setIsLoading(false);
             }
         }
         fetchData();
     }, [scenarioId, setScenario, setPersona]);
+
+    const handleRegeneratePersona = async () => {
+        setIsRegeneratingPersona(true);
+        try {
+            const newPersona = await generatePersona();
+            if (newPersona) {
+                setPersona(newPersona);
+            }
+        } catch (error) {
+            console.error("Error regenerating persona:", error);
+        } finally {
+            setIsRegeneratingPersona(false);
+        }
+    };
 
     if (isLoading) {
         return <ScenarioSetupSkeleton />;
@@ -130,7 +146,11 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     <>
                         <ScenarioDescription selectedScenario={selectedScenario} />
                         <ScenarioObjectives selectedScenario={selectedScenario} />
-                        <PersonaDetailsComponent persona={persona} />
+                        <PersonaDetailsComponent 
+                            persona={persona} 
+                            onRegeneratePersona={handleRegeneratePersona}
+                            isRegenerating={isRegeneratingPersona}
+                        />
                     </>
                 )}
 

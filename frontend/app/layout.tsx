@@ -23,11 +23,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} light`}>
-      <body className="antialiased bg-white  text-gray-900 ">
-        <Navbar />
-        {children}
-        <Analytics />
-      </body>
+<body className="antialiased bg-white text-gray-900 flex flex-col h-screen">
+<Navbar />
+  <main className="flex-1 overflow-y-auto">
+    {children}
+  </main>
+  <Analytics />
+</body>
     </html>
   );
 }
