@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/dialog"
 import { LogOut, SendHorizontal } from "lucide-react"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
-import { ConversationData, Message } from "./StartChat";
-
-async function getConversationData(conversationId: string) {
+import { ConversationData, Message } from "./page";
+import { v4 as uuidv4 } from 'uuid';
+async function getConversationData(conversationId: string): Promise<ConversationData | null> {
   try {
     const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
-    return response.data;
-  } catch (error) {
+    return {...response.data, id: conversationId};
+  }   catch (error) {
     console.error('Error fetching chat:', error);
     return null;
   }
@@ -72,8 +72,24 @@ const ChatComponent = ({ conversationData: initialConversationData }: ChatCompon
 
     try {
       setIsLoading(true);
+
+      // Create user message
+      const userMessage: Message = {
+        id: uuidv4(), // NOTE: this should be set by the db
+        content: inputMessage,
+        conversation_id: conversationData.conversationId,
+        created_at: new Date().toISOString(), // NOTE: this should be set by the db
+        role: 'user'
+      };
+
+      // Update state with user message
+      setConversationData(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage]
+      }));
+      setInputMessage('');
       
-      // Send message to the API first
+ 
       await sendUserMessage(
         conversationData.conversationId, 
         inputMessage, 
@@ -81,7 +97,7 @@ const ChatComponent = ({ conversationData: initialConversationData }: ChatCompon
       );
       
       // Once successfully sent, fetch the updated conversation
-      const updatedConversation = await getConversationData(conversationData.conversationId);
+      const updatedConversation = await getConversationData(conversationData.id);
       
       if (updatedConversation) {
         setConversationData(updatedConversation);
