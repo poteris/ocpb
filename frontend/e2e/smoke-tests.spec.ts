@@ -85,7 +85,7 @@ test('Chat page loads and messages can be exchanged', async () => {
 });
 
 test('Chat can be ended and user is routed to feedback page', async () => {
-  const endChatButton = page.getByRole('button', { name: 'End Chat' });
+  const endChatButton = page.getByTestId('endChatButton');
   await expect(endChatButton).toBeVisible();
   await endChatButton.click()
   
