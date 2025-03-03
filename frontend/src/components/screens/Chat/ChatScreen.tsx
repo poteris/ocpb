@@ -214,6 +214,7 @@ const ChatScreen = () => {
         <Button
           onClick={handleEndChat}
           className="bg-red-500 text-white hover:bg-red-600"
+          data-testid="endChatButton"
         >
           <LogOut />
         </Button>
