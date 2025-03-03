@@ -134,5 +134,6 @@ For major changes, please open an issue first to discuss your proposed modificat
 - `pnpm db:reset:all` - Reset database (⚠️ destructive)
 - `pnpm start` - Start development server
 - `pnpm test` - Run test suite
+- `pnpm test:ui` - Run Playwright E2E smoke test suite
 
 For additional assistance or questions, please check our issue tracker or reach out to the development team.
