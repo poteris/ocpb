@@ -28,9 +28,6 @@ interface ConversationResponse {
   aiResponse: string;
 }
 
-interface StartChatProps {
-  chatData: ConversationData;
-}
 
 export async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
@@ -93,6 +90,11 @@ async function sendUserMessage(conversationId: string, content: string, scenario
   }
 }
 
+interface StartChatProps {
+  chatData: ConversationData;
+}
+
+
 const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
@@ -122,7 +124,7 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   }, [conversationData]);
 
   const startChat = async (message?: string) => {
-    console.log("CONVERSATION DATA", conversationData);
+   
     if (!conversationData) return;
 
     try {
@@ -142,7 +144,7 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
       console.log("RESPONSE", response);
       
       if (response) {
-        const updatedConversation = await getConversation("38100d01-542a-4c09-9ffe-8a0be28a26be");
+        const updatedConversation = await getConversation(conversationData.id);
         setConversationData(updatedConversation);
         setMessages(updatedConversation?.messages);
       }
