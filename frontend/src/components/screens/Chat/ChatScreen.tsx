@@ -165,7 +165,7 @@ const ChatScreen = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-85px)] max-w-2xl mx-auto p-4 overflow-y-auto">
+    <div className="flex flex-col h-[calc(100vh-85px)] max-w-[1200px] mx-auto p-4 overflow-y-auto">
       <div className="flex-grow overflow-auto mb-4">
         {conversationData?.messages.map((m) => (
           <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
