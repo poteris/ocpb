@@ -1,16 +1,15 @@
-name: Nightly dev tests
+name: Smoke test suite
 
 on:
-  pull_request: # TODO: Remove when complete
-  schedule:
-    - cron: '0 23 * * *'
+  pull_request: 
+    types: [ready_for_review]    
   workflow_dispatch:
 
 jobs:
-  run-nightly:
+  smoke-suite:
     uses: ./.github/workflows/playwright.yml
     with:
-      branch: OCPB-26-Initial-Playright-setup
+      branch: ${{ github.event.pull_request.head.sha }}
     secrets:
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
