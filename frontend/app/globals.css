@@ -109,22 +109,22 @@
 /* ===================
    Base Styles
 =================== */
+html,
+
 body {
   color: hsl(var(--foreground));
   background: hsl(var(--background));
   font-family: var(--font-poppins);
   margin: 0;
-  height: 100%;
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
+  padding: 0;
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
 
 a {
   text-decoration: none;
