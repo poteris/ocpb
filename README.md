@@ -51,6 +51,13 @@ Important notes:
 pnpm start
 ```
 
+6. Smoke test the application with Playwright E2E tests:
+
+```bash
+pnpm test:ui
+```
+- There is also a github action that invokes the Playwright E2E smoke test suite for a given branch, when the associated PR is marked as Ready for Review
+
 This command starts the Next.js development server which offers hot reloading
 
 ## 🏗️ Architecture Overview
