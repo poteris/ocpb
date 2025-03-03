@@ -42,7 +42,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 
 
   const handleContinueChat = () => {
-    router.push(`/chat-screen?conversationId=${conversationId}`);
+    router.push(`/chat/${conversationId}`);
   }
 
   return (
@@ -63,7 +63,7 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
         {/* Scrollable content */}
         <div className="flex-grow overflow-y-auto">
           <div className="p-4">
-            <>
+            
               <div className="bg-gradient-to-r from-orange-400 to-orange-600 rounded-lg p-4 mb-6 text-white">
                 <h3 className="text-lg font-bold mb-2">Performance Score</h3>
                   <div className="flex">
@@ -107,7 +107,6 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
                     </div>
                   </>
                 )}
-              </>
           
           </div>
         </div>

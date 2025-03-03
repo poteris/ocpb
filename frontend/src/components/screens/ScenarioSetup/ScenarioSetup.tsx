@@ -92,6 +92,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
     const [persona, setPersona] = useAtom(selectedPersonaAtom);
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isStarting, setIsStarting] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -124,9 +125,16 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
 
     async function handleStartChat() {
         if (!selectedScenario || !persona) return;
-        const { id: conversationId } = await startChat(uuidv4(), scenarioId, persona);
-        // navigate to chat screen
-        router.push(`/chat/${conversationId}`);
+        try {
+            setIsStarting(true);
+            const { id: conversationId } = await startChat(uuidv4(), scenarioId, persona);
+            router.push(`/chat/${conversationId}`);
+        } catch (error) {
+            console.error('Error starting chat:', error);
+            // You may want to show a toast/notification here
+        } finally {
+            setIsStarting(false);
+        }
     }
 
     return (
@@ -157,8 +165,16 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                         <Button
                             onClick={handleStartChat}
                             className="w-full md:w-auto"
+                            disabled={isStarting}
                         >
-                            Start Chat
+                            {isStarting ? (
+                                <>
+                                    <span className="animate-spin inline-block mr-2">⌛</span>
+                                    Starting...
+                                </>
+                            ) : (
+                                'Start Chat'
+                            )}
                         </Button>
                     </div>
                 </div>

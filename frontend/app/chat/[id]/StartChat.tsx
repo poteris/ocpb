@@ -100,7 +100,6 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [conversationData, setConversationData] = useState<ConversationData | null>(chatData);
-  const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [messages, setMessages] = useState<Message[] | null>(chatData?.messages || null);
 
   useEffect(() => {
@@ -109,19 +108,7 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
     }
   }, [chatData, router]);
 
-  useEffect(() => {
-    const loadScenarioAndPersona = async () => {
-      if (conversationData) {
-        const scenarioId = conversationData.scenarioId;
-        const personaId = conversationData.personaId;
-        const scenario = await getScenario(scenarioId);
-        const persona = await getPersona(personaId);
-        setScenarioInfo(scenario);
-      }
-    };
 
-    loadScenarioAndPersona();
-  }, [conversationData]);
 
   const startChat = async (message?: string) => {
    
@@ -129,7 +116,6 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
 
     try {
       setLoading(true);
-      console.log("START CHAT", message);
 
       if (!message?.trim()) {
         console.error("Message is missing.");
@@ -141,8 +127,6 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
         message.trim(),
         conversationData.scenarioId
       );
-      console.log("RESPONSE", response);
-      
       if (response) {
         const updatedConversation = await getConversation(conversationData.id);
         setConversationData(updatedConversation);
@@ -157,7 +141,6 @@ const StartChat: React.FC<StartChatProps> = ({ chatData }) => {
   };
 
   const handleStartChat = async (prompt?: string) => {
-    console.log("handleStartChat", prompt, inputMessage);
     if (prompt) {
       startChat(prompt);
     } else {
