@@ -80,6 +80,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
 
     useEffect(() => {
         async function fetchData() {
+            setIsLoading(true);
             try {
                 const [scenarioData, personaData] = await Promise.all([
                     getSelectedScenario(scenarioId),
@@ -95,7 +96,7 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
                     setPersona(personaData);
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching initial data:", error);
             } finally {
                 setIsLoading(false);
             }
@@ -104,8 +105,8 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
     }, [scenarioId, setScenario, setPersona]);
 
     const handleRegeneratePersona = async () => {
+        setIsRegeneratingPersona(true);
         try {
-            setIsRegeneratingPersona(true);
             const newPersona = await generatePersona();
             if (newPersona) {
                 setPersona(newPersona);
