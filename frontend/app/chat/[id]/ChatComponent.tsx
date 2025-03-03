@@ -35,7 +35,7 @@ async function sendUserMessage(conversationId: string, content: string, scenario
     return response.data;
   } catch (error) {
     console.error('Error sending message:', error);
-    throw error; // Propagate error to be handled by the caller
+    throw error; 
   }
 }
 
