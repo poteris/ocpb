@@ -16,7 +16,7 @@ export interface Message {
   
   
   export interface ConversationData {
-    messages: Message[]
+ 
     id: string;
     conversationId: string;
     userId: string;
@@ -24,6 +24,7 @@ export interface Message {
     personaId: string;
     systemPromptId: string;
     feedbackPromptId: string;
+    messages: Message[];
   }
 
 
@@ -47,7 +48,7 @@ export default function ChatPage() {
             if (typeof id === 'string') {
                 try {
                     const data = await getConversationData(id);
-                    setConversationData(data);
+                    setConversationData({...data, id: id});
                 } catch (error) {
                     console.error("Failed to fetch conversation data", error);
                 } finally {
@@ -63,7 +64,7 @@ export default function ChatPage() {
     }, [id]);
 
     useEffect(() => {
-        console.log("CONVERSATION DATA", conversationData);
+        console.log("CONVERSATION DATA", conversationData?.id);
     }, [conversationData]);
 
     if (loading) {
