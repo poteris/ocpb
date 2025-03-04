@@ -1,0 +1,22 @@
+.tail-user::before {
+    content: '';
+    position: absolute;
+    right: -10px;        /* How far the tail sticks out */
+    bottom: 0;
+    width: 26px;
+    height: 26px;
+    clip-path: polygon(0 100%,0 0,100% 100%);
+    background: hsla(188, 100%, 97%, 1);
+  }
+
+.tail-assistant::before {
+    content: '';
+    position: absolute;
+    left: -12px;        /* How far the tail sticks out */
+    bottom: 0;
+    width: 26px;
+    height: 26px;
+    aspect-ratio: 1;
+    clip-path: polygon(0 100%,100% 0,100% 100%);
+    background: hsla(219, 72%, 33%, 1);
+  }

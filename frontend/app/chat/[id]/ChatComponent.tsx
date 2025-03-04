@@ -15,6 +15,8 @@ import { LogOut, SendHorizontal } from "lucide-react"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
 import { ConversationData, Message } from "./page";
 import { v4 as uuidv4 } from 'uuid';
+import "./Chat.css";
+
 async function getConversationData(conversationId: string): Promise<ConversationData | null> {
   try {
     const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
@@ -50,7 +52,6 @@ const ChatComponent = ({ conversationData: initialConversationData }: ChatCompon
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
   const router = useRouter();
 
   // Auto-scroll to bottom on new messages
@@ -131,23 +132,24 @@ const ChatComponent = ({ conversationData: initialConversationData }: ChatCompon
 
   return (
     <div className="grid min-h-screen grid-rows-[1fr_auto] p-4 md:p-6">
-      <div className="max-w-[1200px] mx-auto w-full mt-10 grid grid-rows-[1fr_auto] gap-4 h-full">
+      <div className="max-w-[1200px] mx-auto w-full mt-10 grid grid-rows-[1fr_auto] gap-4 h-full ">
         {/* Messages Container */}
-        <div className="overflow-auto space-y-4">
+        <div className="overflow-auto space-y-4 m-8">
           {conversationData?.messages.map((m) => (
-            <div
-              key={m.id}
-              className={`grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
-            >
-              <span
-                className={`p-4 rounded-lg text-sm w-fit max-w-[600px] break-words ${m.role === "user"
-                  ? "bg-primary-light text-black"
-                  : "bg-primary text-white"
-                  }`}
-              >
-                {m.content}
-              </span>
-            </div>
+           <div
+           key={m.id}
+           className={`m-8 relative grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
+         >
+           <div
+             className={` p-4 text-sm w-fit max-w-[600px] break-words rounded-[16px] ${
+               m.role === "user" 
+                 ? "bg-primary-light text-black tail-user"
+                 : "bg-primary text-white tail-assistant"
+             }`}
+           >
+             {m.content}
+           </div>
+         </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
