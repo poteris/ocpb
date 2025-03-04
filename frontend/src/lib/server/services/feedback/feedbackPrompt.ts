@@ -1,6 +1,6 @@
 'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
-import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationByConversationId } from "@/lib/server/db";
+import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/server/db";
 
 type FeedbackPrompt = {
   content: string;
@@ -10,7 +10,7 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
   try {
     // Fetch conversation (including scenario, persona, messages) and feedback prompt in parallel
     const [conversationResult, feedbackPromptResult] = await Promise.all([
-      getConversationByConversationId(conversationId),
+      getConversationById(conversationId),
       getFeedbackPromptFromDb(),
     ]);
 
@@ -19,9 +19,10 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
         `Error fetching data: ${conversationResult.error?.message || feedbackPromptResult.error?.message}`
       );
     }
+    // console.log("conversationResult", conversationResult.data);
 
-    const conversation = conversationDataSchema.parse(conversationResult.data);
-    const feedbackPrompt = feedbackPromptResult.data as FeedbackPrompt;
+    const conversation = await conversationDataSchema.parse(conversationResult);
+    const feedbackPrompt = await feedbackPromptResult.data as FeedbackPrompt;
 
     if (!feedbackPrompt?.content) {
       throw new Error("Feedback prompt content not found or empty.");

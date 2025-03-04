@@ -7,7 +7,7 @@ import {supabase} from "../../../app/api/init"
 
 // NOTE this takes in the id not conversation_id which is a different field
 export async function getConversationById(id: string) {
-  const { data, error } = await supabase.from("conversations").select("*").eq("id", id).single();
+  const { data, error } = await supabase.from("conversations").select("*, scenario:scenarios(*), persona:personas(*), messages(*)").eq("id", id).single();
 
   if (error) throw error;
 
