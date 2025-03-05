@@ -67,11 +67,13 @@ const Welcome = () => {
                     <ScenarioCardSkeleton key={uuidv4()} />
                   ))
                 ) : (
-                  scenarios.map((scenario) => (
+                  scenarios.map((scenario, index) => (
                     <ScenarioCard 
                       key={scenario.id}
                       scenario={scenario} 
                       onSelect={handleScenarioSelect}
+                      index={index}
+
                     />
                   ))
                 )}
