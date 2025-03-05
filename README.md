@@ -53,8 +53,14 @@ pnpm start
 
 6. Smoke test the application with Playwright E2E tests:
 
+- Before first run, install playwright browsers and set the host and port of your dev server:
 ```bash
-pnpm test:ui
+pnpm exec playwright install --with-deps
+echo E2E_TEST_BASE_URL=http://localhost:3000 >> ./frontend/.env
+```
+- Then to execute the E2E smoke test suite:
+```bash
+pnpm dev && pnpm test:ui
 ```
 - There is also a github action that invokes the Playwright E2E smoke test suite for a given branch, when the associated PR is marked as Ready for Review
 
