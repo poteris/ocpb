@@ -25,7 +25,7 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
 test('Landing page loads and the call to action button starts the user journey for member recruitment', async () => {
   await page.goto(`${baseUrl}`);
   await page.waitForResponse(`${baseUrl}/api/scenarios`);
-  const startScenarioButton = page.getByTestId('startScenarioButton');
+  const startScenarioButton = page.getByTestId('startScenarioButton-0');
   await expect(startScenarioButton).toBeVisible();
   await startScenarioButton.click();
   await expect(page).toHaveURL(`${baseUrl}/scenario-setup?scenarioId=member-recruitment`);

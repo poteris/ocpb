@@ -165,8 +165,9 @@ const ChatScreen = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-85px)] max-w-[1200px] mx-auto p-4 overflow-y-auto">
-      <div className="flex-grow overflow-auto mb-4">
+    <div className="max-w-[1200px] mx-auto p-4 pb-32">
+      {/* Messages Container */}
+      <div className="mb-4">
         {conversationData?.messages.map((m) => (
           <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
             <div
@@ -184,40 +185,45 @@ const ChatScreen = () => {
       </div>
 
       {/* Input Container */}
-      <div className="flex gap-3 mb-10">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex-1 grid grid-cols-[1fr_auto] gap-3"
-        >
-          <ChatInput
-            ref={inputRef}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading}
-          />
+      <div className="fixed bottom-0 left-0 right-0 bg-white max-w-[1200px] mx-auto">
+        <div className="max-w-[1200px] mx-auto p-4">
+          <div className="flex gap-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex-1 grid grid-cols-[1fr_auto] gap-3"
+            >
+              <ChatInput
+                ref={inputRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Type your message..."
+                disabled={isLoading}
+                data-testid="startChatInput"
+              />
 
-          <Button
-            type="submit"
-            className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
-            disabled={isLoading || !inputMessage.trim()}
-            data-testid="sendMessageButton"
-          >
-            Send
-            <SendHorizontal className="w-4 h-4 ml-2" />
-          </Button>
-        </form>
+              <Button
+                type="submit"
+                className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
+                disabled={isLoading || !inputMessage.trim()}
+                data-testid="sendMessageButton"
+              >
+                Send
+                <SendHorizontal className="w-4 h-4 ml-2" />
+              </Button>
+            </form>
 
-        <Button
-          onClick={handleEndChat}
-          className="bg-red-500 text-white hover:bg-red-600"
-          data-testid="endChatButton"
-        >
-          <LogOut />
-        </Button>
+            <Button
+              onClick={handleEndChat}
+              className="bg-red-500 text-white hover:bg-red-600"
+              data-testid="endChatButton"
+            >
+              <LogOut />
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>

@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { TrainingScenario } from "@/types/scenarios";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ScenarioCard = ({ scenario, onSelect }: { 
+const ScenarioCard = ({ scenario, onSelect, index }: { 
     scenario: TrainingScenario; 
     onSelect: (id: string) => void 
+    index: number;
+
   }) => (
     <Card key={scenario.id} className="border-none rounded-[20px] bg-card p-2 md:p-2">
       <CardHeader>
@@ -14,7 +16,7 @@ const ScenarioCard = ({ scenario, onSelect }: {
           <Button 
             onClick={() => onSelect(scenario.id)} 
             className="w-24 py-3"
-            data-testid="startScenarioButton"
+            data-testid={`startScenarioButton-${index}`}
           >
             Start Chat
           </Button>

@@ -2,9 +2,7 @@ import { useAtom } from "jotai";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
 import PersonaDetailsComponent from "./PersonaDetails";
-import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TrainingScenario } from "@/types/scenarios";
@@ -13,6 +11,7 @@ import ScenarioObjectives from "./ScenarioObjectives";
 import ScenarioDescription from "./ScenarioDescription";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkeletonBlock } from "./SkeletonBlock";
+import ScenarioSetupLayout from "./Layout";
 
 interface ScenarioSetupComponentProps {
     readonly scenarioId: string;
@@ -22,7 +21,7 @@ const ScenarioSetupSkeleton = () => {
     return (
         <>
             {/* Skeleton Header */}
-            <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
+            <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14 ">
                 <ChevronLeft
                     className="w-4 h-4 text-gray-900  hover:cursor-pointer"
                 />
@@ -118,55 +117,51 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
         }
     };
 
-    if (isLoading) {
-        return <ScenarioSetupSkeleton />;
-    }
-
     function handleStartChat() {
         if (!selectedScenario || !persona) return;
         router.push(`/initiate-chat?scenarioId=${selectedScenario.id}&personaId=${persona.id}`);
     }
 
+    if (isLoading) {
+        return (
+            <ScenarioSetupLayout onStartChat={handleStartChat} isLoading={isLoading}>
+                <ScenarioSetupSkeleton />
+            </ScenarioSetupLayout>
+        );
+    }
+
+
     return (
-        <>
-            {/* Scenario Header */}
-            <div className="flex flex-row items-center gap-2 mt-4 md:mt-8 mx-4 md:ml-14">
-                <ChevronLeft
-                    data-testid="backButton"
-                    className="w-4 h-4 text-gray-900 hover:cursor-pointer"
-                    onClick={() => router.back()}
-                />
-                <h1 className="text-xl md:text-2xl font-regular text-gray-900 ">
-                    {selectedScenario?.title}
-                </h1>
-            </div>
-
-            <div className="flex flex-col gap-3 md:gap-4 mx-4 md:m-14 min-h-screen relative pb-28 md:pb-24">
-                {selectedScenario && (
-                    <>
-                        <ScenarioDescription selectedScenario={selectedScenario} />
-                        <ScenarioObjectives selectedScenario={selectedScenario} />
-                        <PersonaDetailsComponent 
-                            persona={persona} 
-                            onRegeneratePersona={handleRegeneratePersona}
-                            isRegenerating={isRegeneratingPersona}
+        <ScenarioSetupLayout onStartChat={handleStartChat} isLoading={isLoading}>
+            <div className="flex flex-col">
+                {/* Scenario Header */}
+                <div className="p-14 ">
+                    <div className="flex flex-row items-center gap-2">
+                        <ChevronLeft
+                            data-testid="backButton"
+                            className="w-4 h-4 text-gray-900 hover:cursor-pointer"
+                            onClick={() => router.back()}
                         />
-                    </>
-                )}
+                        <h1 className="text-xl md:text-2xl font-regular text-gray-900 ">
+                            {selectedScenario?.title}
+                        </h1>
+                    </div>
 
-                {/* Fixed Bottom Button */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-card-alt border-t">
-                    <div className="max-w-full md:max-w-[calc(100%-7rem)] mx-auto flex justify-end">
-                        <Button
-                            onClick={handleStartChat}
-                            className="w-full md:w-auto"
-                            data-testid="startChatButton"
-                        >
-                            Start Chat
-                        </Button>
+                    <div className="flex flex-col gap-3">
+                        {selectedScenario && (
+                            <>
+                                <ScenarioDescription selectedScenario={selectedScenario} />
+                                <ScenarioObjectives selectedScenario={selectedScenario} />
+                                <PersonaDetailsComponent 
+                                    persona={persona} 
+                                    onRegeneratePersona={handleRegeneratePersona}
+                                    isRegenerating={isRegeneratingPersona}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
-        </>
+        </ScenarioSetupLayout>
     );
 }

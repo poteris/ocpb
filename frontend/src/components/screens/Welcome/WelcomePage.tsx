@@ -47,34 +47,37 @@ const Welcome = () => {
   }, []);
   
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
-      {/* Main container*/}
+    <div className="bg-gradient-to-br from-white to-gray-100 min-h-[calc(100vh-85px)]">
+      {/* Main container */}
       <div className="container mx-auto px-6 md:px-8 lg:px-12 py-6 md:py-12">
         <div className="flex flex-col lg:flex-row lg:gap-8">
-          {/* Welcome Message */}
-          <div className="w-full lg:w-1/3 mb-8 lg:mb-0">
+          {/* Welcome Message - Fixed position on large screens */}
+          <div className="w-full lg:w-1/3 mb-8 lg:mb-0 lg:fixed lg:max-w-[calc(33.33%-4rem)]">
             <WelcomeMessage />
           </div>
 
-          {/* Scenarios */}
+          {/* Scenarios section - Normal page scroll with left margin on large screens */}
+          <div className="w-full lg:ml-[33.33%] lg:w-2/3 flex flex-col">
+            <h1 className="text-2xl mb-6 font-light ml-2">Your Training Scenarios</h1>
+            <div className="pr-4">
+              <div className="flex flex-col gap-4 pb-6">
+                {isLoading ? (
+                  // display some skeletons while loading
+                  Array.from({ length: 4 }).map(() => (
+                    <ScenarioCardSkeleton key={uuidv4()} />
+                  ))
+                ) : (
+                  scenarios.map((scenario, index) => (
+                    <ScenarioCard 
+                      key={scenario.id}
+                      scenario={scenario} 
+                      onSelect={handleScenarioSelect}
+                      index={index}
 
-          <div className="w-full lg:w-2/3">
-              <h1 className="text-2xl mb-6 font-light ml-2">Your Training Scenarios</h1>
-            <div className="flex flex-col gap-4">
-              {isLoading ? (
-                // display some skeletons while loading
-                Array.from({ length: 4 }).map(() => (
-                  <ScenarioCardSkeleton key={uuidv4()} />
-                ))
-              ) : (
-                scenarios.map((scenario) => (
-                  <ScenarioCard 
-                    key={scenario.id}
-                    scenario={scenario} 
-                    onSelect={handleScenarioSelect}
-                  />
-                ))
-              )}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
