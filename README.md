@@ -48,8 +48,9 @@ Important notes:
 5. Launch the application:
 
 ```bash
-pnpm start
+pnpm dev
 ```
+This command starts the Next.js development server which offers hot reloading
 
 6. Smoke test the application with Playwright E2E tests:
 
@@ -63,8 +64,6 @@ echo E2E_TEST_BASE_URL=http://localhost:3000 >> ./frontend/.env
 pnpm dev && pnpm test:ui
 ```
 - There is also a github action that invokes the Playwright E2E smoke test suite for a given branch, when the associated PR is marked as Ready for Review
-
-This command starts the Next.js development server which offers hot reloading
 
 ## 🏗️ Architecture Overview
 
