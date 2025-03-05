@@ -46,11 +46,10 @@ Important notes:
 - To completely reset the database: `pnpm db:reset:all` (⚠️ This will erase all data)
 
 5. Launch the application:
-
+- This command starts the Next.js development server which offers hot reloading
 ```bash
 pnpm dev
 ```
-This command starts the Next.js development server which offers hot reloading
 
 6. Smoke test the application with Playwright E2E tests:
 
