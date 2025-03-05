@@ -201,6 +201,7 @@ const ChatScreen = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
                 disabled={isLoading}
+                data-testid="startChatInput"
               />
 
               <Button
