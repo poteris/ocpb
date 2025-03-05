@@ -24,7 +24,7 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({
   }
 
   return (
-    <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md mb-20">
+    <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md">
       <Accordion type="single" collapsible defaultValue="persona" className="mb-2 md:mb-6">
         <AccordionItem value="persona" className="border-none">
           <AccordionTrigger className="font-normal text-gray-900 hover:no-underline text-[20px] md:text-[24px] px-3 md:px-4">
