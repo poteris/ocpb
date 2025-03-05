@@ -185,7 +185,7 @@ const ChatScreen = () => {
       </div>
 
       {/* Input Container */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white">
+      <div className="fixed bottom-0 left-0 right-0 bg-white max-w-[1200px] mx-auto">
         <div className="max-w-[1200px] mx-auto p-4">
           <div className="flex gap-3">
             <form
