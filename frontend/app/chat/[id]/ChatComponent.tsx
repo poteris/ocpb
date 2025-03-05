@@ -134,11 +134,11 @@ const ChatComponent = ({ conversationData: initialConversationData }: ChatCompon
     <div className="grid min-h-screen grid-rows-[1fr_auto] p-4 md:p-6">
       <div className="max-w-[1200px] mx-auto w-full mt-10 grid grid-rows-[1fr_auto] gap-4 h-full ">
         {/* Messages Container */}
-        <div className="overflow-auto space-y-4 m-8">
+        <div className="overflow-auto space-y-4 lg:m-8">
           {conversationData?.messages.map((m) => (
            <div
            key={m.id}
-           className={`m-8 relative grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
+           className={`lg:m-8 m-4 relative grid ${m.role === "user" ? "justify-items-end" : "justify-items-start"}`}
          >
            <div
              className={` p-4 text-sm w-fit max-w-[600px] break-words rounded-[16px] ${
