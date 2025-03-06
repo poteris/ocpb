@@ -1,8 +1,10 @@
-import { getScenarios } from "@/lib/services/scenarios/getScenarios";
+import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
-import { supabase } from "@/lib/init";
 import { Result, err, ok } from "@/types/result";
+import { supabase } from "../init";
+
+
 
 export async function GET() {
   const result = await getScenarios();

@@ -1,197 +1,247 @@
-"use client";
+"use client"
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { v4 as uuidv4 } from 'uuid';
+import { LogOut, SendHorizontal } from "lucide-react"
+import { ChatInput } from "@/components/ChatInput/ChatInput"
 
-import React, { useState, useRef, useEffect, Suspense, KeyboardEvent } from "react";
-import { LoadingScreen } from "@/components/LoadingScreen";
-import { MessageList } from "../ChatMessageList";
-import { useChat } from "@/hooks/useChat";
-import { Send, Loader } from "react-feather";
-import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { Header } from "@/components/Header";
-import { ChatModals } from "@/components/ChatModals";
-import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { scenarioAtom, selectedPersonaAtom } from "@/store";
-import ChatScreenSkeleton from "./ChatScreenSkeleton";
+export interface ConversationData {
+  messages: Message[];
+  conversationId: string;
+  scenarioId: string;
+  userId: string;
+  personaId: string;
+  systemPromptId: string;
+  feedbackPromptId: string;
+}
 
-const ChatScreenContent: React.FC = () => {
-  const [showInfoPopover, setShowInfoPopover] = useState(false);
-  const [showEndChatModal, setShowEndChatModal] = useState(false);
-  const [showFeedbackPopover, setShowFeedbackPopover] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+interface Message {
+  content: string;
+  conversation_id: string;
+  created_at: string;
+  id: string;
+  role: string;
+}
 
-  const {
-    currentSession,
-    conversationId,
-    isLoading,
-    inputMessage,
-    setInputMessage,
-    handleSendMessage,
-    initializeSession,
-    isWaitingForInitialResponse,
-  } = useChat();
 
-  const [scenarioInfo] = useAtom(scenarioAtom);
-  const [persona] = useAtom(selectedPersonaAtom);
+async function getConversationData(conversationId: string) {
+  try {
+    const response = await axios.get<ConversationData>(`/api/chat/${conversationId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching chat:', error);
+    return null;
+  }
+}
 
-  const router = useRouter();
+async function sendUserMessage(conversationId: string, content: string, scenarioId: string) {
+  try {
+    const response = await axios.post<Message>('/api/chat/send-user-message', {
+      conversationId,
+      content,
+      scenario_id: scenarioId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return null;
+  }
+}
+
+const ChatScreen = () => {
+  const [conversationData, setConversationData] = useState<ConversationData | null>(null);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const searchParams = useSearchParams();
+  const conversationId = searchParams ? searchParams.get('conversationId') : null;
+  const [isEndChatModalOpen, setIsEndChatModalOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  const router = useRouter()
+
+
+  // Fetch initial chat data
   useEffect(() => {
-    const doInit = async () => {
-      await initializeSession();
-      setIsInitializing(false);
+    const fetchChat = async () => {
+      if (!conversationId) return;
+
+      try {
+        setIsLoading(true);
+        const response = await getConversationData(conversationId);
+        setConversationData(response);
+      } catch (error) {
+        console.error('Error fetching chat:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    doInit();
-  }, [initializeSession]);
 
-  //scroll to bottom whenever messages change
+    fetchChat();
+  }, [conversationId]);
+
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [currentSession?.messages]);
-
-  // focus the input when no longer loading 
-  useEffect(() => {
-    if (!isLoading) {
-      inputRef.current?.focus();
-    }
-  }, [isLoading, currentSession?.messages]);
-
-
-  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Refocus input after messages update
     if (inputRef.current) {
-      inputRef.current.style.height = "auto";
-      const newHeight = Math.min(inputRef.current.scrollHeight, 100);
-      inputRef.current.style.height = `${newHeight}px`;
+      inputRef.current.focus();
     }
-  }, [inputMessage]);
+  }, [conversationData?.messages]);
 
-   const handleLocalSend = () => {
-    if (inputMessage.trim() && conversationId && scenarioInfo?.id) {
-      handleSendMessage(inputMessage, conversationId, scenarioInfo.id);
-      setInputMessage("");
-      // Note: Re-focus the input for next message
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
-  };
-
-  // Keydown sends if user presses Enter (without Shift)
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
+  // Send message handler
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) {
       e.preventDefault();
-      handleLocalSend();
+    }
+
+    if (!inputMessage.trim() || !conversationData?.conversationId || isLoading) return;
+
+    try {
+      setIsLoading(true);
+
+      // Create user message
+      const userMessage: Message = {
+        id: uuidv4(), // NOTE: this should be set by the db
+        content: inputMessage,
+        conversation_id: conversationData.conversationId,
+        created_at: new Date().toISOString(), // NOTE: this should be set by the db
+        role: 'user'
+      };
+
+      // Update state with user message
+      setConversationData(prev => ({
+        ...prev!,
+        messages: [...prev!.messages, userMessage]
+      }));
+      setInputMessage('');
+
+      const response = await sendUserMessage(conversationData.conversationId, inputMessage, conversationData.scenarioId);
+
+      if (response) {
+        // Fetch the updated conversation data after bot response
+        const updatedConversation = await getConversationData(conversationData.conversationId);
+        setConversationData(updatedConversation);
+      }
+
+      setIsLoading(false);
+      // Refocus input after sending message
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Remove the failed message from the state
+      setConversationData(prev => ({
+        ...prev!,
+        messages: prev!.messages.slice(0, -1)
+      }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleEndChat = () => {
-    setShowEndChatModal(true);
-  };
-
-  const handleFeedbackClose = async () => {
-    setIsExiting(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setShowFeedbackPopover(false);
-    router.push("/");
-  };
-
-  if (isInitializing) {
-    return (
-      <LoadingScreen
-        title="Initializing Chat"
-        message="Setting up your training environment..."
-      />
-    );
+    setIsEndChatModalOpen(true)
   }
 
+  const handleCloseModal = () => {
+    setIsEndChatModalOpen(false)
+  }
+
+  const handleConfirmEndChat = () => {
+    setIsEndChatModalOpen(false)
+    router.push(`/feedback?conversationId=${conversationData?.conversationId}`)
+  }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        className="flex flex-col h-screen"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isExiting ? 0 : 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Header
-          title={scenarioInfo?.title || "Chat"}
-          variant="default"
-          showInfoIcon={true}
-          onInfoClick={() => setShowInfoPopover(true)}
-        />
-
-        <main className="flex-grow overflow-hidden">
-          <div className="flex flex-col h-full container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-            <MessageList
-              messages={currentSession?.messages || []}
-              isLoading={isLoading}
-              isWaitingForInitialResponse={isWaitingForInitialResponse}
-            />
-            <div ref={messagesEndRef} />
-          </div>
-        </main>
-
-        <footer className="bg-slate-50 dark:bg-slate-800 py-4 sm:py-6">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="relative flex-grow">
-                <textarea
-                  ref={inputRef}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={isLoading}
-                  placeholder="Type your message..."
-                  className="w-full bg-white dark:bg-gray-800 text-sm sm:text-base py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 transition-all duration-200 resize-none overflow-hidden min-h-[40px] max-h-[100px]"
-                  rows={1}
-                />
-                {(inputMessage.trim() || isLoading) && (
-                  <button
-                    onClick={handleLocalSend}
-                    className="absolute right-[1%] top-[10%] flex items-center justify-center p-1.5 rounded-full transition-colors duration-200 disabled:opacity-50 bg-blue-600 hover:bg-blue-700 text-white"
-                    aria-label="Send message"
-                    disabled={isLoading || !inputMessage.trim()}
-                  >
-                    {isLoading ? (
-                      <Loader size={18} className="animate-spin" />
-                    ) : (
-                      <Send size={18} />
-                    )}
-                  </button>
-                )}
-              </div>
-              <Button
-                onClick={handleEndChat}
-                className="text-sm sm:text-base px-3 sm:px-4 py-2 rounded-full h-[40px] whitespace-nowrap flex-shrink-0"
-              >
-                End Chat
-              </Button>
+    <div className="max-w-[1200px] mx-auto p-4 pb-32">
+      {/* Messages Container */}
+      <div className="mb-4">
+        {conversationData?.messages.map((m) => (
+          <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
+            <div
+              className={`inline-block p-4 rounded-lg text-sm max-w-[600px] break-words ${
+                m.role === "user"
+                  ? "bg-slate-50 text-black"
+                  : "bg-primary text-white"
+              }`}
+            >
+              {m.content}
             </div>
           </div>
-        </footer>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
 
-        <ChatModals
-          showEndChatModal={showEndChatModal}
-          setShowEndChatModal={setShowEndChatModal}
-          showInfoPopover={showInfoPopover}
-          setShowInfoPopover={setShowInfoPopover}
-          showFeedbackPopover={showFeedbackPopover}
-          setShowFeedbackPopover={setShowFeedbackPopover}
-          handleFeedbackClose={handleFeedbackClose}
-          scenarioInfo={scenarioInfo}
-          persona={persona}
-          conversationId={conversationId}
-        />
-      </motion.div>
-    </AnimatePresence>
+      {/* Input Container */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white max-w-[1200px] mx-auto">
+        <div className="max-w-[1200px] mx-auto p-4">
+          <div className="flex gap-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex-1 grid grid-cols-[1fr_auto] gap-3"
+            >
+              <ChatInput
+                ref={inputRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Type your message..."
+                disabled={isLoading}
+                data-testid="startChatInput"
+              />
+
+              <Button
+                type="submit"
+                className="text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
+                disabled={isLoading || !inputMessage.trim()}
+                data-testid="sendMessageButton"
+              >
+                Send
+                <SendHorizontal className="w-4 h-4 ml-2" />
+              </Button>
+            </form>
+
+            <Button
+              onClick={handleEndChat}
+              className="bg-red-500 text-white hover:bg-red-600"
+              data-testid="endChatButton"
+            >
+              <LogOut />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={isEndChatModalOpen} onOpenChange={setIsEndChatModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End Chat</DialogTitle>
+            <DialogDescription>Are you sure you want to end this chat?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseModal}>
+              No
+            </Button>
+            <Button onClick={handleConfirmEndChat}>Yes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
-
-export const ChatScreen: React.FC = () => (
-  <Suspense fallback={<ChatScreenSkeleton />}>
-    <ChatScreenContent />
-  </Suspense>
-);
+export default ChatScreen;

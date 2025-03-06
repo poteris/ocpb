@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Modal } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
 import { TrainingScenario } from "@/types/scenarios";
@@ -47,7 +47,7 @@ async function deleteScenario(id: string) {
 
 export const OrganiserAdmin: React.FC = () => {
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-white">
       <Header title="Admin - Scenarios" variant="alt" />
       <PromptManager type="scenario" />
     </div>
@@ -111,12 +111,12 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
 
   const renderScenarioSection = () => (
     <div className="space-y-4 border-b pb-6 mb-6">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Scenario</h2>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Scenario</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
             <Input
               type="text"
               value={scenarioForm.title}
@@ -133,7 +133,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <Input
               type="textarea"
               value={scenarioForm.description}
@@ -148,7 +148,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Context</label>
             <Input
               type="textarea"
               value={scenarioForm.context}
@@ -163,9 +163,9 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
             <p className="text-sm text-gray-500 mt-1">This context will help frame the scenario for the AI.</p>
           </div>
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
-            <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Template Preview</h3>
-            <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
+          <div className="bg-blue-50 rounded-md p-4">
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Template Preview</h3>
+            <p className="text-sm text-blue-600 font-mono">
               Role play to help users to{" "}
               <span className="font-bold">{scenarioForm.description || "{{description}}"}</span>. The user is a trade
               union representative speaking to you about{" "}
@@ -174,7 +174,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Learning Objectives
             </label>
             <div className="space-y-2">
@@ -221,7 +221,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               Create Scenario
             </Button>
             {objectives.length > 0 && objectives.length < 3 && (
-              <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 text-center">
+              <p className="text-sm text-amber-600 mt-2 text-center">
                 Add {3 - objectives.length} more objective{3 - objectives.length === 1 ? "" : "s"} to create
               </p>
             )}
@@ -377,16 +377,15 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
       {scenarios.map((scenario) => (
         <div
           key={scenario.id}
-          className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           {editingScenarioId === scenario.id ? (
-            // Edit Mode
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-mono text-gray-500 dark:text-gray-400">ID: {scenario.id}</span>
+                <span className="text-xs font-mono text-gray-500">ID: {scenario.id}</span>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <Input
                   type="text"
                   value={editForm?.title}
@@ -400,7 +399,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <Input
                   type="textarea"
                   value={editForm?.description}
@@ -414,7 +413,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Context</label>
                 <Input
                   type="textarea"
                   value={editForm?.context}
@@ -427,22 +426,21 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                 />
               </div>
 
-              {/* Template Preview */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-4">
-                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Template Preview</h3>
-                <p className="text-sm text-blue-600 dark:text-blue-200 font-mono">
+              <div className="bg-blue-50 rounded-md p-4">
+                <h3 className="text-sm font-medium text-blue-700 mb-2">Template Preview</h3>
+                <p className="text-sm text-blue-600 font-mono">
                   Role play to help users to <span className="font-bold">{editForm?.description}</span>. The user is a
                   trade union representative speaking to you about <span className="font-bold">{editForm?.title}</span>.
                 </p>
                 {(editForm?.title || editForm?.description) && (
-                  <p className="text-xs text-blue-600 dark:text-blue-300 mt-2 italic">
+                  <p className="text-xs text-blue-600 mt-2 italic">
                     ⚡ Make sure the title and description flow naturally in the sentence above
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Learning Objectives
                 </label>
                 <div className="space-y-2">
@@ -487,14 +485,14 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                     Add Objective
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-sm text-gray-500 mt-2">
                   {editForm && editForm.objectives.length < 3 ? (
-                    <span className="text-amber-600 dark:text-amber-400">
+                    <span className="text-amber-600">
                       Add {3 - editForm.objectives.length} more objective
                       {3 - editForm.objectives.length === 1 ? "" : "s"}
                     </span>
                   ) : (
-                    <span className="text-green-600 dark:text-green-400">
+                    <span className="text-green-600">
                       ✓ {editForm?.objectives.length} objectives added
                     </span>
                   )}
@@ -509,12 +507,11 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               </div>
             </div>
           ) : (
-            // Updated View Mode
             <>
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-medium text-lg">{scenario.title}</h3>
-                  <span className="text-xs font-mono text-gray-500 dark:text-gray-400">ID: {scenario.id}</span>
+                  <span className="text-xs font-mono text-gray-500">ID: {scenario.id}</span>
                 </div>
                 <div className="flex space-x-2">
                   <Button onClick={() => handleEditClick(scenario)}>Edit</Button>
@@ -523,17 +520,17 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
                 </div>
               </div>
 
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{scenario.description}</p>
+              <p className="text-gray-600 mb-4">{scenario.description}</p>
 
               <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Context:</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">{scenario.context}</p>
+                <h4 className="text-sm font-medium text-gray-700 mb-1">Context:</h4>
+                <p className="text-gray-600 text-sm">{scenario.context}</p>
               </div>
 
               <div className="space-y-1">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Learning Objectives:</h4>
+                <h4 className="text-sm font-medium text-gray-700">Learning Objectives:</h4>
                 {scenario.objectives.map((objective, index) => (
-                  <div key={index} className="text-sm text-gray-600 dark:text-gray-400 pl-4">
+                  <div key={index} className="text-sm text-gray-600 pl-4">
                     {index + 1}. {objective}
                   </div>
                 ))}
@@ -543,7 +540,6 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         </div>
       ))}
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -556,7 +552,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
             </Button>
           </div>
         }>
-        <p className="text-lg text-gray-700 dark:text-gray-300">
+        <p className="text-lg text-gray-700">
           Are you sure you want to delete this scenario? This action cannot be undone.
         </p>
       </Modal>
@@ -565,7 +561,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
 
   return (
     <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Scenario Management</h1>
+      <h1 className="text-3xl font-bold mb-4 text-gray-900">Scenario Management</h1>
 
       {error && (
         <div
@@ -585,7 +581,6 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         </TabsList>
 
         <TabsContent value="existing">{renderExistingScenarios()}</TabsContent>
-
         <TabsContent value="new">{renderScenarioSection()}</TabsContent>
       </Tabs>
     </div>

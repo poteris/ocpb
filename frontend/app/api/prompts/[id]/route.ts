@@ -1,7 +1,7 @@
-import { supabase } from "@/lib/init";
 import { NextResponse, NextRequest } from "next/server";
 import { Result, Option, err, ok } from "@/types/result";
 import { z } from "zod";
+import { supabase } from "../../init";
 
 async function updatePrompt(
   id: number,

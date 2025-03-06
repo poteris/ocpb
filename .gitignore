@@ -46,3 +46,9 @@ next-env.d.ts
 .vscode
 setup.code-workspace
 node_modules
+
+# Playwright
+/frontend/test-results/
+/playwright-report/
+/frontend/blob-report/
+/frontend/playwright/.cache/

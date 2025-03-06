@@ -1,27 +1,26 @@
 "use client";
 
 import React, { useState, Suspense, useEffect } from "react";
-import { Header } from "../../Header";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChatModals } from "../../ChatModals";
-import { motion, AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useAtom } from "jotai";
-import { selectedPersonaAtom, scenarioAtom } from "@/store";
+import { selectedPersonaAtom } from "@/store";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Persona } from "@/types/persona";
+import { TrainingScenario } from "@/types/scenarios";
+import { Badge } from "@/components/ui/badge";
+import { SendHorizontal } from "lucide-react";
 
-const FIXED_PROMPTS = [
+const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
   "Hey, how are you doing?",
   "Hey mate, sorry to bother you - how's it going?",
-  "What are you up to?",
-  "Hi!",
-  "Heya mate - what's new?",
 ];
 
 interface CreateNewChatRequest {
@@ -39,14 +38,24 @@ interface ConversationResponse {
 export async function createNewChat({ initialMessage, scenarioId, persona }: CreateNewChatRequest) {
   try {
     const response = await axios.post<ConversationResponse>("/api/chat/create-new-chat", {
-      userId: uuidv4(), // TODO: currently we don't have a user based system
+      userId: uuidv4(), // NOTE: this should be set by db, currently we don't have a user based system
       initialMessage,
       scenarioId,
       persona,
-    } as CreateNewChatRequest);
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating new chat:", error);
+    throw error;
+  }
+}
+
+async function getScenario(scenarioId: string) {
+  try {
+    const response = await axios.get<TrainingScenario>(`/api/scenarios/${scenarioId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching scenario:", error);
     throw error;
   }
 }
@@ -55,46 +64,33 @@ const InitiateChatContent: React.FC = () => {
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const router = useRouter();
-  // const { scenarioInfo, persona, setPersona } = useScenario();
-  const [isExiting, setIsExiting] = useState(false);
   const searchParams = useSearchParams();
-
   const [isNavigatingToChat, setIsNavigatingToChat] = useState(false);
-
   const [isInitiatingChat, setIsInitiatingChat] = useState(false);
-
-  // State to store the randomly selected prompts
-  const [selectedPrompts, setSelectedPrompts] = useState<string[]>([]);
   const [persona] = useAtom(selectedPersonaAtom);
-  const scenarioId = searchParams.get("scenarioId");
-  // TODO: fetch scenario info. Two ways to handle this - either fetch from db or use global context
-  const [scenarioInfo] = useAtom(scenarioAtom);
-
-  // Update prompts when screen size changes
-  useEffect(() => {
-    const getRandomPrompts = () => {
-      const shuffled = [...FIXED_PROMPTS].sort(() => 0.5 - Math.random());
-      const isMobile = window.innerWidth < 640;
-      return shuffled.slice(0, isMobile ? 3 : 4);
-    };
-
-    const handleResize = () => {
-      setSelectedPrompts(getRandomPrompts());
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const scenarioId = searchParams ? searchParams.get('scenarioId') : null;
+  const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedPersona = persona;
-    if (storedPersona) {
-      // const parsedPersona: Persona = JSON.parse(storedPersona);
-      // setPersona(parsedPersona);
-    } else {
-      router.push(`/scenario-setup?scenarioId=${scenarioId}`);
-    }
+    const loadScenario = async () => {
+      try {
+        if (!scenarioId || !persona) {
+          router.push('/');
+          return;
+        }
+
+        const scenario = await getScenario(scenarioId);
+        setScenarioInfo(scenario);
+      } catch (error) {
+        console.error('Error loading scenario:', error);
+        router.push('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadScenario();
   }, [persona, router, scenarioId]);
 
   const startChat = async (message: string) => {
@@ -102,203 +98,156 @@ const InitiateChatContent: React.FC = () => {
 
     try {
       setIsInitiatingChat(true);
-      setIsExiting(true);
       setIsNavigatingToChat(true);
 
-      // await storePersona(persona); // we are doing this in create chat function anyway
-      // const conversationResponse = await createConversation(
-      //   message,
-      //   scenarioId || "",
-      //   persona
-      // );
-      // createNewChat(message);
-
+      // create new chat
       const conversationResponse = await createNewChat({
         userId: uuidv4(),
         initialMessage: message,
-        scenarioId: scenarioId || "",
+        scenarioId: scenarioId!,
         persona,
       });
 
-      navigateToChat(conversationResponse, message);
-    } catch (error) {
-      handleChatError(error as ChatError);
+      const chatId = conversationResponse.id;
+
+      if (conversationResponse) {
+        const url = `/chat-screen?conversationId=${chatId}`;
+        router.push(url);
+      }
+    } catch (error: unknown) {
+      console.error("Error starting conversation:", error instanceof Error ? error.message : "Unknown error");
+      setIsNavigatingToChat(false);
     } finally {
       setIsInitiatingChat(false);
     }
   };
 
-  // TODO: remove, unnecessary
-  // const createNewChat = async (message: string) => {
-  //   if (!persona) {
-  //     throw new Error("Persona is null");
-  //   }
-  //   return await createConversation(message, scenarioId || "", persona);
-  // };
-
-  const navigateToChat = (conversationResponse: ConversationResponse, message: string) => {
-    const url = `/chat-screen?conversationId=${conversationResponse.id}&firstMessage=${encodeURIComponent(
-      message
-    )}&initialResponse=${encodeURIComponent(conversationResponse.aiResponse)}`;
-    router.push(url);
-  };
-
-  interface ChatError {
-    message: string;
-  }
-
-  const handleChatError = (error: ChatError) => {
-    console.error("Error starting conversation:", error);
-    setIsExiting(false);
-    setIsNavigatingToChat(false);
-  };
-
-  // TODO combine the two functions
-  const handlePromptSelect = async (prompt: string) => {
-    startChat(prompt);
-  };
-
-  const handleStartChat = async () => {
-    if (inputMessage.trim()) {
+  const handleStartChat = async (prompt?: string) => {
+    if (prompt) {
+      startChat(prompt);
+    } else if (inputMessage) {
       startChat(inputMessage.trim());
     }
-  };
-
-  const handleBack = () => {
-    setIsExiting(true);
-    // setTimeout(() => {
-    //   router.push(`/scenario-setup?scenarioId=${scenarioId}`);
-    // }, 300);
-    router.back();
   };
 
   if (isNavigatingToChat) {
     return <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />;
   }
 
+  if (isLoading) {
+    return <LoadingScreen title="Loading Scenario" message="Please wait..." />;
+  }
+
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isExiting ? 0 : 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}>
-        <div className="flex-shrink-0 w-full">
-          <Header
-            title={scenarioInfo?.title || "Scenario"}
-            variant="default"
-            showInfoIcon={true}
-            onInfoClick={() => setShowInfoPopover(true)}
-          />
+    <div className="flex flex-col h-[calc(100vh-85px)] overflow-y-auto">
+      <h3 className="text-center font-light text-sm mt-12">
+        Choose a prompt below or start with your own message
+      </h3>
+      <div className="flex-1 flex flex-col justify-between py-4 md:py-8 md:max-w-3xl md:mx-auto w-full px-4">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center mb-8 md:mb-12">
+            <Image
+              width={200}
+              height={200}
+              alt="Union Training Bot"
+              src="/images/chat-bot.svg"
+              className="mb-6 md:mb-8 w-[150px] md:w-[250px]"
+              priority
+            />
+          </div>
         </div>
 
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-          <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex justify-between items-center mb-8">
-                <Button onClick={handleBack}>Back to Scenario Setup</Button>
-              </motion.div>
+        <div className="mt-auto">
+          <div className="relative">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (inputMessage.trim()) {
+                  handleStartChat();
+                }
+              }}
+              className="flex flex-col sm:flex-row items-center gap-3 p-2"
+            >
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                className="w-full bg-slate-50 text-[14px] p-4 rounded-full border-none shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-0 focus:ring-0 placeholder:text-xs placeholder:px-2"
+                placeholder="Start typing..."
+                data-testid="startChatInput"
+              />
 
-              <motion.div
-                className="flex flex-col items-center mb-12"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}>
-                <Image width={250} height={250} alt="Union Training Bot" src="/images/chat-bot.svg" className="mb-8" />
-                <h2 className="text-pcsprimary-04 dark:text-pcsprimary-02 text-4xl font-bold mb-6">Start Training</h2>
-                <p className="text-pcsprimary-04 dark:text-pcsprimary-02 text-center text-xl mb-8">
-                  Choose a prompt below or write your own to start your union training session
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="grid gap-4 sm:grid-cols-2 mb-12"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}>
-                {selectedPrompts.map((prompt, index) => (
-                  <motion.div key={index} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button onClick={() => handlePromptSelect(prompt)} className=" py-4 px-6 text-left h-full w-full">
-                      {prompt}
-                    </Button>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-
-            <motion.div
-              className="mt-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 text-pcsprimary-05 dark:text-gray-300 text-sm sm:text-base p-3 pr-16 rounded-full border border-pcsprimary-05 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pcsprimary-02 dark:focus:ring-pcsprimary-01 transition-all duration-200"
-                  placeholder="Start training..."
-                />
-                <Button
-                  onClick={handleStartChat}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-base py-2 px-4 rounded-full"
-                  disabled={!inputMessage.trim()}>
-                  Start
-                </Button>
-              </div>
-            </motion.div>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto text-base py-2 px-4 rounded-full whitespace-nowrap flex items-center justify-center text-sm"
+                disabled={!inputMessage}
+                data-testid="initiateSendButton"
+              >
+                Send
+                <SendHorizontal className="w-4 h-4 mr-2" />
+              </Button>
+            </form>
           </div>
-        </main>
+        </div>
 
-        <ChatModals
-          showInfoPopover={showInfoPopover}
-          setShowInfoPopover={setShowInfoPopover}
-          scenarioInfo={scenarioInfo}
-          persona={persona}
-          showEndChatModal={false}
-          setShowEndChatModal={() => {}}
-          showFeedbackPopover={false}
-          setShowFeedbackPopover={() => {}}
-          handleFeedbackClose={() => {}}
-          conversationId={""}
-        />
-      </motion.div>
-    </AnimatePresence>
+        <div className="flex flex-col gap-2 mt-4">
+          <p className="text-left font-regular text-xs ml-2">
+            Struggling to start?
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {PROMPTS.map((prompt) => (
+              <Badge
+                key={uuidv4()}
+                onClick={() => handleStartChat(prompt)}
+                className="text-xs font-light rounded-full whitespace-nowrap bg-primary-light text-primary w-fit p-2 hover:bg-primary-light/80 hover:shadow-lg cursor-pointer transition-colors"
+              >
+                {prompt}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <ChatModals
+        showInfoPopover={showInfoPopover}
+        setShowInfoPopover={setShowInfoPopover}
+        scenarioInfo={scenarioInfo}
+        persona={persona}
+        showEndChatModal={false}
+        setShowEndChatModal={() => { }}
+        conversationId={""}
+      />
+    </div>
   );
 };
 
 const InitiateChatSkeleton: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-gray-100 ">
       <div className="flex-shrink-0">
-        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-12 md:h-16 w-full" />
       </div>
 
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 max-w-screen-xl flex flex-col">
-        <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-between py-8">
+      <main className="flex-grow w-full px-4 flex flex-col md:container md:mx-auto md:px-6 lg:px-8 md:max-w-screen-xl">
+        <div className="w-full flex-grow flex flex-col justify-between py-4 md:py-8 md:max-w-3xl md:mx-auto">
           <div>
-            <Skeleton className="h-10 w-40 mb-8" />
-            <div className="flex flex-col items-center mb-12">
-              <Skeleton className="w-64 h-64 mb-8 rounded-full" />
-              <Skeleton className="h-10 w-3/4 mb-6" />
-              <Skeleton className="h-6 w-full mb-2" />
-              <Skeleton className="h-6 w-5/6 mb-8" />
+            <Skeleton className="h-8 md:h-10 w-32 md:w-40 mb-6 md:mb-8" />
+            <div className="flex flex-col items-center mb-8 md:mb-12">
+              <Skeleton className="w-[150px] h-[150px] md:w-64 md:h-64 mb-6 md:mb-8 rounded-full" />
+              <Skeleton className="h-8 md:h-10 w-full md:w-3/4 mb-4 md:mb-6" />
+              <Skeleton className="h-5 md:h-6 w-full mb-2" />
+              <Skeleton className="h-5 md:h-6 w-5/6 mb-6 md:mb-8" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 mb-12">
+            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 mb-8 md:mb-12">
               {[1, 2, 3, 4].map((index) => (
-                <Skeleton key={index} className="h-16 w-full rounded-lg" />
+                <Skeleton key={index} className="h-12 md:h-16 w-full rounded-lg" />
               ))}
             </div>
           </div>
 
           <div className="mt-auto">
-            <Skeleton className="h-12 w-full rounded-full" />
+            <Skeleton className="h-10 md:h-12 w-full rounded-full" />
           </div>
         </div>
       </main>

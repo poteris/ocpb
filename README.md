@@ -46,12 +46,23 @@ Important notes:
 - To completely reset the database: `pnpm db:reset:all` (⚠️ This will erase all data)
 
 5. Launch the application:
-
+- This command starts the Next.js development server which offers hot reloading
 ```bash
-pnpm start
+pnpm dev
 ```
 
-This command starts the Next.js development server which offers hot reloading
+6. Smoke test the application with Playwright E2E tests:
+
+- Before first run, install playwright browsers and set the host and port of your dev server:
+```bash
+pnpm exec playwright install --with-deps
+echo E2E_TEST_BASE_URL=http://localhost:3000 >> ./frontend/.env
+```
+- Then to execute the E2E smoke test suite:
+```bash
+pnpm dev && pnpm test:ui
+```
+- There is also a github action that invokes the Playwright E2E smoke test suite for a given branch, when the associated PR is marked as Ready for Review
 
 ## 🏗️ Architecture Overview
 
@@ -127,5 +138,6 @@ For major changes, please open an issue first to discuss your proposed modificat
 - `pnpm db:reset:all` - Reset database (⚠️ destructive)
 - `pnpm start` - Start development server
 - `pnpm test` - Run test suite
+- `pnpm test:ui` - Run Playwright E2E smoke test suite
 
 For additional assistance or questions, please check our issue tracker or reach out to the development team.
