@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Browser, ConsoleMessage } from '@playwright/test';
+import { test, expect, type Page, type Browser, ConsoleMessage, Response } from '@playwright/test';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -98,14 +98,13 @@ test('Chat can be ended and user is routed to feedback page', async () => {
   // Check routing to feedback page
   await Promise.all([
     page.waitForURL(`${baseUrl}/feedback**`),
+    page.waitForResponse(`${baseUrl}/api/feedback/generate-feedback`),
     yesButton.click()
   ]);
   await expect(page.url()).toEqual(expect.stringContaining(`${baseUrl}/feedback`));
 });
 
 test('Feedback report is presented to user', async () => {
-  await page.waitForResponse(`${baseUrl}/api/feedback/generate-feedback`);
-  
   // Check high level report content
   await expect(page.getByRole('heading', { name: 'Feedback' })).toBeVisible();
   
