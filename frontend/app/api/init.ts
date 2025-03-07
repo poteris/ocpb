@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { OpenAI } from "openai";
+// import { OpenAI } from "openai";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -13,6 +13,6 @@ if (!process.env.OPENAI_API_KEY) {
   throw new Error("Missing OpenAI API key");
 }
 
-export const openaiClient = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// export const openaiClient = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
