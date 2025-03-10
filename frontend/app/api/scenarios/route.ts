@@ -1,7 +1,7 @@
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
-import { supabase } from "@/lib/init";
+import { supabase } from "../init";
 import {  DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
 
 
@@ -28,9 +28,13 @@ async function createScenarioWithObjectives(scenario: TrainingScenario) {
     .single();
 
   if (error) {
-    throw new DatabaseError("Error creating scenario", "create_scenario", DatabaseErrorCodes.Insert, {
-      error,
+    const dbError = new DatabaseError("Error creating scenario", "create_scenario", DatabaseErrorCodes.Insert, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   const objectivesString = (objectives: string[]) => {
@@ -49,9 +53,13 @@ async function createScenarioWithObjectives(scenario: TrainingScenario) {
     if (objectivesError) {
       // If objectives creation fails, clean up the scenario
       await supabase.from("scenarios").delete().eq("id", scenario.id);
-      throw new DatabaseError("Error creating objectives", "create_scenario", DatabaseErrorCodes.Insert, {
-        error: objectivesError,
+      const dbError = new DatabaseError("Error creating objectives", "create_scenario", DatabaseErrorCodes.Insert, {
+        details: {
+          error: objectivesError,
+        }
       });
+      console.error(dbError.toLog());
+      throw dbError;
     }
   }
 

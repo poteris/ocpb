@@ -6,9 +6,13 @@ import {DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
 async function updatePrompt(id: number, type: "system" | "feedback" | "persona", content: string) {
   const { error } = await supabase.from(`${type}_prompts`).update({ content }).eq("id", id);
   if (error) {
-    throw new DatabaseError(`Error updating ${type} prompt`, "update_prompt", DatabaseErrorCodes.Update, {
-      error
+    const dbError = new DatabaseError(`Error updating ${type} prompt`, "update_prompt", DatabaseErrorCodes.Update, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 }
 

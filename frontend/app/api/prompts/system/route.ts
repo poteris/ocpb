@@ -2,6 +2,7 @@ import { PromptWithDetails, PromptWithDetailsSchema } from "@/types/prompt";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
+import { supabase } from "../../init";
 
 async function getSystemPrompts(): Promise<PromptWithDetails[]> {
   const { data, error } = await supabase.from("system_prompts").select("id, content, scenario_id, persona_id, created_at").order("created_at", { ascending: true });
@@ -16,7 +17,7 @@ async function getSystemPrompts(): Promise<PromptWithDetails[]> {
   if (!validationResult.success) {
     console.error("Error validating system prompts data:", validationResult.error);
     throw new DatabaseError("Error validating system prompts data", "getSystemPrompts", DatabaseErrorCodes.Select, {
-      error: validationResult.error.format()  ,
+      error: validationResult.error.format(),
     });
   }
   return validationResult.data;
