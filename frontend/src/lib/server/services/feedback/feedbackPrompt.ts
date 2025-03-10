@@ -1,10 +1,12 @@
 'use server'
 import { conversationDataSchema, messageDataSchema, MessageData } from "@/types/feedback";
 import { getFeedbackPrompt as getFeedbackPromptFromDb, getConversationById } from "@/lib/server/db";
+import { z } from "zod";
 
-type FeedbackPrompt = {
-  content: string;
-};
+const feedbackPromptSchema = z.object({
+  content: z.string(),
+});
+
 
 export async function getFeedbackPrompt(conversationId: string): Promise<string> {
   try {
@@ -14,14 +16,8 @@ export async function getFeedbackPrompt(conversationId: string): Promise<string>
       getFeedbackPromptFromDb(),
     ]);
 
-    if (conversationResult.error || feedbackPromptResult.error) {
-      throw new Error(
-        `Error fetching data: ${conversationResult.error?.message || feedbackPromptResult.error?.message}`
-      );
-    }
-
-    const conversation = conversationDataSchema.parse(conversationResult.data);
-    const feedbackPrompt = feedbackPromptResult.data as FeedbackPrompt;
+    const conversation = conversationDataSchema.parse(conversationResult);
+    const feedbackPrompt = feedbackPromptSchema.parse(feedbackPromptResult);
 
     if (!feedbackPrompt?.content) {
       throw new Error("Feedback prompt content not found or empty.");

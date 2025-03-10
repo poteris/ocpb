@@ -1,20 +1,21 @@
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
 import { NextResponse, NextRequest } from "next/server";
-import { Result, err, ok } from "@/types/result";
 import { supabase } from "../init";
-
+import {  DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
 
 
 export async function GET() {
-  const result = await getScenarios();
-  if (!result.isOk) {
-    return NextResponse.json({ message: result.error }, { status: 500 });
+  try {
+    const result = await getScenarios();
+    return NextResponse.json(result, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Error in GET scenarios:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-  return NextResponse.json(result.value, { status: 200 });
 }
 
-async function createScenarioWithObjectives(scenario: TrainingScenario): Promise<Result<TrainingScenario, string>> {
+async function createScenarioWithObjectives(scenario: TrainingScenario) {
   const { data, error } = await supabase
     .from("scenarios")
     .insert({
@@ -27,8 +28,13 @@ async function createScenarioWithObjectives(scenario: TrainingScenario): Promise
     .single();
 
   if (error) {
-    console.error("Error creating scenario:", error);
-    return err(error.message);
+    const dbError = new DatabaseError("Error creating scenario", "create_scenario", DatabaseErrorCodes.Insert, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   const objectivesString = (objectives: string[]) => {
@@ -47,8 +53,13 @@ async function createScenarioWithObjectives(scenario: TrainingScenario): Promise
     if (objectivesError) {
       // If objectives creation fails, clean up the scenario
       await supabase.from("scenarios").delete().eq("id", scenario.id);
-      console.error("Error creating objectives:", objectivesError);
-      return err("Failed to create objectives");
+      const dbError = new DatabaseError("Error creating objectives", "create_scenario", DatabaseErrorCodes.Insert, {
+        details: {
+          error: objectivesError,
+        }
+      });
+      console.error(dbError.toLog());
+      throw dbError;
     }
   }
 
@@ -60,19 +71,17 @@ async function createScenarioWithObjectives(scenario: TrainingScenario): Promise
     objectives: data.objectives,
   } as TrainingScenario;
 
-  return ok(newScenario);
+  return newScenario;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const result = await createScenarioWithObjectives(body);
-    if (!result.isOk) {
-      return NextResponse.json({ message: result.error }, { status: 500 });
-    }
-    return NextResponse.json(result.value, { status: 201 });
-  } catch (error) {
-    console.error("Error processing request:", error);
-    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+     
+    return NextResponse.json(result, { status: 201 });
+  } catch (error: unknown) {
+    console.error("Error in POST scenarios:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
