@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Browser, ConsoleMessage } from '@playwright/test';
+import { test, expect, type Page, type Browser, ConsoleMessage, Response } from '@playwright/test';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
@@ -40,9 +40,24 @@ test('Route back to landing page from scenario setup page', async () => {
   await expect(page).toHaveURL(`${baseUrl}`);
 });
 
-test('Persona loads on scenario page', async () => {
-  await page.goto(`${baseUrl}/scenario-setup?scenarioId=member-recruitment`);
+test('Persona loads on scenario page, using real OpenAI API', async () => {
+  await page.goto(`${baseUrl}/scenario-setup?scenarioId=member-recruitment`, {
+    headers: {
+      'x-use-real-openai': 'true'
+    },
+    timeout: 15000, // Timeout allows (a lot of) timefor API to respond
+  });
   await page.waitForResponse(`${baseUrl}/api/persona/generate-new-persona`);
+  await expect(page.getByRole('heading', { name: 'Personal Background' })).toBeVisible();
+});
+
+test('Persona regenerates on scenario page, using mock OpenAI API', async () => {
+  const regenerateButton = page.getByTestId('regeneratePersonaButton');
+  await expect(regenerateButton).toBeVisible(); 
+  await Promise.all([
+    page.waitForResponse(`${baseUrl}/api/persona/generate-new-persona`),
+    regenerateButton.click()
+  ]);
   await expect(page.getByRole('heading', { name: 'Personal Background' })).toBeVisible({ timeout: 15000 });
 });
 
@@ -98,14 +113,13 @@ test('Chat can be ended and user is routed to feedback page', async () => {
   // Check routing to feedback page
   await Promise.all([
     page.waitForURL(`${baseUrl}/feedback**`),
+    page.waitForResponse(`${baseUrl}/api/feedback/generate-feedback`),
     yesButton.click()
   ]);
   await expect(page.url()).toEqual(expect.stringContaining(`${baseUrl}/feedback`));
 });
 
 test('Feedback report is presented to user', async () => {
-  await page.waitForResponse(`${baseUrl}/api/feedback/generate-feedback`);
-  
   // Check high level report content
   await expect(page.getByRole('heading', { name: 'Feedback' })).toBeVisible();
   

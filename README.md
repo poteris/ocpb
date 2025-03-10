@@ -57,6 +57,7 @@ pnpm dev
 ```bash
 pnpm exec playwright install --with-deps
 echo E2E_TEST_BASE_URL=http://localhost:3000 >> ./frontend/.env
+echo USE_MOCK_OPENAI=true >> ./frontend/.env
 ```
 - Then to execute the E2E smoke test suite:
 ```bash

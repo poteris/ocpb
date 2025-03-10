@@ -84,6 +84,7 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({
             className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200"
             onClick={onRegeneratePersona}
             disabled={isRegenerating}
+            data-testid="regeneratePersonaButton"
           >
             <span>Regenerate Persona</span>
             <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />

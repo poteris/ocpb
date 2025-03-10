@@ -1,7 +1,7 @@
 'use server'
 import OpenAI from "openai";
 import { getFeedbackPrompt } from "@/lib/server/services/feedback/feedbackPrompt";
-import { openaiClient } from "../../../../../app/api/init";
+import { getOpenAIClient } from "../openai/OpenAIClientFactory";
 import { tools } from "@/utils/openaiTools";
 
 
@@ -9,7 +9,8 @@ export async function generateFeedbackUsingLLM(conversationId: string) {
   const feedbackPrompt = await getFeedbackPrompt(conversationId);
   const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: "user", content: feedbackPrompt }];
   const llm = process.env.LLM_MODEL || "gpt-4o";
-  const completion = await openaiClient.chat.completions.create({
+  const openaiClient = getOpenAIClient();
+  const completion = await openaiClient.createChatCompletion({
     model: llm,
     messages: messages,
     tools: tools,
