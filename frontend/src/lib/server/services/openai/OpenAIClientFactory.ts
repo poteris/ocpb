@@ -1,12 +1,11 @@
 import { OpenAIClientInterface } from './OpenAIClientInterface';
 import { MockOpenAIClient } from './MockOpenAIClient';
-import { RealOpenAIClient } from './RealOpenAIClient'; // Assume this is the real client
+import { RealOpenAIClient } from './RealOpenAIClient'; 
 
-export function getOpenAIClient(headers: any = {}): OpenAIClientInterface {
+export function getOpenAIClient(headers: Headers = new Headers()): OpenAIClientInterface {
     const useMock = process.env.USE_MOCK_OPENAI === 'true';
-    const overrideHeader = headers['x-use-real-openai'];
 
-    if (overrideHeader) {
+    if (headers.get('x-use-real-openai')) {
         return new RealOpenAIClient();
     }
 
