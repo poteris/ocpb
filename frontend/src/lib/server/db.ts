@@ -247,16 +247,38 @@ export async function getConversationById(conversationId: string) {
   
 }
 
-export async function getFeedbackPrompt() {
+const feedbackPromptSchema = z.object({
+  content: z.string(),
+});
+
+type FeedbackPrompt = z.infer<typeof feedbackPromptSchema>;
+
+export async function getFeedbackPrompt(): Promise<FeedbackPrompt> {
   const { data, error } = await supabase.from("feedback_prompts").select("content").single();
 
   if (error) {
-    throw new DatabaseError("Error fetching feedback prompt", "getFeedbackPrompt", DatabaseErrorCodes.Select, {
-      error: error,
+    const dbError = new DatabaseError("Error fetching feedback prompt", "getFeedbackPrompt", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
-  return data;
+  const feedbackPrompt = feedbackPromptSchema.safeParse(data);
+
+  if (!feedbackPrompt.success) {
+    const dbError = new DatabaseError("Error parsing feedback prompt", "getFeedbackPrompt", DatabaseErrorCodes.Select, {
+      details: {
+        error: feedbackPrompt.error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
+  }
+
+  return feedbackPrompt.data;
 }
 
 export async function getScenarioById(scenarioId: string): Promise<TrainingScenario> {
