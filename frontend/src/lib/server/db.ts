@@ -2,7 +2,8 @@
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { z } from "zod";
-import { DatabaseError, DatabaseErrorCodes, isError } from "@/utils/errors";
+import { DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
+import { supabase } from "../../../app/api/init";
 
 
 export async function getAllScenarios(): Promise<TrainingScenario[]> {
@@ -15,9 +16,14 @@ export async function getAllScenarios(): Promise<TrainingScenario[]> {
   `);
 
   if (error) {
-    throw new DatabaseError("Error fetching scenarios", "getAllScenarios", DatabaseErrorCodes.Select, {
-      error: error,
+    const dbError = new DatabaseError("Error fetching scenarios", "getAllScenarios", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
   // we need to add the objectives to the scenario object
   const scenarios = data.map((scenario) => ({
@@ -27,11 +33,11 @@ export async function getAllScenarios(): Promise<TrainingScenario[]> {
 
   const validationResult = z.array(TrainingScenarioSchema).safeParse(scenarios);
   if (!validationResult.success) {
-    throw new DatabaseError("Error validating scenarios data", "getAllScenarios", DatabaseErrorCodes.Select, {
-      error: validationResult.error,
+    console.error(validationResult.error);
+    throw new Error ("Error validating scenarios data", {
+      cause: validationResult.error,
     });
-  }
-
+  } 
   return validationResult.data;
 }
 
@@ -50,7 +56,15 @@ export async function getScenario(scenarioId: string): Promise<TrainingScenario>
     .eq("id", scenarioId)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const dbError = new DatabaseError("Error fetching scenario", "getScenario", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
+  }
 
   return {
     ...data,
@@ -62,8 +76,13 @@ export async function retrievePersona(personaId: string) {
   const { data: personas, error } = await supabase.from("personas").select("*").eq("id", personaId).single();
 
   if (error) {
-    console.error("Error fetching persona:", error);
-    return null;
+    const dbError = new DatabaseError("Error fetching persona", "retrievePersona", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   return personas;
@@ -93,21 +112,29 @@ export async function getConversationContext(conversationId: string) {
     .eq("conversation_id", conversationId)
     .single();
 
-  if (error) throw new DatabaseError("Error fetching conversation context", "getConversationContext", DatabaseErrorCodes.Select, {
-    error: error,
-  });
+  if (error) {
+    const dbError = new DatabaseError("Error fetching conversation context", "getConversationContext", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
+  }
 
   const scenario = await getScenario(data.scenario_id);
   const persona = await retrievePersona(data.persona_id);
   const systemPrompt = await getSystemPrompt(data.system_prompt_id);
 
   if (!scenario || !persona) {
-    console.error("Scenario or persona not found", error);
-    throw new DatabaseError("Scenario or persona not found", "getConversationContext", DatabaseErrorCodes.Select, {
-      error: error,
+    const dbError = new DatabaseError("Scenario or persona not found", "getConversationContext", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
-
   return { scenario, persona, systemPrompt };
 } 
 
@@ -118,10 +145,13 @@ export async function saveMessages(conversationId: string, userMessage: string, 
   ]);
 
   if (error) {
-    console.error("Error saving messages:", error);
-    throw new DatabaseError("Error saving messages", "saveMessages", DatabaseErrorCodes.Insert, {
-      error: error,
+    const dbError = new DatabaseError("Error saving messages", "saveMessages", DatabaseErrorCodes.Insert, {
+      details: {
+        error: error
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 }
 
@@ -129,10 +159,13 @@ export async function upsertPersona(persona: Persona) {
   const { error } = await supabase.from("personas").upsert(persona, { onConflict: "id" });
 
   if (error) {
-    console.error("Error upserting persona:", error);
-    throw new DatabaseError("Error upserting persona", "upsertPersona", DatabaseErrorCodes.Insert, {
-      error: error,
+    const dbError = new DatabaseError("Error upserting persona", "upsertPersona", DatabaseErrorCodes.Insert, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 }
 
@@ -154,10 +187,13 @@ export async function insertConversation(
   });
 
   if (error) {
-    console.error("Error inserting conversation:", error);
-    throw new DatabaseError("Error inserting conversation", "insertConversation", DatabaseErrorCodes.Insert, {
-      error: error,
+    const dbError = new DatabaseError("Error inserting conversation", "insertConversation", DatabaseErrorCodes.Insert, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 }
 
@@ -169,9 +205,13 @@ export async function getAllChatMessages(conversationId: string) {
       .order("created_at", { ascending: true });
 
     if (messagesError) {
-      throw new DatabaseError("Error fetching messages", "getAllChatMessages", DatabaseErrorCodes.Select, {
-        error: messagesError,
+      const dbError = new DatabaseError("Error fetching messages", "getAllChatMessages", DatabaseErrorCodes.Select, {
+        details: {
+          error: messagesError,
+        }
       });
+      console.error(dbError.toLog());
+      throw dbError;
     }
 
     return messagesData;
@@ -194,9 +234,13 @@ export async function getConversationById(conversationId: string) {
       .single();
 
   if (error) {
-    throw new DatabaseError("Error fetching conversation", "getConversationById", DatabaseErrorCodes.Select, {
-      error: error,
+    const dbError = new DatabaseError("Error fetching conversation", "getConversationById", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   return data;
@@ -220,15 +264,23 @@ export async function getScenarioById(scenarioId: string): Promise<TrainingScena
     const { data: scenario, error } = await supabase.from("scenarios").select("*").eq("id", scenarioId).single();
 
   if (error) {
-    throw new DatabaseError("Error fetching scenario", "getScenarioById", DatabaseErrorCodes.Select, {
-      error: error,
+    const dbError = new DatabaseError("Error fetching scenario", "getScenarioById", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   if (!scenario) {
-    throw new DatabaseError("Scenario not found", "getScenarioById", DatabaseErrorCodes.Select, {
-      error: "Scenario not found",
+    const dbError = new DatabaseError("Scenario not found", "getScenarioById", DatabaseErrorCodes.Select, {
+      details: {
+        error: "Scenario not found",
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   const { data: objectives, error: objectivesError } = await supabase
@@ -237,9 +289,13 @@ export async function getScenarioById(scenarioId: string): Promise<TrainingScena
     .eq("scenario_id", scenarioId);
 
   if (objectivesError) {
-    throw new DatabaseError("Error fetching objectives", "getScenarioById", DatabaseErrorCodes.Select, {
-      error: objectivesError,
+    const dbError = new DatabaseError("Error fetching objectives", "getScenarioById", DatabaseErrorCodes.Select, {
+      details: {
+        error: objectivesError,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
 
   return { ...scenario, objectives: objectives.map((obj) => obj.objective) };
