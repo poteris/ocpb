@@ -59,27 +59,3 @@ export class DatabaseError extends BaseError {
     });
   }
 }
-
-// API error codes
-export enum ApiErrorCodes {
-  InvalidRequest = "invalid_request",
-  Unauthorized = "unauthorized",
-  NotFound = "not_found"
-}
-
-// API specific error
-export class ApiError extends BaseError {
-  constructor(
-    message: string, 
-    context: string,
-    code: ApiErrorCodes,
-    details?: Record<string, unknown>
-  ) {
-    super(message, {
-      context,
-      code: `API_${code}`,
-      details,
-      timestamp: new Date()
-    });
-  }
-}

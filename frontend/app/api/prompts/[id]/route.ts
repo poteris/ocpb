@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
-import {ApiError, ApiErrorCodes, DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
+import { supabase } from "../../init";
+import {DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
 
 async function updatePrompt(id: number, type: "system" | "feedback" | "persona", content: string) {
   const { error } = await supabase.from(`${type}_prompts`).update({ content }).eq("id", id);
@@ -20,23 +21,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const id = parseInt((await params).id, 10);
     if (isNaN(id)) {
-      throw new ApiError('Invalid ID', 'update_prompt', ApiErrorCodes.InvalidRequest, {
-        id,
-      });
+      console.error("Invalid ID for update prompt");
+      throw new Error("Invalid ID");
     }
 
     const body = await req.json().catch((error: unknown) => {
-      throw new ApiError('Invalid request', 'update_prompt', ApiErrorCodes.InvalidRequest, {
-        error,
-        body: req.body,
-      });
+      console.error("Error parsing request body", error);
+      throw new Error("Invalid request");
     });
 
     const validatedRequest = UpdatePromptRequestSchema.safeParse(body);
     if (!validatedRequest.success) {
-      throw new ApiError('Invalid request', 'update_prompt', ApiErrorCodes.InvalidRequest, {
-        error: validatedRequest.error.format(),
-      });
+      console.error("Validation error for update prompt", validatedRequest.error);
+      throw new Error("Invalid request");
     }
     await updatePrompt(id, validatedRequest.data.type, validatedRequest.data.content);
 
