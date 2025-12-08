@@ -1,6 +1,0 @@
-livekit
-livekit-agents[codecs]
-livekit-plugins-groq
-livekit-plugins-elevenlabs
-python-dotenv
-

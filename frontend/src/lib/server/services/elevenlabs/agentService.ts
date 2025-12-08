@@ -84,9 +84,11 @@ export async function createElevenLabsAgent(
   }
 
   // Get voice for persona and validate it exists in account
-  let voice = getVoiceOrDefault(persona.voice_id);
+  // Pass persona gender to select an appropriate voice if no specific voice is set
+  let voice = getVoiceOrDefault(persona.voice_id, persona.gender);
   console.log('🎯 Requested voice:', {
     personaVoiceId: persona.voice_id,
+    personaGender: persona.gender,
     resolvedVoice: voice
   });
 
@@ -105,7 +107,8 @@ export async function createElevenLabsAgent(
       id: firstVoice.voice_id,
       name: firstVoice.name,
       accent: 'Available Voice',
-      description: `${firstVoice.name} - Available in account`
+      description: `${firstVoice.name} - Available in account`,
+      gender: voice.gender // Preserve the original gender from the selected voice
     };
     console.log('🔄 Using fallback voice:', voice);
   } else if (voiceExists) {

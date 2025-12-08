@@ -5,10 +5,12 @@ import Image from "next/image";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger, Modal, ColorPicker } from "@/components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Modal, ColorPicker, Select } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
 import { TrainingScenario } from "@/types/scenarios";
 import { useTenant } from "@/context/TenantContext";
+import { Persona } from "@/types/persona";
+import { BRITISH_VOICES } from "@/const/voices";
 import axios from "axios";
 interface ScenarioForm {
   id: string;
@@ -81,8 +83,12 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
   const [brandingForm, setBrandingForm] = useState({
     logoUrl: branding.logoUrl || "",
     primaryColor: branding.primaryColor,
+    voiceEnabled: branding.voiceEnabled || false,
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  
+  // Voice settings state
+  const [personas, setPersonas] = useState<Persona[]>([]);
 
   useEffect(() => {
     if (type === "scenario") {
@@ -100,8 +106,22 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
     setBrandingForm({
       logoUrl: branding.logoUrl || "",
       primaryColor: branding.primaryColor,
+      voiceEnabled: branding.voiceEnabled || false,
     });
   }, [branding]);
+
+  // Fetch personas for voice assignment
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        const response = await axios.get<Persona[]>(`/api/personas?organisation_id=${organisationId}`);
+        setPersonas(response.data);
+      } catch (error) {
+        console.error('Error fetching personas:', error);
+      }
+    };
+    fetchPersonas();
+  }, [organisationId]);
 
   const generateScenarioId = (title: string) => {
     const baseSlug = slugify(title);
@@ -447,6 +467,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         body: JSON.stringify({
           logoUrl: brandingForm.logoUrl,
           primaryColor: brandingForm.primaryColor,
+          voiceEnabled: brandingForm.voiceEnabled,
         }),
       });
 
@@ -455,6 +476,7 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         updateBranding({
           logoUrl: data.logoUrl,
           primaryColor: data.primaryColor,
+          voiceEnabled: data.voiceEnabled,
         });
         setError('Branding updated successfully!');
       } else {
@@ -464,6 +486,34 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
     } catch (error) {
       console.error('Branding update error:', error);
       setError('Failed to update branding. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVoiceAssignment = async (personaId: string, voiceId: string) => {
+    try {
+      setLoading(true);
+      const selectedVoice = BRITISH_VOICES.find(v => v.id === voiceId);
+      
+      const response = await axios.patch(`/api/personas/${personaId}`, {
+        voice_id: voiceId,
+        voice_name: selectedVoice?.name || null,
+        voice_accent: selectedVoice?.accent || null,
+      });
+
+      if (response.status === 200) {
+        // Update local state
+        setPersonas(prev => prev.map(p => 
+          p.id === personaId 
+            ? { ...p, voice_id: voiceId, voice_name: selectedVoice?.name, voice_accent: selectedVoice?.accent }
+            : p
+        ));
+        setError('Voice assigned successfully!');
+      }
+    } catch (error) {
+      console.error('Voice assignment error:', error);
+      setError('Failed to assign voice. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -554,6 +604,70 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
               onChange={(color) => setBrandingForm(prev => ({ ...prev, primaryColor: color }))}
               disabled={loading}
             />
+          </div>
+
+          {/* Voice Settings Section */}
+          <div className="border-t pt-6 mt-6">
+            <h3 className="text-md font-semibold text-gray-900 mb-4">Voice Chat Settings</h3>
+            
+            {/* Enable Voice Toggle */}
+            <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Enable Voice Chat</label>
+                <p className="text-xs text-gray-500">Allow users to have voice conversations with personas</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBrandingForm(prev => ({ ...prev, voiceEnabled: !prev.voiceEnabled }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  brandingForm.voiceEnabled ? 'bg-green-600' : 'bg-gray-300'
+                }`}
+                disabled={loading}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    brandingForm.voiceEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Persona Voice Assignment - only shown when voice is enabled */}
+            {brandingForm.voiceEnabled && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700">Configure Persona Voices</h4>
+                {personas.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">
+                    No personas found. Personas are created when users select scenarios.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {personas.map((persona) => (
+                      <div key={persona.id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{persona.name}</p>
+                          <p className="text-xs text-gray-500">{persona.job} - {persona.segment}</p>
+                        </div>
+                        <div className="w-48">
+                          <Select
+                            value={persona.voice_id || 'none'}
+                            onChange={(value) => handleVoiceAssignment(persona.id, value === 'none' ? '' : value)}
+                            options={[
+                              { value: 'none', label: 'Select voice...' },
+                              ...BRITISH_VOICES.map(v => ({
+                                value: v.id,
+                                label: `${v.name} - ${v.accent}`
+                              }))
+                            ]}
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preview Section */}

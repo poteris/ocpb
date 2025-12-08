@@ -17,7 +17,7 @@ export async function GET(
 
     const { data: organization, error } = await supabase
       .from('organisations')
-      .select('logo_url, primary_color')
+      .select('logo_url, primary_color, voice_enabled')
       .eq('id', organizationId)
       .single();
 
@@ -29,6 +29,7 @@ export async function GET(
     return NextResponse.json({
       logoUrl: organization.logo_url,
       primaryColor: organization.primary_color,
+      voiceEnabled: organization.voice_enabled || false,
     });
   } catch (error) {
     console.error('Error in GET /api/organizations/[id]/branding:', error);
@@ -50,7 +51,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { logoUrl, primaryColor } = body;
+    const { logoUrl, primaryColor, voiceEnabled } = body;
 
     // Validate hex colors
     const hexColorRegex = /^#[0-9A-F]{6}$/i;
@@ -58,15 +59,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid primary color format' }, { status: 400 });
     }
 
-    const updateData: { logo_url?: string; primary_color?: string } = {};
+    const updateData: { logo_url?: string; primary_color?: string; voice_enabled?: boolean } = {};
     if (logoUrl !== undefined) updateData.logo_url = logoUrl;
     if (primaryColor !== undefined) updateData.primary_color = primaryColor;
+    if (voiceEnabled !== undefined) updateData.voice_enabled = voiceEnabled;
 
     const { data, error } = await supabase
       .from('organisations')
       .update(updateData)
       .eq('id', organizationId)
-      .select('logo_url, primary_color')
+      .select('logo_url, primary_color, voice_enabled')
       .single();
 
     if (error) {
@@ -77,6 +79,7 @@ export async function PUT(
     return NextResponse.json({
       logoUrl: data.logo_url,
       primaryColor: data.primary_color,
+      voiceEnabled: data.voice_enabled || false,
     });
   } catch (error) {
     console.error('Error in PUT /api/organizations/[id]/branding:', error);

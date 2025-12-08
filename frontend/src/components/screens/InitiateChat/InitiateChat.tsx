@@ -15,7 +15,8 @@ import { v4 as uuidv4 } from "uuid";
 import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
 import { Badge } from "@/components/ui/badge";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, Mic } from "lucide-react";
+import { useTenant } from "@/context/TenantContext";
 
 const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
@@ -71,6 +72,11 @@ const InitiateChatContent: React.FC = () => {
   const scenarioId = searchParams ? searchParams.get('scenarioId') : null;
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { branding } = useTenant();
+  
+  // Voice mode is always available for now (bypassing database check)
+  // TODO: Re-enable database check once voice_enabled is properly set
+  const isVoiceAvailable = true; // Was: branding.voiceEnabled && persona?.voice_id;
 
   useEffect(() => {
     const loadScenario = async () => {
@@ -130,6 +136,34 @@ const InitiateChatContent: React.FC = () => {
     }
   };
 
+  const handleStartVoiceChat = async () => {
+    if (isInitiatingChat || !persona || !scenarioId) return;
+
+    try {
+      setIsInitiatingChat(true);
+      setIsNavigatingToChat(true);
+
+      // Create a new conversation for voice mode (no initial message needed)
+      const response = await axios.post<{ id: string }>("/api/chat/create-new-chat", {
+        userId: uuidv4(),
+        initialMessage: "[Voice conversation started]",
+        scenarioId,
+        persona,
+        isVoiceConversation: true,
+      });
+
+      const conversationId = response.data.id;
+      
+      // Navigate to voice chat page
+      router.push(`/voice-chat?conversationId=${conversationId}&personaId=${persona.id}&scenarioId=${scenarioId}`);
+    } catch (error) {
+      console.error("Error starting voice conversation:", error);
+      setIsNavigatingToChat(false);
+    } finally {
+      setIsInitiatingChat(false);
+    }
+  };
+
   if (isNavigatingToChat) {
     return <LoadingScreen title="Starting Conversation" message="Preparing your training session..." />;
   }
@@ -154,6 +188,26 @@ const InitiateChatContent: React.FC = () => {
               className="mb-6 md:mb-8 w-[150px] md:w-[250px]"
               priority
             />
+            
+            {/* Voice Chat Button - shown when voice is available */}
+            {isVoiceAvailable && (
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <Button
+                  onClick={handleStartVoiceChat}
+                  disabled={isInitiatingChat}
+                  className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                  data-testid="startVoiceChatButton"
+                >
+                  <Mic className="w-5 h-5" />
+                  Start Voice Chat
+                </Button>
+                {persona?.voice_name && (
+                  <p className="text-xs text-gray-500">
+                    Using {persona.voice_name} voice
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { createContext, useContext, ReactNode, useState, useEffect, useCallback 
 interface BrandingData {
   logoUrl?: string;
   primaryColor: string;
+  voiceEnabled?: boolean;
 }
 
 interface TenantContextType {
@@ -34,6 +35,7 @@ export function TenantProvider({
         setBranding({
           logoUrl: data.logoUrl,
           primaryColor: data.primaryColor || '#1e3a8a',
+          voiceEnabled: data.voiceEnabled || false,
         });
       }
     } catch (error) {

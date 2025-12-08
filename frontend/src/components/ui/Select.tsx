@@ -5,7 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "react-feather";
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+const SelectRoot = SelectPrimitive.Root;
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -70,8 +70,48 @@ const SelectItem = React.forwardRef<
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
+// Simple Select wrapper component for easier use
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  disabled?: boolean;
+  placeholder?: string;
+  className?: string;
+}
+
+const Select: React.FC<SelectProps> = ({ 
+  value, 
+  onChange, 
+  options, 
+  disabled = false,
+  placeholder = "Select...",
+  className 
+}) => {
+  return (
+    <SelectRoot value={value} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger className={className}>
+        <SelectPrimitive.Value placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </SelectRoot>
+  );
+};
+
 export {
   Select,
+  SelectRoot,
   SelectTrigger,
   SelectContent,
   SelectItem,

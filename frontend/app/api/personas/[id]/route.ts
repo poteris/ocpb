@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseService as supabase } from "../../service-init";
-import { personaSchema } from "@/types/persona";
 
 export async function PATCH(
   req: NextRequest,
@@ -10,30 +9,36 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
-    // Validate the persona data
-    const validatedData = personaSchema.parse(body);
+    // Build update object with only provided fields
+    const updateData: Record<string, unknown> = {};
+    
+    // Voice fields
+    if (body.voice_id !== undefined) updateData.voice_id = body.voice_id;
+    if (body.voice_name !== undefined) updateData.voice_name = body.voice_name;
+    if (body.voice_accent !== undefined) updateData.voice_accent = body.voice_accent;
+    
+    // Other persona fields (for full updates)
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.segment !== undefined) updateData.segment = body.segment;
+    if (body.age !== undefined) updateData.age = body.age;
+    if (body.gender !== undefined) updateData.gender = body.gender;
+    if (body.family_status !== undefined) updateData.family_status = body.family_status;
+    if (body.uk_party_affiliation !== undefined) updateData.uk_party_affiliation = body.uk_party_affiliation;
+    if (body.workplace !== undefined) updateData.workplace = body.workplace;
+    if (body.job !== undefined) updateData.job = body.job;
+    if (body.busyness_level !== undefined) updateData.busyness_level = body.busyness_level;
+    if (body.major_issues_in_workplace !== undefined) updateData.major_issues_in_workplace = body.major_issues_in_workplace;
+    if (body.personality_traits !== undefined) updateData.personality_traits = body.personality_traits;
+    if (body.emotional_conditions !== undefined) updateData.emotional_conditions = body.emotional_conditions;
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
 
     // Update the persona in the database
     const { data, error } = await supabase
       .from('personas')
-      .update({
-        voice_id: validatedData.voice_id,
-        voice_name: validatedData.voice_name,
-        voice_accent: validatedData.voice_accent,
-        // Include other fields that might be updated
-        name: validatedData.name,
-        segment: validatedData.segment,
-        age: validatedData.age,
-        gender: validatedData.gender,
-        family_status: validatedData.family_status,
-        uk_party_affiliation: validatedData.uk_party_affiliation,
-        workplace: validatedData.workplace,
-        job: validatedData.job,
-        busyness_level: validatedData.busyness_level,
-        major_issues_in_workplace: validatedData.major_issues_in_workplace,
-        personality_traits: validatedData.personality_traits,
-        emotional_conditions: validatedData.emotional_conditions,
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

@@ -9,8 +9,7 @@ export async function GET(req: NextRequest) {
     const { data: personas, error } = await supabase
       .from('personas')
       .select('*')
-      .eq('organisation_id', organisationId)
-      .order('created_at', { ascending: false });
+      .eq('organisation_id', organisationId);
 
     if (error) {
       console.error('Error fetching personas:', error);

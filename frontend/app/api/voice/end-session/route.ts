@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseService as supabase } from "../../service-init";
-
-interface TranscriptMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-}
+import { getConversationTranscript } from "@/lib/server/services/elevenlabs/agentService";
+import { syncTranscriptToDatabase } from "@/lib/server/services/elevenlabs/transcriptService";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { conversationId, transcriptData } = body;
+    const { conversationId, elevenLabsConversationId } = body;
 
     if (!conversationId) {
       return NextResponse.json(
@@ -19,50 +14,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('🔚 Ending voice session:', conversationId);
-
-    // If transcriptData provided (from LiveKit client), save it
-    if (transcriptData && Array.isArray(transcriptData) && transcriptData.length > 0) {
+    // If elevenLabsConversationId provided, fetch and sync transcript
+    if (elevenLabsConversationId) {
       try {
-        console.log('📝 Saving transcript with', transcriptData.length, 'messages');
+        const transcriptData = await getConversationTranscript(elevenLabsConversationId);
         
-        const messagesToInsert = transcriptData.map((msg: TranscriptMessage) => ({
-          conversation_id: conversationId,
-          role: msg.role,
-          content: msg.content,
-          created_at: new Date(msg.timestamp).toISOString()
-        }));
-
-        const { error } = await supabase
-          .from('messages')
-          .insert(messagesToInsert);
-
-        if (error) {
-          console.error('❌ Error saving transcript:', error);
-          throw new Error('Failed to save transcript');
-        }
-
-        console.log('✅ Transcript saved successfully');
+        // Sync transcript to our database
+        await syncTranscriptToDatabase(conversationId, transcriptData);
 
         return NextResponse.json({
           success: true,
-          messageCount: transcriptData.length
+          messageCount: transcriptData.transcript?.length || 0,
+          duration: transcriptData.call_duration_secs || 0
         }, { status: 200 });
       } catch (transcriptError) {
-        console.error('Error saving transcript:', transcriptError);
-        // Don't fail the whole request
+        console.error('Error fetching/syncing transcript:', transcriptError);
+        // Don't fail the whole request - transcript might be available later
         return NextResponse.json({
           success: false,
-          error: 'Failed to save transcript',
+          error: 'Failed to fetch transcript',
           details: transcriptError instanceof Error ? transcriptError.message : 'Unknown error'
         }, { status: 200 }); // Still return 200 so UI can proceed
       }
     }
 
-    // No transcript to save
+    // If no elevenLabsConversationId, just acknowledge
     return NextResponse.json({
       success: true,
-      message: 'Session ended (no transcript to save)'
+      message: 'Session ended (no transcript to sync)'
     }, { status: 200 });
 
   } catch (error) {
