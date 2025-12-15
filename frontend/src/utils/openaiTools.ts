@@ -92,16 +92,16 @@ export const tools: OpenAI.ChatCompletionTool[]= [
             type: "string",
             description: "Political affiliation of the person.",
           },
-          workplace: { type: "string", description: "Place of work." },
+          location: { type: "string", description: "Where the person lives in the UK." },
           job: { type: "string", description: "Specific job title and role." },
           busyness_level: {
             type: "string",
             enum: ["low", "medium", "high"], // strict values
             description: "Busyness level (low, medium, high).",
           },
-          major_issues_in_workplace: {
+          major_issues: {
             type: "string",
-            description: "Key workplace concerns.",
+            description: "Key political concerns.",
           },
           personality_traits: {
             type: "string", 
@@ -121,10 +121,10 @@ export const tools: OpenAI.ChatCompletionTool[]= [
           "gender",
           "family_status",
           "uk_party_affiliation",
-          "workplace",
+          "location",
           "job",
           "busyness_level",
-          "major_issues_in_workplace",
+          "major_issues",
           "personality_traits",
           "emotional_conditions",
         ],

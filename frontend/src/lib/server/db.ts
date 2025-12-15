@@ -3,9 +3,8 @@ import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
 import { z } from "zod";
 import { DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
+import { createClient } from "@/utils/supabase/server";
 import { supabaseService as supabase } from "../../../app/api/service-init";
-
-
 export async function getAllScenarios(organizationId: string = 'default'): Promise<TrainingScenario[]> {
   const { data, error } = await supabase.from("scenarios").select(`
     id,
@@ -91,6 +90,8 @@ export async function retrievePersona(personaId: string, organizationId: string 
 
 
 export async function getSystemPrompt(promptId: number): Promise<string> {
+    const supabase = await createClient();
+  try {
     const { data: promptData, error: promptError } = await supabase
       .from("system_prompts")
       .select("content")
@@ -104,6 +105,17 @@ export async function getSystemPrompt(promptId: number): Promise<string> {
 
     // Return the content directly as a string
     return promptData.content;
+  } 
+  catch (error) {
+    console.error("Error fetching system prompt", error);
+    const dbError = new DatabaseError("Error fetching system prompt", "getSystemPrompt", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
+  }
 }
 
 export async function getLatestSystemPromptId(): Promise<number> {
@@ -139,6 +151,7 @@ export async function getLatestFeedbackPromptId(): Promise<number> {
 }
 
 export async function getConversationContext(conversationId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversations")
     .select("scenario_id, persona_id, system_prompt_id")
@@ -192,6 +205,7 @@ export async function getConversationContext(conversationId: string) {
 } 
 
 export async function saveMessages(conversationId: string, userMessage: string, aiResponse: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("messages").insert([
     { conversation_id: conversationId, role: "user", content: userMessage },
     { conversation_id: conversationId, role: "assistant", content: aiResponse },
@@ -235,6 +249,7 @@ export async function insertConversation(
   systemPromptId: number,
   feedback_prompt_id = 1
 ) {
+  const supabase = await createClient();
   const { error } = await supabase.from("conversations").insert({
     conversation_id: conversationId,
     user_id: userId,
@@ -256,6 +271,8 @@ export async function insertConversation(
 }
 
 export async function getAllChatMessages(conversationId: string) {
+  try {
+    const supabase = await createClient();
       const { data: messagesData, error: messagesError } = await supabase
       .from("messages")
       .select("role, content")
@@ -273,11 +290,20 @@ export async function getAllChatMessages(conversationId: string) {
     }
 
     return messagesData;
-  }
+  } 
+catch (error) {
+    const dbError = new DatabaseError("Error fetching messages", "getAllChatMessages", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    }); 
+    console.error(dbError.toLog());
+    throw dbError;
+  }}
 
 
 export async function getConversationById(conversationId: string) {
-  
+const supabase = await createClient();
   const { data, error } = await supabase
     .from("conversations")
     .select(
@@ -289,7 +315,8 @@ export async function getConversationById(conversationId: string) {
         `
     )
     .eq("conversation_id", conversationId)
-      .single();
+  
+    .single();
 
   if (error) {
     const dbError = new DatabaseError("Error fetching conversation", "getConversationById", DatabaseErrorCodes.Select, {
@@ -302,8 +329,9 @@ export async function getConversationById(conversationId: string) {
   }
 
   return data;
-  
 }
+
+
 
 const feedbackPromptSchema = z.object({
   content: z.string(),
@@ -380,5 +408,5 @@ export async function getScenarioById(scenarioId: string, organizationId: string
     throw dbError;
   }
 
-  return { ...scenario, objectives: objectives.map((obj) => obj.objective) };
+  return { ...scenario, objectives: objectives.map((obj: {objective: string}) => obj.objective) };
 }

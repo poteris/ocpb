@@ -39,12 +39,13 @@ export async function createBasePromptForMessage(
       job: persona.job,
       family_status: persona.family_status.toLowerCase(),
       segment: persona.segment,
-      major_issues_in_workplace: persona.major_issues_in_workplace,
+      major_issues: persona.major_issues,
       uk_party_affiliation: persona.uk_party_affiliation,
       personality_traits: persona.personality_traits,
       emotional_conditions: persona.emotional_conditions,
       busyness_level: persona.busyness_level,
-      workplace: persona.workplace,
+      // workplace: persona.workplace,
+      location: persona.location,
     });
     return finalPrompt;
   } catch (error) {

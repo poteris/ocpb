@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger, LoadingSpinner } from "@/components/ui";
 import axios from "axios";
 import { PromptData, PromptWithDetails } from "@/types/prompt";
+import { LogOut } from "lucide-react";
+import { logoutUser } from "@/components/AdminLogin/actions";
 
 async function getLatestFeedbackPrompt(): Promise<PromptData> {
   const response = await axios.get<PromptData>("/api/prompts/feedback");
@@ -270,13 +272,26 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   );
 };
 
-// Update the SiteAdmin component to use the modified PromptManager
 export const SiteAdmin: React.FC = () => {
+
+
   return (
     <div className="flex flex-col h-full bg-white">
       <Header title="Site Admin - Prompts" variant="alt" />
       <div className="flex-grow w-full max-w-4xl mx-auto p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900">Prompt Management</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Prompt Management</h1>
+          <Button 
+            onClick={() => {
+              logoutUser();
+            }} 
+
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
+          >
+            <LogOut size={18} className="text-white" />
+            <span>Logout</span>
+          </Button>
+        </div>
 
         <Tabs defaultValue="system" className="w-full">
           <TabsList>

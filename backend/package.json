@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "supabase": "^2.6.8"
+    "supabase": "^2.12.1"
   },
   "scripts": {
     "db:start": "supabase start",

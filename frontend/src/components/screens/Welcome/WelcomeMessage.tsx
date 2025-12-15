@@ -7,8 +7,8 @@ const WelcomeMessage = () => {
         <CardTitle className="text-2xl font-light mb-2">Welcome</CardTitle>
         <CardDescription className="leading-relaxed space-y-4">
           <p>
-            Welcome to Rep Coach! This is a safe space where you can practice your 
-            conversation as a trade union representative, in different scenarios.
+            Welcome to Canvass Coach! This is a safe space where you can practice your 
+            conversation as a canvasser, in different scenarios.
           </p>
           <p>
             For each scenario, you will be given objectives to achieve and details 

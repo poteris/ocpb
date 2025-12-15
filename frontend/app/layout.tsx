@@ -15,8 +15,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Rep Coach",
-  description: "Training scenarios for union representatives",
+  title: "Canvass Coach",
+  description: "Training scenarios for canvassing",
 };
 
 export default async function RootLayout({

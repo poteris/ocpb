@@ -13,7 +13,7 @@ export default function ScenarioObjectives({ selectedScenario }: { readonly sele
                     <AccordionContent className="px-3 md:px-4">
                         <ul className="list-disc pl-4 md:pl-6 text-sm md:text-base space-y-1">
                             {selectedScenario?.objectives?.map((objective: string) => (
-                                <li key={uuidv4()}>{objective}</li>
+                                <li key={uuidv4()} className="whitespace-pre-wrap break-words">{objective}</li>
                             ))}
                         </ul>
                     </AccordionContent>

@@ -21,12 +21,12 @@
 
   /* Primary Colors */
   --pcsprimary-01: 219 72% 33%;
-  --pcsprimary-02: 215 73% 33%;
+  --pcsprimary-02: 345 100% 31%;
   --pcsprimary-03: 0 0% 22%;
   --pcsprimary-04: 0 0% 27%;
   --pcsprimary-05: 0 0% 73%;
   --pcsprimary-06: 0 0% 96%;
-  --pcsprimary01-light: 187, 100%, 97%;
+  --pcsprimary01-light: 340 100% 97%;
 
   /* Secondary Colors */
   --pcssecondary-01: 24 98% 47%;
@@ -37,6 +37,7 @@
   --pcssecondary-06: 64 99% 37%;
   --pcssecondary-07: 8 85% 48%;
   --pcssecondary-08: 231 25% 35%;
+
 }
 
 /*=====================
@@ -141,7 +142,6 @@ button:focus-visible {
    Layered Components
 =================== */
 @layer components {
-
   /* Utility: Unset all properties */
   .all-\[unset\] {
     all: unset;
@@ -182,6 +182,76 @@ button:focus-visible {
       transform: scale(1);
     }
   }
+  .feedback-gradient {
+    background-image: url('/images/feedback-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .performance-card {    
+    width: 595px;
+    height: 134px;
+  }
+
+  @media (max-width: 620px) {
+    .feedback-gradient {
+      background-image: url('/images/feedback-bg-mobile.png');
+      width: 342px;
+      height: 118px;
+      background-size: cover;
+    }
+    .performance-card {    
+      width: 342px;
+      height: 118px;
+    }
+  }
+
+  .feedback-content {
+    width: 515px;
+  }
+  
+  .rose-container {
+    gap: 12px;
+  }
+
+  .rose-image {
+    width: 42px;
+  }
+
+  .score-text {
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  .performance-score {
+    font-size: 24px;
+    font-weight: 400;
+  }
+
+  @media (max-width: 620px) {
+    .feedback-content {
+      width: 298px;
+    }
+    .rose-container {
+      gap: 4px;
+    }
+
+    .rose-image {
+      width: 24px;
+    }
+    
+    .performance-score {
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .score-text {
+      font-size: 12px;
+      font-weight: 400;
+    }
+  }
+
 }
 
 /* ===================

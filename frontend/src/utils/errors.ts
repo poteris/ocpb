@@ -29,7 +29,7 @@ abstract class BaseError extends Error {
       message: this.message,
       context: this.errorContext.context,
       code: this.errorContext.code,
-      details: this.errorContext.details,
+      details: JSON.stringify(this.errorContext.details, null, 2),
       timestamp: this.errorContext.timestamp
     };
   }

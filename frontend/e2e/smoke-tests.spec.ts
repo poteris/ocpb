@@ -130,7 +130,7 @@ test('Feedback report is presented to user', async () => {
   await expect(page.getByRole('heading', { name: 'Feedback' })).toBeVisible();
   
   await expect(page.getByRole('heading', { name: 'Performance Score' })).toBeVisible();
-  const feedbackStars = page.locator('.lucide-star');
+  const feedbackStars = page.locator('.rose-image');
   await expect(feedbackStars).toHaveCount(5);
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible();

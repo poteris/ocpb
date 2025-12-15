@@ -1,16 +1,21 @@
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
+import { createClient } from "@/utils/supabase/server";
 import "@testing-library/jest-dom";
-import { supabaseService as supabase } from "../../app/api/service-init";
+
 
 jest.mock("../../app/api/service-init");
 
 describe("getScenarios", () => {
+  let supabase: any;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    supabase = createClient();
   });
 
   it("should call Supabase with the correct table and select fields", async () => {
+    
     // We mock the return value from supabase
     (supabase.from as jest.Mock).mockReturnValue({
       select: jest.fn().mockResolvedValue({ data: [], error: null }),
