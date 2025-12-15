@@ -28,7 +28,6 @@ jobs:
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         USE_MOCK_OPENAI: ${{ vars.USE_MOCK_OPENAI }}
     steps:
     - uses: actions/checkout@v4
