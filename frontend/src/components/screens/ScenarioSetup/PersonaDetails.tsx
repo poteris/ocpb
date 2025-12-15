@@ -24,7 +24,7 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({
             Who you&apos;ll be talking to 
           </AccordionTrigger>
           <AccordionContent className="p-2 md:p-4">
-            {!persona && (
+          {!persona && (
             <div className="pb-4 text-red-500">No persona data available. Please try regenerating the persona.</div>
             )}
 
@@ -42,7 +42,7 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({
                       <section>
                         <h4 className="font-semibold text-base md:text-lg mb-2">Personal Background</h4>
                         <p className="leading-relaxed">
-                          {persona.name} is a {persona.age}-year-old {persona.gender} who lives in {persona.location} and works as a {persona.job}.
+                          {persona.name} is a {persona.age}-year-old {persona.gender} who works as a {persona.job} at {persona.workplace}.
                           They&apos;re {persona.family_status} and are segmented as a {persona.segment}.
                         </p>
                       </section>
@@ -57,18 +57,18 @@ const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({
                       </section>
 
                       <section>
-                        <h4 className="font-semibold text-base md:text-lg mb-2">Personality & Political Issues</h4>
+                        <h4 className="font-semibold text-base md:text-lg mb-2">Personality & Workplace Issues</h4>
                         <p className="mb-2 normal-case leading-relaxed">
                           {persona.name}&apos;s personality can be characterised as {persona.personality_traits}.
                         </p>
                         <div>
-                          <h5 className="font-medium mb-1">Major political issues:</h5>
-                          <p className="leading-relaxed">{persona.major_issues}</p>
+                          <h5 className="font-medium mb-1">Major workplace issues:</h5>
+                          <p className="leading-relaxed">{persona.major_issues_in_workplace}</p>
                         </div>
                       </section>
 
                       <section>
-                        <h4 className="font-semibold text-base md:text-lg mb-2">Labour Perspective</h4>
+                        <h4 className="font-semibold text-base md:text-lg mb-2">Union Perspective</h4>
                         <p className="leading-relaxed">{persona.emotional_conditions}</p>
                       </section>
                     </div>

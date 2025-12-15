@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Info } from 'react-feather';
 import Link from 'next/link';
+import { useTenant } from '@/context/TenantContext';
 
 interface HeaderProps {
   title?: string;
@@ -16,8 +17,14 @@ export const Header: React.FC<HeaderProps> = ({
   showInfoIcon = false,
   onInfoClick
 }) => {
-  const bgColor = variant === 'alt' ? 'bg-pcsprimary-02' : 'bg-pcsprimary01-light';
+  const { branding } = useTenant();
+  
+  // Use organization colors with fallbacks
+  const bgColor = variant === 'alt' ? 'bg-org-primary' : 'bg-pcsprimary01-light';
   const textColor = variant === 'alt' ? 'text-white' : 'text-pcsprimary-03';
+  
+  // Use custom logo if available, otherwise fallback to default
+  const logoSrc = branding.logoUrl || "/images/bot-avatar.svg";
 
   return (
     <header className={`${bgColor} py-3 sm:py-4 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10`}>
@@ -29,9 +36,13 @@ export const Header: React.FC<HeaderProps> = ({
           <Image
             width={48}
             height={48}
-            className="rounded-full w-10 h-10 sm:w-12 sm:h-12"
-            alt="Bot Avatar"
-            src="/images/bot-avatar.svg"
+            className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover"
+            alt="Organization Logo"
+            src={logoSrc}
+            onError={(e) => {
+              // Fallback to default logo if custom logo fails to load
+              e.currentTarget.src = "/images/bot-avatar.svg";
+            }}
           />
           <div className="ml-3 sm:ml-4">
             <h1 className={`font-semibold ${textColor} text-lg sm:text-xl md:text-2xl truncate`}>{title}</h1>
@@ -40,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
         {showInfoIcon && (
           <button 
             onClick={onInfoClick} 
-            className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-pcsprimary-02 transition-colors ml-2 p-2"
+            className="bg-transparent border-none cursor-pointer text-pcsprimary-03 hover:text-org-primary transition-colors ml-2 p-2"
             aria-label="Show information"
           >
             <Info size={24} />

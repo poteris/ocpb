@@ -1,6 +1,6 @@
 'use server'
 import { Persona } from "@/types/persona";
-import { getConversationContext, getSystemPrompt, saveMessages, upsertPersona, insertConversation} from "@/lib/server/db";
+import { getConversationContext, getSystemPrompt, saveMessages, upsertPersona, insertConversation, getLatestSystemPromptId, getLatestFeedbackPromptId} from "@/lib/server/db";
 import { createBasePromptForMessage, getAIResponse} from "@/lib/server/llm";
 import OpenAI from "openai";
 import { v4 as uuidv4 } from "uuid";
@@ -20,7 +20,7 @@ export async function createConversation({
   initialMessage,
   scenarioId,
   persona,
-  systemPromptId = 1,
+  systemPromptId,
 }: CreateNewChatRequest) {
   try {
     if (!userId || !scenarioId || !persona) {
@@ -30,26 +30,13 @@ export async function createConversation({
     // inserts a persona if does not exist or throws an error 
     await upsertPersona(persona);
 
-
-
-
-    // TODO: remove if adding default to the function signature works
-    // if (!systemPromptId) {
-    //   const { data: defaultPrompt, error: defaultPromptError } = await supabase
-    //     .from("system_prompts")
-    //     .select("id")
-    //     .single();
-
-    //   if (defaultPromptError) {
-    //     console.error("Error fetching default prompt:", defaultPromptError);
-    //     throw defaultPromptError;
-    //   }
-    //   systemPromptId = defaultPrompt.id;
-    // }
+    // Get the latest prompt IDs if not provided (prompts are shared across organisations)
+    const latestSystemPromptId = systemPromptId || await getLatestSystemPromptId();
+    const latestFeedbackPromptId = await getLatestFeedbackPromptId();
 
     const conversationId = uuidv4();
-    // Create conversation with system_prompt_id
-    await insertConversation(conversationId, userId, scenarioId, persona.id, systemPromptId);
+    // Create conversation with latest prompt IDs
+    await insertConversation(conversationId, userId, scenarioId, persona.id, latestSystemPromptId, latestFeedbackPromptId);
 
     
     let aiResponse = null;
@@ -59,7 +46,7 @@ export async function createConversation({
       const { scenario } = await getConversationContext(conversationId);
 
       // Get and fill the system prompt template
-      const systemPromptTemplate = await getSystemPrompt(systemPromptId || 1);
+      const systemPromptTemplate = await getSystemPrompt(latestSystemPromptId);
       const basePrompt = await createBasePromptForMessage(
         persona,
         scenario,

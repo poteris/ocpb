@@ -9,22 +9,23 @@ import { PromptData, PromptWithDetails } from "@/types/prompt";
 import { LogOut } from "lucide-react";
 import { logoutUser } from "@/components/AdminLogin/actions";
 
-async function getFeedbackPrompts(): Promise<PromptData[]> {
-  const response = await axios.get<PromptData[]>("/api/prompts/feedback");
+async function getLatestFeedbackPrompt(): Promise<PromptData> {
+  const response = await axios.get<PromptData>("/api/prompts/feedback");
   return response.data;
 }
 
-async function getSystemPrompts(): Promise<PromptWithDetails[]> {
-  const response = await axios.get<PromptWithDetails[]>("/api/prompts/system");
+async function getLatestSystemPrompt(): Promise<PromptWithDetails> {
+  const response = await axios.get<PromptWithDetails>("/api/prompts/system");
   return response.data;
 }
 
-async function getPersonaPrompts(): Promise<PromptData[]> {
-  const response = await axios.get<PromptData[]>("/api/prompts/persona");
+async function getLatestPersonaPrompt(): Promise<PromptData> {
+  const response = await axios.get<PromptData>("/api/prompts/persona");
   return response.data;
 }
-async function updatePrompt(id: number, type: "system" | "feedback" | "persona", content: string) {
-  const response = await axios.patch(`/api/prompts/${id}`, { type, content });
+
+async function createNewPromptVersion(type: "system" | "feedback" | "persona", content: string) {
+  const response = await axios.post("/api/prompts/create-version", { type, content });
   return response.data;
 }
 
@@ -112,28 +113,26 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
   const [error, setError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Fetch the single prompt on component mount
+  // Fetch the latest prompt on component mount
   const fetchPrompt = useCallback(async () => {
     setLoading(true);
     try {
-      let prompt: PromptData[] | PromptWithDetails[];
+      let prompt: PromptData | PromptWithDetails;
       switch (type) {
         case "system":
-          prompt = await getSystemPrompts();
+          prompt = await getLatestSystemPrompt();
           break;
         case "feedback":
-          prompt = await getFeedbackPrompts();
+          prompt = await getLatestFeedbackPrompt();
           break;
         case "persona":
-          prompt = await getPersonaPrompts();
+          prompt = await getLatestPersonaPrompt();
           break;
         default:
-          prompt = [];
+          throw new Error("Invalid prompt type");
       }
-      // Handle both single object and array cases
-      const content = prompt.length > 0 ? prompt[0].content : "";
-      setPromptContent(content);
-      setOriginalContent(content);
+      setPromptContent(prompt.content);
+      setOriginalContent(prompt.content);
     } catch (error) {
       console.error("Error fetching prompt:", error);
       setError("Failed to load prompt. Please try again.");
@@ -155,13 +154,14 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
     setLoading(true);
     setError(null);
     try {
-      // Assuming the API returns the prompt ID in the initial fetch
-      const promptId = 1; // This should come from your API
-      await updatePrompt(promptId, type, promptContent);
+      // Create a new version of the prompt
+      await createNewPromptVersion(type, promptContent);
       setOriginalContent(promptContent);
       setHasUnsavedChanges(false);
+      // Optionally, you could refresh the prompt to get the new version info
+      // await fetchPrompt();
     } catch (error) {
-      console.error("Error saving prompt:", error);
+      console.error("Error creating new prompt version:", error);
       setError("Failed to save changes. Please try again.");
     } finally {
       setLoading(false);
@@ -190,7 +190,7 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
                   Discard
                 </Button>
                 <Button onClick={handleSave} disabled={loading}>
-                  Save Changes
+                  Create New Version
                 </Button>
               </>
             )}
@@ -240,13 +240,24 @@ const PromptManager: React.FC<PromptManagerProps> = ({ type }) => {
           </div>
 
           {/* Right Column: Prompt Input */}
-          <div className="space-y-4">
-            <textarea
-              value={promptContent}
-              onChange={(e) => setPromptContent(e.target.value)}
-              className="w-full h-[400px] p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none whitespace-pre-wrap"
-              placeholder={`Enter your ${type} prompt here...`}
-            />
+          <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">Prompt Content</label>
+              <span className="text-xs text-gray-500">{promptContent.length} characters</span>
+            </div>
+            <div className="flex-grow h-full min-h-[500px]">
+              <textarea
+                value={promptContent}
+                onChange={(e) => setPromptContent(e.target.value)}
+                className="w-full h-full p-4 text-sm font-mono leading-relaxed border border-gray-300 rounded-md shadow-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                placeholder="Enter your prompt here..."
+                style={{ 
+                  lineHeight: '1.6',
+                  fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", monospace'
+                }}
+                required
+              />
+            </div>
           </div>
         </div>
       </div>

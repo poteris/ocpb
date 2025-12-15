@@ -1,26 +1,30 @@
 import { PromptWithDetails, PromptWithDetailsSchema } from "@/types/prompt";
-import { z } from "zod";
 import { NextResponse } from "next/server";
 import { DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
-import { createClient } from "@/utils/supabase/server";
+import { supabaseService as supabase } from "../../service-init";
 
-async function getSystemPrompts(): Promise<PromptWithDetails[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("system_prompts").select("id, content, scenario_id, persona_id, created_at").order("created_at", { ascending: true });
+async function getLatestSystemPrompt(): Promise<PromptWithDetails> {
+  const { data, error } = await supabase
+    .from("system_prompts")
+    .select("id, content, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
   if (error) {
-    console.error("Error fetching system prompts:", error);
-  const dbError = new DatabaseError("Error fetching system prompts", "getSystemPrompts", DatabaseErrorCodes.Select, {
+    const dbError = new DatabaseError("Error fetching latest system prompt", "getLatestSystemPrompt", DatabaseErrorCodes.Select, {
       details: {
-        error,
+        error: error,
       }
     });
     console.error(dbError.toLog());
     throw dbError;
   }
-  const validationResult = z.array(PromptWithDetailsSchema).safeParse(data);
+  
+  const validationResult = PromptWithDetailsSchema.safeParse(data);
   if (!validationResult.success) {
-    console.error("Error validating system prompts data:", validationResult.error);
-    throw new DatabaseError("Error validating system prompts data", "getSystemPrompts", DatabaseErrorCodes.Select, {
+    console.error("Error validating system prompt data:", validationResult.error);
+    throw new DatabaseError("Error validating system prompt data", "getLatestSystemPrompt", DatabaseErrorCodes.Select, {
       error: validationResult.error.format(),
     });
   }
@@ -29,10 +33,10 @@ async function getSystemPrompts(): Promise<PromptWithDetails[]> {
 
 export async function GET() {
   try {
-    const result = await getSystemPrompts();
+    const result = await getLatestSystemPrompt();
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
-    console.error("Error in GET system prompts:", error);
+    console.error("Error in GET latest system prompt:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

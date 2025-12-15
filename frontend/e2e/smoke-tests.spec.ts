@@ -91,7 +91,7 @@ test('Text box is visible: Entering text and pressing CTA starts chat ', async (
 
 test('Chat page loads and messages can be exchanged', async () => {
   await expect(page.getByText(startChatText)).toBeVisible();
-  const botMessage = page.locator('.text-left');
+  const botMessage = page.getByTestId('bot-message');
   await botMessage.first().waitFor();
   await expect(botMessage).toHaveCount(1);
   const chatTextbox = page.getByRole('textbox', { name: 'Type your message...' });
@@ -100,7 +100,7 @@ test('Chat page loads and messages can be exchanged', async () => {
   await expect(page.getByTestId('sendMessageButton')).toBeVisible();
   await page.getByTestId('sendMessageButton').click();
   await page.waitForResponse(`${baseUrl}/api/chat/send-user-message`);
-  const userMessages = page.locator('.text-right');
+  const userMessages = page.getByTestId('user-message');
   await expect(userMessages).toHaveCount(2);
   await expect(botMessage).toHaveCount(2);
 });

@@ -13,6 +13,8 @@ on:
          required: true
        SUPABASE_ANON_KEY:
          required: true
+       SUPABASE_SERVICE_ROLE_KEY:
+         required: true
        OPENAI_API_KEY:
          required: true
 jobs:
@@ -23,6 +25,8 @@ jobs:
     env: 
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         E2E_TEST_BASE_URL: ${{ vars.E2E_TEST_BASE_URL }}
         USE_MOCK_OPENAI: ${{ vars.USE_MOCK_OPENAI }}

@@ -16,7 +16,9 @@
   --foreground: 0 0% 3.9%;
   /* Changed to use HSL values */
 
-  
+  /* Organization Dynamic Colors - Updated by TenantContext */
+  --org-primary: #1e3a8a;
+
   /* Primary Colors */
   --pcsprimary-01: 219 72% 33%;
   --pcsprimary-02: 345 100% 31%;
@@ -258,6 +260,19 @@ button:focus-visible {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Organization Dynamic Color Utilities */
+  .bg-org-primary {
+    background-color: var(--org-primary);
+  }
+  
+  .text-org-primary {
+    color: var(--org-primary);
+  }
+  
+  .border-org-primary {
+    border-color: var(--org-primary);
   }
 
   .container {

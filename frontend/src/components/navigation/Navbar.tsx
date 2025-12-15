@@ -1,32 +1,35 @@
 "use client"
 
+'use client';
+
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useTenant } from '@/context/TenantContext'
 
 const Navbar = () => {
-  const pathname = usePathname()
-  const isInitiateChat = pathname === '/initiate-chat'
-  const isChatScreen = pathname === '/chat-screen'
-  const useLightBackground = isInitiateChat || isChatScreen
+  const { branding } = useTenant();
   
+  // Use custom logo if available, otherwise fallback to default
+  const logoSrc = branding.logoUrl || "/logo.svg";
+
   return (
-    <nav className={`h-[85px] w-full flex items-center justify-between px-4 md:px-8 ${useLightBackground ? 'bg-primary-light' : 'bg-primary'}`}>
-      <div className="flex items-center">
-        {useLightBackground && (
-          <div className="relative h-12 w-12 md:h-16 md:w-16 mr-4">
-            <Image
-              src="/logo.svg"
-              alt="Canvass Coach Logo"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        )}
-        <Link href="/" className={`text-[30px] font-regular ${useLightBackground ? 'text-black' : 'text-white'}`}>
-          Canvass Coach
-        </Link>
+    <nav className="h-[85px] w-full flex items-center justify-between px-4 md:px-8" style={{ backgroundColor: branding.primaryColor }}>
+      <Link href="/" className="text-white text-[30px] font-regular ml-8">
+        Rep Coach
+      </Link>
+
+      <div className="relative h-12 w-12 md:h-16 md:w-16">
+        <Image
+          src={logoSrc}
+          alt="Rep Coach Logo"
+          fill
+          className="object-contain rounded-full"
+          priority
+          onError={(e) => {
+            // Fallback to default logo if custom logo fails to load
+            e.currentTarget.src = "/logo.svg";
+          }}
+        />
       </div>
     </nav>
   )

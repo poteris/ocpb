@@ -1,6 +1,6 @@
-# 🚀 Getting Started with Rep Coach
+# 🚀 Getting Started with Convo Coach
 
-This guide will help you set up the Rep Coach project locally.
+This guide will help you set up the Convo Coach project locally.
 
 ## Prerequisites
 

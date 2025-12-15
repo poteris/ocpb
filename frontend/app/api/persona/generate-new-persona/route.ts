@@ -1,5 +1,6 @@
 import { generateNewPersona as newPersona } from "@/lib/server/services/persona/generateNewPersona";
 import { NextRequest, NextResponse } from "next/server";
+import { getTenantFromRequest } from "@/lib/tenant";
 import { z } from "zod";
 
 const personaSchema = z.object({
@@ -21,11 +22,15 @@ const personaSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    const organizationId = getTenantFromRequest(request);
     const persona = await newPersona(request.headers);
+    
+    // Add organisation_id to the generated persona
+    const personaWithOrg = { ...persona, organisation_id: organizationId };
 
     personaSchema.parse(persona); // will throw an error if the persona does not match the schema
 
-    return NextResponse.json(persona, { status: 200 });
+    return NextResponse.json(personaWithOrg, { status: 200 });
   } catch (error) {
     console.error("Error generating persona:", error);
 

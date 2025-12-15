@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger, Modal } from "@/components/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Modal, ColorPicker } from "@/components/ui";
 import { slugify } from "@/utils/helpers";
 import { TrainingScenario } from "@/types/scenarios";
+import { useTenant } from "@/context/TenantContext";
 import axios from "axios";
 interface ScenarioForm {
   id: string;
@@ -46,15 +48,18 @@ async function deleteScenario(id: string) {
 }
 
 export const OrganiserAdmin: React.FC = () => {
+  const { organisationId } = useTenant();
+  
   return (
     <div className="flex flex-col h-full bg-white">
-      <Header title="Admin - Scenarios" variant="alt" />
+      <Header title={`Admin - Scenarios (${organisationId})`} variant="alt" />
       <PromptManager type="scenario" />
     </div>
   );
 };
 
 const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
+  const { organisationId, branding, updateBranding } = useTenant();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -71,6 +76,13 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
   const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ScenarioForm | null>(null);
   const [deleteScenarioId, setDeleteScenarioId] = useState<string | null>(null);
+  
+  // Branding state
+  const [brandingForm, setBrandingForm] = useState({
+    logoUrl: branding.logoUrl || "",
+    primaryColor: branding.primaryColor,
+  });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (type === "scenario") {
@@ -82,6 +94,14 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
       fetchScenarios();
     }
   }, [type]);
+
+  // Sync branding form with context when branding changes
+  useEffect(() => {
+    setBrandingForm({
+      logoUrl: branding.logoUrl || "",
+      primaryColor: branding.primaryColor,
+    });
+  }, [branding]);
 
   const generateScenarioId = (title: string) => {
     const baseSlug = slugify(title);
@@ -372,6 +392,217 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
     }
   };
 
+  const handleLogoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+    }
+  };
+
+  const handleUploadLogo = async () => {
+    if (!logoFile) return;
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+
+      const response = await fetch('/api/upload/logo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBrandingForm(prev => ({ ...prev, logoUrl: data.logoUrl }));
+        setLogoFile(null);
+        setError('Logo uploaded successfully!');
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Failed to upload logo');
+      }
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      setError('Failed to upload logo. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setBrandingForm(prev => ({ ...prev, logoUrl: '' }));
+    setError('Logo removed. Click "Save Branding Changes" to apply.');
+  };
+
+  const handleSaveBranding = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/organizations/${organisationId}/branding`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          logoUrl: brandingForm.logoUrl,
+          primaryColor: brandingForm.primaryColor,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        updateBranding({
+          logoUrl: data.logoUrl,
+          primaryColor: data.primaryColor,
+        });
+        setError('Branding updated successfully!');
+      } else {
+        const error = await response.json();
+        setError(error.error || 'Failed to update branding');
+      }
+    } catch (error) {
+      console.error('Branding update error:', error);
+      setError('Failed to update branding. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderBrandingSection = () => (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Organization Branding</h2>
+        
+        <div className="space-y-6">
+          {/* Logo Upload Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Organization Logo
+            </label>
+            <div className="flex items-center space-x-4">
+              {brandingForm.logoUrl && (
+                <div className="w-16 h-16 rounded-lg border-2 border-gray-300 overflow-hidden">
+                  <Image
+                    src={brandingForm.logoUrl}
+                    alt="Current logo"
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/bot-avatar.svg";
+                    }}
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/svg+xml"
+                  onChange={handleLogoFileChange}
+                  className="mb-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500">
+                  Supported formats: JPEG, PNG, SVG (max 5MB)
+                </p>
+                <div className="flex space-x-2 mt-2">
+                  {logoFile && (
+                    <Button 
+                      onClick={handleUploadLogo} 
+                      disabled={loading}
+                    >
+                      Upload Logo
+                    </Button>
+                  )}
+                  {brandingForm.logoUrl && (
+                    <Button 
+                      onClick={handleRemoveLogo} 
+                      disabled={loading}
+                      variant="outline"
+                    >
+                      Remove Logo
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Logo URL Display */}
+          {brandingForm.logoUrl && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Current Logo URL
+              </label>
+              <Input
+                type="text"
+                value={brandingForm.logoUrl}
+                onChange={(e) => setBrandingForm(prev => ({ ...prev, logoUrl: e.target.value }))}
+                placeholder="https://..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                You can also manually enter a logo URL
+              </p>
+            </div>
+          )}
+
+          {/* Colour Customization */}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <ColorPicker
+              label="Primary Colour"
+              value={brandingForm.primaryColor}
+              onChange={(color) => setBrandingForm(prev => ({ ...prev, primaryColor: color }))}
+              disabled={loading}
+            />
+          </div>
+
+          {/* Preview Section */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Preview</h3>
+            <div 
+              className="rounded-lg p-4 text-white"
+              style={{ backgroundColor: brandingForm.primaryColor }}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20">
+                  <Image
+                    src={brandingForm.logoUrl || "/images/bot-avatar.svg"}
+                    alt="Logo preview"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/bot-avatar.svg";
+                    }}
+                  />
+                </div>
+                <h4 className="font-semibold">Union Training Bot</h4>
+              </div>
+            </div>
+            <div className="mt-3 flex space-x-2">
+              <div 
+                className="w-8 h-8 rounded border"
+                style={{ backgroundColor: brandingForm.primaryColor }}
+                title={`Primary: ${brandingForm.primaryColor}`}
+              />
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-4">
+            <Button 
+              onClick={handleSaveBranding} 
+              disabled={loading}
+              className="w-full"
+            >
+              Save Branding Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderExistingScenarios = () => (
     <div className="space-y-4">
       {scenarios.map((scenario) => (
@@ -578,10 +809,12 @@ const PromptManager: React.FC<{ type: "scenario" }> = ({ type }) => {
         <TabsList>
           <TabsTrigger value="existing">Your Scenarios</TabsTrigger>
           <TabsTrigger value="new">New Scenario</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
         </TabsList>
 
         <TabsContent value="existing">{renderExistingScenarios()}</TabsContent>
         <TabsContent value="new">{renderScenarioSection()}</TabsContent>
+        <TabsContent value="branding">{renderBrandingSection()}</TabsContent>
       </Tabs>
     </div>
   );

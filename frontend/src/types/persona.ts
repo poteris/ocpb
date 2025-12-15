@@ -15,7 +15,7 @@ export interface Persona {
     major_issues: string;
     personality_traits: string;
     emotional_conditions: string;
-    location: string;
+    organisation_id?: string;
   }
 
   export const personaSchema = z.object({
@@ -31,6 +31,5 @@ export interface Persona {
     busyness_level: z.string(),
     personality_traits: z.string(),
     emotional_conditions: z.string(),
-    location: z.string(),
-    major_issues: z.string(),
+    organisation_id: z.string().optional(),
 });

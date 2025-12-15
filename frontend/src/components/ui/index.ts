@@ -1,5 +1,6 @@
 export { InfoPopover } from "./Popover";
 export { Modal } from "./Modal";
+export { ColorPicker } from "./ColorPicker";
 
 export { Loader } from "./Loader";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs";

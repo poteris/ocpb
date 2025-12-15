@@ -1,9 +1,10 @@
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
-import "@testing-library/jest-dom";
 import { createClient } from "@/utils/supabase/server";
+import "@testing-library/jest-dom";
 
-jest.mock("@/utils/supabase/server");
+
+jest.mock("../../app/api/service-init");
 
 describe("getScenarios", () => {
   let supabase: any;

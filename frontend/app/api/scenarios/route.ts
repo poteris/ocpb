@@ -1,13 +1,15 @@
 import { getScenarios } from "@/lib/server/services/scenarios/getScenarios";
 import { TrainingScenario } from "@/types/scenarios";
-import { NextResponse, NextRequest } from "next/server";import {  DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
-import { createClient } from "@/utils/supabase/server";
+import { NextResponse, NextRequest } from "next/server";
+import { supabaseService as supabase } from "../service-init";
+import {  DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
+import { getTenantFromRequest } from "@/lib/tenant";
 
 
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const result = await getScenarios();
+    const organizationId = getTenantFromRequest(request);
+    const result = await getScenarios(organizationId);
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
     console.error("Error in GET scenarios:", error);
@@ -15,8 +17,7 @@ export async function GET() {
   }
 }
 
-async function createScenarioWithObjectives(scenario: TrainingScenario) {
-  const supabase = await createClient();
+async function createScenarioWithObjectives(scenario: TrainingScenario & { organisation_id: string }) {
   const { data, error } = await supabase
     .from("scenarios")
     .insert({
@@ -24,6 +25,7 @@ async function createScenarioWithObjectives(scenario: TrainingScenario) {
       title: scenario.title,
       description: scenario.description,
       context: scenario.context,
+      organisation_id: scenario.organisation_id,
     })
     .select()
     .single();
@@ -77,8 +79,10 @@ async function createScenarioWithObjectives(scenario: TrainingScenario) {
 
 export async function POST(req: NextRequest) {
   try {
+    const organizationId = getTenantFromRequest(req);
     const body = await req.json();
-    const result = await createScenarioWithObjectives(body);
+    const scenarioWithOrg = { ...body, organisation_id: organizationId };
+    const result = await createScenarioWithObjectives(scenarioWithOrg);
      
     return NextResponse.json(result, { status: 201 });
   } catch (error: unknown) {

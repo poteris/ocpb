@@ -14,6 +14,8 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { LogOut, SendHorizontal } from "lucide-react"
 import { ChatInput } from "@/components/ChatInput/ChatInput"
+import ChatPersonaCard from "@/components/ChatPersonaCard"
+import { Persona } from "@/types/persona"
 
 export interface ConversationData {
   messages: Message[];
@@ -44,6 +46,16 @@ async function getConversationData(conversationId: string) {
   }
 }
 
+async function getPersonaData(personaId: string) {
+  try {
+    const response = await axios.get<Persona>(`/api/persona/${personaId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching persona:', error);
+    return null;
+  }
+}
+
 async function sendUserMessage(conversationId: string, content: string, scenarioId: string) {
   try {
     const response = await axios.post<Message>('/api/chat/send-user-message', {
@@ -60,8 +72,10 @@ async function sendUserMessage(conversationId: string, content: string, scenario
 
 const ChatScreen = () => {
   const [conversationData, setConversationData] = useState<ConversationData | null>(null);
+  const [persona, setPersona] = useState<Persona | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPersonaLoading, setIsPersonaLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const conversationId = searchParams ? searchParams.get('conversationId') : null;
@@ -80,6 +94,14 @@ const ChatScreen = () => {
         setIsLoading(true);
         const response = await getConversationData(conversationId);
         setConversationData(response);
+        
+        // Fetch persona data if we have a personaId
+        if (response?.personaId) {
+          setIsPersonaLoading(true);
+          const personaResponse = await getPersonaData(response.personaId);
+          setPersona(personaResponse);
+          setIsPersonaLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching chat:', error);
       } finally {
@@ -166,10 +188,17 @@ const ChatScreen = () => {
 
   return (
     <div className="max-w-[1200px] mx-auto p-4 pb-32">
+      {/* Persona Card */}
+      <ChatPersonaCard persona={persona} isLoading={isPersonaLoading} />
+      
       {/* Messages Container */}
       <div className="mb-4">
         {conversationData?.messages.map((m) => (
-          <div key={m.id} className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}>
+          <div 
+            key={m.id} 
+            className={`mb-4 ${m.role === "user" ? "text-right" : "text-left"}`}
+            data-testid={m.role === "user" ? "user-message" : "bot-message"}
+          >
             <div
               className={`inline-block p-4 rounded-lg text-sm max-w-[600px] break-words ${
                 m.role === "user"

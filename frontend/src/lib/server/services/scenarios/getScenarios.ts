@@ -3,9 +3,9 @@ import { isError } from "@/utils/errors";
 import { z } from "zod";
 import { TrainingScenarioSchema, TrainingScenario } from "@/types/scenarios";
 
-export async function getScenarios(): Promise<TrainingScenario[]> {
+export async function getScenarios(organizationId: string = 'default'): Promise<TrainingScenario[]> {
 try {
-  const result = await getScenariosFromDb();
+  const result = await getScenariosFromDb(organizationId);
 
   const validationResult = z.array(TrainingScenarioSchema).safeParse(result);
   if (!validationResult.success) {
@@ -31,9 +31,9 @@ try {
 }
 }
 
-export async function getScenarioById(scenarioId: string): Promise<TrainingScenario> {
+export async function getScenarioById(scenarioId: string, organizationId: string = 'default'): Promise<TrainingScenario> {
   try {
-    const scenario = await getScenarioByIdFromDb(scenarioId);
+    const scenario = await getScenarioByIdFromDb(scenarioId, organizationId);
     const validatedResult = TrainingScenarioSchema.safeParse(scenario);
     if (!validatedResult.success) {
       throw new Error("Error validating scenario data", { cause: validatedResult.error });

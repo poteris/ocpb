@@ -1,15 +1,18 @@
 import { PromptData, PromptDataSchema } from "@/types/prompt";
-import { createClient } from "@/utils/supabase/server";
-import { z } from "zod";
+import { supabaseService as supabase } from "../../service-init";
 import { NextResponse } from "next/server";
 import { DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
 
-async function getPersonaPrompts(): Promise<PromptData[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("persona_prompts").select("id, content, scenario_id, persona_id, created_at").order("created_at", { ascending: true });
+async function getLatestPersonaPrompt(): Promise<PromptData> {
+  const { data, error } = await supabase
+    .from("persona_prompts")
+    .select("id, content, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
 
   if (error) {
-    const dbError = new DatabaseError("Error fetching persona prompts", "getPersonaPrompts", DatabaseErrorCodes.Select, {
+    const dbError = new DatabaseError("Error fetching latest persona prompt", "getLatestPersonaPrompt", DatabaseErrorCodes.Select, {
       details: {
         error: error,
       }
@@ -18,10 +21,10 @@ async function getPersonaPrompts(): Promise<PromptData[]> {
     throw dbError;
   }
 
-  const validationResult = z.array(PromptDataSchema).safeParse(data);
+  const validationResult = PromptDataSchema.safeParse(data);
   if (!validationResult.success) {
-    console.error("Error validating persona prompts data:", validationResult.error);
-    throw new Error ("Error validating persona prompts data", { cause: validationResult.error.format() });
+    console.error("Error validating persona prompt data:", validationResult.error);
+    throw new Error ("Error validating persona prompt data", { cause: validationResult.error.format() });
   }
 
   return validationResult.data;
@@ -29,10 +32,10 @@ async function getPersonaPrompts(): Promise<PromptData[]> {
 
 export async function GET() {
   try {
-    const result = await getPersonaPrompts();
+    const result = await getLatestPersonaPrompt();
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
-    console.error("Error in GET persona prompts:", error);
+    console.error("Error in GET latest persona prompt:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
