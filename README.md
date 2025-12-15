@@ -9,7 +9,6 @@ This guide will help you set up the Convo Coach project locally.
 - OpenAI API key
 - Docker (for local Supabase)
 
-## 📝 Installation and Setup
 
 1. Clone the repository:
 
