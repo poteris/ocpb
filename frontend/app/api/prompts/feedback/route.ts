@@ -3,6 +3,7 @@ import { PromptData, PromptDataSchema } from "@/types/prompt";
 import { NextResponse } from "next/server";
 import { DatabaseError, DatabaseErrorCodes } from "@/utils/errors";
 import { createClient } from "@/utils/supabase/server";
+import { z } from "zod";
 
 async function getFeedbackPrompts(): Promise<PromptData[]> {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ async function getFeedbackPrompts(): Promise<PromptData[]> {
     throw dbError;
   }
   
-  const validationResult = PromptDataSchema.safeParse(data);
+  const validationResult = z.array(PromptDataSchema).safeParse(data);
   if (!validationResult.success) {
     console.error ("Error validating feedback prompt data:", validationResult.error);
     throw new Error ("Error validating feedback prompt data", { cause: validationResult.error });

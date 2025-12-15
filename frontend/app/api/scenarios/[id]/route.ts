@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getScenarioById } from "@/lib/server/services/scenarios/getScenarios";
 import { DatabaseError, DatabaseErrorCodes, isError } from "@/utils/errors";
 import { getTenantFromRequest } from "@/lib/tenant";
+import { createClient } from "@/utils/supabase/server";
 import { z } from "zod";
 
 const UpdateScenarioSchema = z.object({

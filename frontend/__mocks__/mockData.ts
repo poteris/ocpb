@@ -25,12 +25,14 @@ export const mockPersona: Persona = {
   gender: "Female",
   family_status: "Married",
   uk_party_affiliation: "Independent",
+  workplace: "Tech Solutions Ltd",
   job: "Senior Development Manager",
   busyness_level: "Very High",
+  major_issues_in_workplace: "Team conflicts, deadline pressure, communication gaps",
+  major_issues: "Team conflicts, deadline pressure, communication gaps",
+  location: "London",
   personality_traits: "Analytical, Direct, Solution-oriented",
   emotional_conditions: "Stressed but composed",
-  location: "London",
-  major_issues: "Team conflicts, deadline pressure, communication gaps",
 };
 
 export const mockFeedback: FeedbackData = {

@@ -8,11 +8,12 @@ export interface Persona {
     gender: string;
     family_status: string;
     uk_party_affiliation: string;
-    // workplace: string;
+    workplace: string;
     job: string;
     busyness_level: string;
-    // major_issues_in_workplace: string;
+    major_issues_in_workplace: string;
     major_issues: string;
+    location: string;
     personality_traits: string;
     emotional_conditions: string;
     organisation_id?: string;
@@ -26,9 +27,12 @@ export interface Persona {
     gender: z.string(),
     family_status: z.string(),
     uk_party_affiliation: z.string(),
-    //workplace: z.string(),
+    workplace: z.string(),
     job: z.string(),
     busyness_level: z.string(),
+    major_issues_in_workplace: z.string(),
+    major_issues: z.string(),
+    location: z.string(),
     personality_traits: z.string(),
     emotional_conditions: z.string(),
     organisation_id: z.string().optional(),
