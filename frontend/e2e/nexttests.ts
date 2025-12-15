@@ -1,0 +1,31 @@
+/*test('get started link', async ({ page }) => {
+  await page.goto('https://ocpb.vercel.app/');
+  await page.getByRole('button', { name: 'Generate New Persona' }).click();
+  await page.getByRole('button', { name: 'Start Chat with Current' }).click();
+  await page.getByRole('button', { name: 'What are you up to?' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('work, but I also have a decent amount of time for hobbies');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('tennis, football, piano. You?');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('I agree! It\'s important to have a good work / life balance');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('I do, but the main factor is the ethos of the union');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('they look after us, as reps, really well and ensure that we\'re not over working!');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('Certainly is! Have you ever considered joining?');
+  await page.getByRole('textbox', { name: 'Type your message...' }).click();
+  await page.getByRole('textbox', { name: 'Type your message...' }).fill('Fair enough. Enjoy your day!');
+  await page.getByRole('button', { name: 'End Chat' }).click();
+  await page.getByRole('button', { name: 'End Chat' }).nth(1).click();
+  await expect(page.getByRole('heading', { name: 'Performance Score' })).toBeVisible();
+  await expect(page.locator('polygon').first()).toBeVisible();
+  await expect(page.locator('body')).toContainText('Summary');
+  await expect(page.locator('body')).toContainText('Strengths');
+  await expect(page.locator('.text-green-500').first()).toBeVisible();
+  await expect(page.locator('body')).toContainText('Areas for Improvement');
+  await expect(page.locator('.text-orange-500').first()).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByRole('main')).toContainText('Welcome to the Union Training Bot');
+});*/

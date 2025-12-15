@@ -1,18 +1,33 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let _supabaseService: SupabaseClient | null = null;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase environment variables for service role");
+function getSupabaseService(): SupabaseClient {
+  if (_supabaseService) {
+    return _supabaseService;
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase environment variables for service role");
+  }
+
+  // Service role client for storage operations and admin tasks
+  _supabaseService = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+
+  return _supabaseService;
 }
 
-// Service role client for storage operations and admin tasks
-export const supabaseService = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+// Export as a getter that lazily initializes the client
+export const supabaseService = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    return getSupabaseService()[prop as keyof SupabaseClient];
   }
 });
-
-

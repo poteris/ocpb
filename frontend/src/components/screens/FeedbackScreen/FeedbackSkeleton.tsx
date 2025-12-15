@@ -19,7 +19,7 @@ const FeedbackSkeleton = () => {
       <div className="flex-grow overflow-y-auto">
         <div className="p-4">
           {/* Performance Score Card */}
-          <div className="bg-gradient-to-r from-orange-400 to-orange-600 rounded-lg p-4 mb-6">
+          <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-[40px] p-4 mb-6 performance-card">
             <Skeleton className="h-6 w-40 bg-white/50 mb-4" />
             <div className="flex space-x-2">
               {[...Array(5)].map((_, index) => (

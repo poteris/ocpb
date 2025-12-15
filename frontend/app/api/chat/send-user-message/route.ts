@@ -4,7 +4,7 @@ import { z } from "zod";
 import {  getAIResponse, createBasePromptForMessage } from "@/lib/server/llm";
 import { getConversationContext, saveMessages } from "@/lib/server/db";
 import OpenAI from "openai";
-import { supabaseService as supabase } from "../../service-init";
+import { createClient } from "@/utils/supabase/server";
 
 const userMessageResponseSchema = z.object({
   id: z.string(),
@@ -21,6 +21,7 @@ const sendUserMessageRequestSchema = z.object({
 
 async function sendMessage(headers: Headers, { conversationId, content }: { conversationId: string; content: string; scenarioId?: string }) {
   try {
+    const supabase = await createClient();
     // Get conversation context
     const { persona, scenario, systemPrompt } = await getConversationContext(conversationId);
 
@@ -44,7 +45,7 @@ async function sendMessage(headers: Headers, { conversationId, content }: { conv
         content: `${completePrompt}\n\nRemember to maintain consistent personality and context throughout the conversation. Previous context: This is message ${messagesData.length + 1} in the conversation.`
       },
       // Previous conversation history
-        ...messagesData.map((msg) => ({
+        ...messagesData.map((msg: { role: string; content: string }) => ({
           role: msg.role as "user" | "system" | "assistant",
           content: msg.content,
         } as OpenAI.ChatCompletionMessageParam)),

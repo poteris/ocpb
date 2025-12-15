@@ -25,6 +25,8 @@ export class MockOpenAIClient implements AIClientInterface {
                   major_issues_in_workplace: "Staff turnover",
                   personality_traits: "helpful, curious",
                   emotional_conditions: "worried about not much",
+                  location: "London",
+                  major_issues: "Brexit",
                 }),
               },
             }],
@@ -40,7 +42,7 @@ export class MockOpenAIClient implements AIClientInterface {
               function: {
                 name: "generate_feedback",
                 arguments: JSON.stringify({
-                  score: 5,
+                  score: 3,
                   summary: "Great performance!",
                   strengths: [
                     { title: "Good listener", description: "You listened well." },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseService as supabase } from "../../service-init";
+import { createClient } from "@/utils/supabase/server";
 interface Message {
     content: string;
     conversation_id: string;
@@ -30,6 +30,7 @@ interface Message {
 
 async function getConversationDataByConversationId(id: string) {
     try {
+        const supabase = await createClient();
         const { data, error } = await supabase.from("messages").select("*").eq("conversation_id", id)
         const { data: chatData, error: chatDataError } = await supabase.from("conversations").select("conversation_id, scenario_id, user_id, persona_id, system_prompt_id, feedback_prompt_id").eq("conversation_id", id).single();
         

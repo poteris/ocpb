@@ -12,10 +12,13 @@ async function getLatestSystemPrompt(): Promise<PromptWithDetails> {
     .single();
 
   if (error) {
-    console.error("Error fetching latest system prompt:", error);
-    throw new DatabaseError("Error fetching latest system prompt", "getLatestSystemPrompt", DatabaseErrorCodes.Select, {
-      error,
+    const dbError = new DatabaseError("Error fetching latest system prompt", "getLatestSystemPrompt", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
     });
+    console.error(dbError.toLog());
+    throw dbError;
   }
   
   const validationResult = PromptWithDetailsSchema.safeParse(data);

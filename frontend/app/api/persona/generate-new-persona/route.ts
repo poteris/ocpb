@@ -11,12 +11,13 @@ const personaSchema = z.object({
   gender: z.string(),
   family_status: z.string(),
   uk_party_affiliation: z.string(),
-  workplace: z.string(),
+  //workplace: z.string(),
   job: z.string(),
   busyness_level: z.string(),
-  major_issues_in_workplace: z.string(),
   personality_traits: z.string(),
   emotional_conditions: z.string(),
+  location: z.string(),
+  major_issues: z.string(),
 });
 
 export async function GET(request: NextRequest) {

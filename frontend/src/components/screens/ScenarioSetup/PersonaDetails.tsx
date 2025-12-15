@@ -11,15 +11,11 @@ interface PersonaDetailsComponentProps {
   isRegenerating?: boolean;
 }
 
-
-
-
 const PersonaDetailsComponent: React.FC<PersonaDetailsComponentProps> = ({ 
   persona, 
   onRegeneratePersona,
   isRegenerating = false
 }) => {
-
   return (
     <div className="border-none rounded-[16px] md:rounded-[20px] bg-card p-2 bg-card-alt shadow-md">
       <Accordion type="single" collapsible defaultValue="persona" className="mb-2 md:mb-6">
