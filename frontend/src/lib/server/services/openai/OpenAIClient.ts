@@ -1,3 +1,4 @@
+import 'server-only'
 import { OpenAI } from "openai";
 import { AIClientInterface } from './AIClientInterface';
 import { ChatCompletionResponse, ChatCompletionRequest } from './ChatCompletionTypes';

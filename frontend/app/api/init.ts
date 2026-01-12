@@ -1,3 +1,4 @@
+import 'server-only'
 import { OpenAI } from "openai";
 
 if (!process.env.OPENAI_API_KEY) {

@@ -1,3 +1,4 @@
+import 'server-only'
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let _supabaseService: SupabaseClient | null = null;
