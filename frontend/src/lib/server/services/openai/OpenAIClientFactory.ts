@@ -1,3 +1,4 @@
+import 'server-only'
 import { AIClientInterface } from './AIClientInterface';
 import { MockOpenAIClient } from './MockOpenAIClient';
 import { OpenAIClient } from './OpenAIClient'; 

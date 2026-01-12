@@ -1,3 +1,4 @@
+import 'server-only'
 import { getAllScenarios as getScenariosFromDb, getScenarioById as getScenarioByIdFromDb } from "@/lib/server/db";
 import { isError } from "@/utils/errors";
 import { z } from "zod";

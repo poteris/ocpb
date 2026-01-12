@@ -1,3 +1,4 @@
+import 'server-only'
 // for more info on how this works see: https://supabase.com/docs/guides/auth/server-side/nextjs
 // NOTE: this is the server-side supabase client
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
