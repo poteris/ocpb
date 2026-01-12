@@ -32,7 +32,10 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  // Use getClaims() instead of getUser() - it validates the JWT signature
+  // against the project's published public keys every time, making it safe
+  // to trust in server code. Never use getSession() in middleware.
+  await supabase.auth.getClaims()
 
   return response
 }
