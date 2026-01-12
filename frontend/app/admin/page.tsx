@@ -20,9 +20,12 @@ export default async function AdminPage() {
   const supabase = await createClient()
   
   try {
-    const { data: { user }, error } = await supabase.auth.getUser()
+    // Use getClaims() instead of getUser() - it validates the JWT signature
+    // against the project's published public keys every time, making it safe
+    // to trust in server code.
+    const { data, error } = await supabase.auth.getClaims()
     
-    if (error || !user || !(await isAdmin(supabase, user.id))) {
+    if (error || !data || !(await isAdmin(supabase, data.claims.sub))) {
       return <LoginForm />
     }
 
