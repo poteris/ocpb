@@ -55,7 +55,7 @@ describe("generatePersona", () => {
     const openaiMock = new OpenAI();
     // const persona: Persona =  await generateNewPersona ();
     expect(openaiMock.chat.completions.create).toHaveBeenCalledWith({
-      model: "gpt-4o",
+      model: "gpt-5.4-mini-2026-03-17",
       messages: [{ role: "user", content: expect.any(String) }],
       functions: expect.arrayContaining([
         expect.objectContaining({

@@ -3,6 +3,7 @@ import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
 import { getOpenAIClient } from "../openai/OpenAIClientFactory";
+import { getLlmModel } from "../../llmModel";
 
 function generateRandomPersonaProperties() {
   // Randomly select a segment
@@ -81,7 +82,7 @@ const generatePersona = async (headers: Headers = new Headers()) => {
     prompt = prompt.replace('{{gender}}', randomProperties.gender);
       
     const messages = [{ role: "user" as const, content: prompt }];
-    const llm = process.env.LLM_MODEL ?? "gpt-4o";
+    const llm = await getLlmModel();
     const openaiClient = getOpenAIClient(headers);
     const completion = await openaiClient.createChatCompletion({
         model: llm,
