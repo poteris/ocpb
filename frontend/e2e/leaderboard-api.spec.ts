@@ -73,4 +73,32 @@ test.describe('Leaderboard API', () => {
     });
     expect(second.status()).toBe(200);
   });
+
+  test('POST /api/users rejects a name already owned by another id with 409', async ({ request }) => {
+    const name = uniqueName('Dup');
+
+    const owner = await request.post(`${baseUrl}/api/users`, {
+      data: { userId: randomUUID(), displayName: name },
+    });
+    expect(owner.status()).toBe(200);
+
+    // A different id claiming the same name (case-insensitively) must be rejected.
+    const clash = await request.post(`${baseUrl}/api/users`, {
+      data: { userId: randomUUID(), displayName: name.toUpperCase() },
+    });
+    expect(clash.status()).toBe(409);
+  });
+
+  test('POST /api/users lets the same id re-register its own name (self-heal upsert)', async ({ request }) => {
+    const userId = randomUUID();
+    const name = uniqueName('Heal');
+
+    const first = await request.post(`${baseUrl}/api/users`, { data: { userId, displayName: name } });
+    expect(first.status()).toBe(200);
+
+    // The chat-start self-heal re-POSTs the same id+name on every conversation; it
+    // must stay a 200, never a 409 against the participant's own row.
+    const again = await request.post(`${baseUrl}/api/users`, { data: { userId, displayName: name } });
+    expect(again.status()).toBe(200);
+  });
 });
