@@ -1,6 +1,7 @@
 'use server'
 import { TrainingScenario, TrainingScenarioSchema } from "@/types/scenarios";
 import { Persona } from "@/types/persona";
+import { LeaderboardEntry, leaderboardRowSchema } from "@/types/leaderboard";
 import { z } from "zod";
 import { DatabaseError, DatabaseErrorCodes} from "@/utils/errors";
 import { supabaseService as supabase } from "../../../app/api/service-init";
@@ -339,6 +340,35 @@ export async function getFeedbackPrompt(): Promise<FeedbackPrompt> {
   }
 
   return feedbackPrompt.data;
+}
+
+const LEADERBOARD_ROW_LIMIT = 500;
+
+export async function getScenarioLeaderboard(
+  scenarioId: string,
+  organisationId: string,
+): Promise<LeaderboardEntry[]> {
+  const { data, error } = await supabase
+    .from("scenario_leaderboard")
+    .select("user_id, display_name, best_score, attempt_count, best_score_at")
+    .eq("scenario_id", scenarioId)
+    .eq("organisation_id", organisationId)
+    .order("best_score", { ascending: false })
+    .order("best_score_at", { ascending: true })
+    .limit(LEADERBOARD_ROW_LIMIT);
+
+  if (error) {
+    const dbError = new DatabaseError("Error fetching leaderboard", "getScenarioLeaderboard", DatabaseErrorCodes.Select, {
+      details: {
+        error: error,
+      }
+    });
+    console.error(dbError.toLog());
+    throw dbError;
+  }
+
+  const rows = z.array(leaderboardRowSchema).parse(data ?? []);
+  return rows.map((row, index) => ({ ...row, rank: index + 1 }));
 }
 
 export async function getScenarioById(scenarioId: string, organizationId: string = 'default'): Promise<TrainingScenario> {
