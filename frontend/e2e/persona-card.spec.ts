@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import dotenv from 'dotenv';
+import { seedParticipantIdentity } from './helpers/participant';
 
 // Load environment variables from root level .env file
 dotenv.config({ path: '../.env' });
@@ -13,7 +14,8 @@ let page: Page;
 
 test.beforeAll(async ({ browser }: { browser: Browser }) => {
   page = await browser.newPage();
-  
+  await seedParticipantIdentity(page);
+
   if (process.env.USE_MOCK_OPENAI === 'true') {
     console.log('Executing persona card tests using Mock OpenAI API');
   }
