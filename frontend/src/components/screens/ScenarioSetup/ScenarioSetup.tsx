@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { scenarioAtom, selectedPersonaAtom } from "@/store";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PersonaDetailsComponent from "./PersonaDetails";
 import { ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -76,8 +76,12 @@ export default function ScenarioSetup({ scenarioId }: ScenarioSetupComponentProp
     const [selectedScenario, setSelectedScenario] = useState<TrainingScenario | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRegeneratingPersona, setIsRegeneratingPersona] = useState(false);
+    const generatedForScenarioRef = useRef<string | null>(null);
 
     useEffect(() => {
+        if (generatedForScenarioRef.current === scenarioId) return;
+        generatedForScenarioRef.current = scenarioId;
+
         async function fetchData() {
             setIsLoading(true);
             try {

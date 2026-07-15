@@ -1,7 +1,7 @@
 import React from "react";
 import { X, Star, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {useState, useEffect } from "react";
+import {useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import FeedbackSkeleton from "./FeedbackSkeleton";
@@ -27,7 +27,11 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   const router = useRouter();
+  const requestedForConversationRef = useRef<string | null>(null);
   useEffect(() => {
+    if (requestedForConversationRef.current === conversationId) return;
+    requestedForConversationRef.current = conversationId;
+
     setIsLoadingFeedback(true);
     generateFeedbackOnConversation(conversationId).then((data) => {
       setFeedbackData(data);
