@@ -68,6 +68,8 @@ jobs:
     - name: Run Playwright tests
       if: ${{ success() && !cancelled() }}
       working-directory: ./frontend
+      env:
+        SKIP_LEADERBOARD_TESTS: 'true' # Leaderboard suite is excluded from the smoke pipeline
       run: pnpm exec playwright test e2e
     - name: Convert JUnit output to CTRF
       if: ${{ env.nextjs_app_started == 'true' && !cancelled() }}
