@@ -1,3 +1,8 @@
 packages:
   - backend
   - frontend
+allowBuilds:
+  core-js: false
+  sharp: true
+  supabase: true
+  unrs-resolver: true
