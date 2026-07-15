@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json({ message: "That name is already taken" }, { status: 409 });
+      }
       console.error("Error upserting user:", error);
       return NextResponse.json({ message: "Failed to save user" }, { status: 500 });
     }
