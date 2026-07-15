@@ -89,7 +89,8 @@ test('Feedback screen offers a View Leaderboard button', async () => {
   test.setTimeout(60_000);
 
   await endChatToFeedback(playerPage, baseUrl!);
-  await expect(playerPage.getByRole('heading', { name: 'Feedback' })).toBeVisible();
+  // First render after feedback generation; give it headroom under parallel load.
+  await expect(playerPage.getByRole('heading', { name: 'Feedback' })).toBeVisible({ timeout: 15000 });
   // The button is conditional on scenario_id coming back from generate-feedback.
   await expect(playerPage.getByTestId('viewLeaderboardButton')).toBeVisible();
 });

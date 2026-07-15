@@ -16,6 +16,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   timeout: 20000,
+  /* Cold dev-server compiles under parallel load can exceed the 5s default. */
+  expect: { timeout: 10000 },
+  /* Warm the dev server so no test pays the first-compile cost. */
+  globalSetup: './e2e/global-setup.ts',
   reporter: [
     ['line'],
     ['html', {  outputFile: 'playwright-report/results.html' }],
