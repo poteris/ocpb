@@ -1,40 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getOrCreateParticipantId, getStoredParticipantName, storeParticipantName } from "@/lib/participant";
+import {
+  getOrCreateParticipantId,
+  getStoredParticipantName,
+  registerParticipant,
+  storeParticipantName,
+  ParticipantNameTakenError,
+} from "@/lib/participant";
 
 interface ParticipantNameDialogProps {
   isOpen: boolean;
   onSaved: (displayName: string) => void;
+  initialErrorMessage?: string | null;
 }
 
-async function saveParticipant(userId: string, displayName: string): Promise<void> {
-  await axios.post("/api/users", { userId, displayName });
-}
+export const NAME_TAKEN_MESSAGE = "That name is already taken — please choose another.";
 
-export const ParticipantNameDialog: React.FC<ParticipantNameDialogProps> = ({ isOpen, onSaved }) => {
+export const ParticipantNameDialog: React.FC<ParticipantNameDialogProps> = ({ isOpen, onSaved, initialErrorMessage }) => {
   const [name, setName] = useState(getStoredParticipantName() ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen && initialErrorMessage) {
+      setErrorMessage(initialErrorMessage);
+    }
+  }, [isOpen, initialErrorMessage]);
+
   const trimmedName = name.trim();
   const canSave = trimmedName.length > 0 && !isSaving;
+
+  const handleNameChange = (nextName: string) => {
+    setName(nextName);
+    if (errorMessage) setErrorMessage(null);
+  };
 
   const handleSave = async () => {
     if (!canSave) return;
     setIsSaving(true);
     setErrorMessage(null);
     try {
-      await saveParticipant(getOrCreateParticipantId(), trimmedName);
+      await registerParticipant(getOrCreateParticipantId(), trimmedName);
       storeParticipantName(trimmedName);
       onSaved(trimmedName);
     } catch (error) {
-      console.error("Error saving participant name:", error);
-      setErrorMessage("Could not save your name. Please try again.");
+      if (error instanceof ParticipantNameTakenError) {
+        setErrorMessage(NAME_TAKEN_MESSAGE);
+      } else {
+        console.error("Error saving participant name:", error);
+        setErrorMessage("Could not save your name. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -58,7 +77,7 @@ export const ParticipantNameDialog: React.FC<ParticipantNameDialogProps> = ({ is
         >
           <Input
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             placeholder="Your name"
             maxLength={40}
             autoFocus

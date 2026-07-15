@@ -16,8 +16,13 @@ import { Persona } from "@/types/persona";
 import { TrainingScenario } from "@/types/scenarios";
 import { Badge } from "@/components/ui/badge";
 import { SendHorizontal } from "lucide-react";
-import { ParticipantNameDialog } from "@/components/ParticipantNameDialog";
-import { getOrCreateParticipantId, getStoredParticipantName } from "@/lib/participant";
+import { ParticipantNameDialog, NAME_TAKEN_MESSAGE } from "@/components/ParticipantNameDialog";
+import {
+  getOrCreateParticipantId,
+  getStoredParticipantName,
+  registerParticipant,
+  ParticipantNameTakenError,
+} from "@/lib/participant";
 
 const PROMPTS = [
   "Hi, can I interrupt you for a sec?",
@@ -74,6 +79,7 @@ const InitiateChatContent: React.FC = () => {
   const [scenarioInfo, setScenarioInfo] = useState<TrainingScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
+  const [nameDialogError, setNameDialogError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!getStoredParticipantName()) {
@@ -105,9 +111,25 @@ const InitiateChatContent: React.FC = () => {
   const startChat = async (message: string) => {
     if (isInitiatingChat || !persona) return;
 
-    if (!getStoredParticipantName()) {
+    const storedName = getStoredParticipantName();
+    if (!storedName) {
       setIsNameDialogOpen(true);
       return;
+    }
+
+    const participantId = getOrCreateParticipantId();
+    try {
+      await registerParticipant(participantId, storedName);
+    } catch (error) {
+      if (error instanceof ParticipantNameTakenError) {
+        setNameDialogError(NAME_TAKEN_MESSAGE);
+        setIsNameDialogOpen(true);
+        return;
+      }
+      // Registration is a best-effort leaderboard concern; a transient failure
+      // self-heals on the next chat start (the upsert is idempotent), so don't
+      // block the conversation on it.
+      console.error("Error registering participant before chat:", error);
     }
 
     try {
@@ -115,7 +137,7 @@ const InitiateChatContent: React.FC = () => {
       setIsNavigatingToChat(true);
 
       const conversationResponse = await createNewChat({
-        userId: getOrCreateParticipantId(),
+        userId: participantId,
         initialMessage: message,
         scenarioId: scenarioId!,
         persona,
@@ -233,7 +255,11 @@ const InitiateChatContent: React.FC = () => {
 
       <ParticipantNameDialog
         isOpen={isNameDialogOpen}
-        onSaved={() => setIsNameDialogOpen(false)}
+        initialErrorMessage={nameDialogError}
+        onSaved={() => {
+          setNameDialogError(null);
+          setIsNameDialogOpen(false);
+        }}
       />
     </div>
   );
