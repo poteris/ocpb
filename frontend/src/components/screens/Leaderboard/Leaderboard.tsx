@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/Select";
+import { Button } from "@/components/ui/button";
 import { TrainingScenario } from "@/types/scenarios";
 import { LeaderboardEntry, leaderboardResponseSchema } from "@/types/leaderboard";
 import { getStoredParticipantId } from "@/lib/participant";
@@ -85,6 +86,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ scenarioId }) => {
   };
 
   const selectedScenario = scenarios.find((scenario) => scenario.id === scenarioId);
+  const hasOwnEntry = participantId !== null && entries.some((entry) => entry.user_id === participantId);
 
   return (
     <div className="bg-gradient-to-br from-white to-gray-100 min-h-[calc(100vh-85px)]">
@@ -97,6 +99,15 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ scenarioId }) => {
             </h1>
             {selectedScenario && (
               <p className="text-lg text-gray-600 mt-1">{selectedScenario.title}</p>
+            )}
+            {scenarioId && !isLoading && (
+              <Button
+                className="mt-3"
+                onClick={() => router.push(`/scenario-setup?scenarioId=${scenarioId}`)}
+                data-testid="improveScoreButton"
+              >
+                {hasOwnEntry ? "Improve your score" : "Play this scenario"}
+              </Button>
             )}
           </div>
 

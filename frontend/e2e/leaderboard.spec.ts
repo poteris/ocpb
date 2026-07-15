@@ -108,6 +108,15 @@ test('Player sees their own scored row with a You badge', async () => {
   expect(Number(attempts)).toBeGreaterThanOrEqual(1);
 });
 
+test('Player can reattempt the scenario via the Improve your score button', async () => {
+  const improveButton = playerPage.getByTestId('improveScoreButton');
+  await expect(improveButton).toBeVisible();
+  await expect(improveButton).toHaveText('Improve your score');
+
+  await improveButton.click();
+  await expect(playerPage).toHaveURL(`${baseUrl}/scenario-setup?scenarioId=${SCENARIO_ID}`);
+});
+
 test('Viewer sees the player appear live, without reloading', async () => {
   // The viewer page has not navigated since it loaded the board (proves it is polling, not reloading).
   await expect(viewerPage).toHaveURL(`${baseUrl}/leaderboard?scenarioId=${SCENARIO_ID}`);
@@ -117,6 +126,14 @@ test('Viewer sees the player appear live, without reloading', async () => {
   await expect(playerRow.getByTestId('leaderboardName')).toContainText(playerName);
   // The viewer is a different participant, so no "You" badge on the player's row.
   await expect(playerRow.getByTestId('leaderboardYouBadge')).toHaveCount(0);
+});
+
+test('A viewer with no entry sees a Play this scenario button', async () => {
+  // The viewer is a distinct participant that never played, so it has no row here.
+  await expect(leaderboardRowFor(viewerPage, playerId)).toBeVisible();
+  const playButton = viewerPage.getByTestId('improveScoreButton');
+  await expect(playButton).toBeVisible();
+  await expect(playButton).toHaveText('Play this scenario');
 });
 
 test('Unknown scenario shows the empty state', async () => {
