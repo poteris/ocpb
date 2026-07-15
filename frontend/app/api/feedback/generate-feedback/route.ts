@@ -4,9 +4,49 @@ import { generateFeedbackUsingLLM } from "@/lib/server/services/feedback/feedbac
 import { supabaseService as supabase } from "../../service-init";
 import { runAllAssertions } from "@/lib/server/services/assertions/conversationAssertions";
 
+async function getExistingFeedback(conversationId: string) {
+  const { data, error } = await supabase
+    .from("feedback")
+    .select("score, summary, strengths, areas_for_improvement")
+    .eq("conversation_id", conversationId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error reading existing feedback:", error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  const parsed = feedbackDataSchema.safeParse(data);
+  if (!parsed.success) {
+    console.error("Stored feedback failed validation, regenerating:", parsed.error);
+    return null;
+  }
+
+  return parsed.data;
+}
+
+async function getScenarioId(conversationId: string) {
+  const { data } = await supabase
+    .from("conversations")
+    .select("scenario_id")
+    .eq("conversation_id", conversationId)
+    .single();
+
+  return data?.scenario_id;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    const existingFeedback = await getExistingFeedback(body.conversationId);
+    if (existingFeedback) {
+      const scenarioId = await getScenarioId(body.conversationId);
+      return NextResponse.json({ ...existingFeedback, scenario_id: scenarioId }, { status: 200 });
+    }
+
     const feedback = await generateFeedbackUsingLLM(body.conversationId);
 
     const parsedFeedback = feedbackDataSchema.parse(feedback);
@@ -67,13 +107,9 @@ export async function POST(req: NextRequest) {
       // Don't fail the request if assertions fail
     }
 
-    const { data: conversation } = await supabase
-      .from("conversations")
-      .select("scenario_id")
-      .eq("conversation_id", body.conversationId)
-      .single();
+    const scenarioId = await getScenarioId(body.conversationId);
 
-    return NextResponse.json({ ...parsedFeedback, scenario_id: conversation?.scenario_id }, { status: 200 });
+    return NextResponse.json({ ...parsedFeedback, scenario_id: scenarioId }, { status: 200 });
   } catch (error) {
     console.error("Error generating feedback:", error);
     return NextResponse.json({ error: "Failed to generate feedback" }, { status: 500 });
