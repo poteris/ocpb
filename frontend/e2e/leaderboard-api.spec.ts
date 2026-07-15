@@ -32,16 +32,37 @@ test.describe('Leaderboard API', () => {
       expect(entry.attempt_count).toBeGreaterThanOrEqual(1);
     }
 
+    // The table is trimmed to the top ten; stats are computed over every player.
+    expect(body.entries.length).toBeLessThanOrEqual(10);
+    expect(body.stats.playerCount).toBeGreaterThanOrEqual(body.entries.length);
+    if (body.stats.averageScore === null) {
+      expect(body.stats.playerCount).toBe(0);
+    } else {
+      expect(body.stats.averageScore).toBeGreaterThanOrEqual(1);
+      expect(body.stats.averageScore).toBeLessThanOrEqual(5);
+    }
+    // No userId was sent, so there is no viewer to resolve.
+    expect(body.viewerEntry).toBeNull();
+
     // Ranks are order-derived: contiguous 1..n, never absolute positions.
     const ranks = body.entries.map((entry: { rank: number }) => entry.rank);
     expect(ranks).toEqual(Array.from({ length: ranks.length }, (_, index) => index + 1));
   });
 
-  test('GET /api/leaderboard for an unknown scenario returns empty entries', async ({ request }) => {
+  test('GET /api/leaderboard for an unknown scenario returns empty entries and zeroed stats', async ({ request }) => {
     const response = await request.get(`${baseUrl}/api/leaderboard?scenarioId=e2e-nonexistent-${Date.now()}`);
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.entries).toEqual([]);
+    expect(body.stats).toEqual({ playerCount: 0, averageScore: null });
+    expect(body.viewerEntry).toBeNull();
+  });
+
+  test('GET /api/leaderboard with an unknown userId resolves a null viewer entry', async ({ request }) => {
+    const response = await request.get(`${baseUrl}/api/leaderboard?scenarioId=${SCENARIO_ID}&userId=${randomUUID()}`);
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.viewerEntry).toBeNull();
   });
 
   test('POST /api/users rejects invalid bodies', async ({ request }) => {
