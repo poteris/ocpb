@@ -45,6 +45,10 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
     router.push(`/chat-screen?conversationId=${conversationId}`);
   }
 
+  const handleViewLeaderboard = () => {
+    router.push(`/leaderboard?scenarioId=${feedbackData?.scenario_id}`);
+  }
+
   return (
     isLoadingFeedback ? (
       <FeedbackSkeleton />
@@ -114,7 +118,10 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 
         {/* Footer */}
         <div className="p-4 flex justify-between border-t border-gray-200 ">
-          {<Button onClick={handleContinueChat}>Continue Chatting</Button>}
+          <Button onClick={handleContinueChat}>Continue Chatting</Button>
+          {feedbackData?.scenario_id && (
+            <Button variant="outline" onClick={handleViewLeaderboard} data-testid="viewLeaderboardButton">View Leaderboard</Button>
+          )}
         </div>
       </div>
     )

@@ -67,7 +67,13 @@ export async function POST(req: NextRequest) {
       // Don't fail the request if assertions fail
     }
 
-    return NextResponse.json(parsedFeedback, { status: 200 });
+    const { data: conversation } = await supabase
+      .from("conversations")
+      .select("scenario_id")
+      .eq("conversation_id", body.conversationId)
+      .single();
+
+    return NextResponse.json({ ...parsedFeedback, scenario_id: conversation?.scenario_id }, { status: 200 });
   } catch (error) {
     console.error("Error generating feedback:", error);
     return NextResponse.json({ error: "Failed to generate feedback" }, { status: 500 });

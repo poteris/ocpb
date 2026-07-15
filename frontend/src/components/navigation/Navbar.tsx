@@ -17,7 +17,12 @@ const Navbar = () => {
         Rep Coach
       </Link>
 
-      <div className="relative h-12 w-12 md:h-16 md:w-16">
+      <div className="flex items-center gap-6">
+        <Link href="/leaderboard" className="text-white text-lg font-regular" data-testid="navbarLeaderboardLink">
+          Leaderboard
+        </Link>
+
+        <div className="relative h-12 w-12 md:h-16 md:w-16">
         <Image
           src={logoSrc}
           alt="Rep Coach Logo"
@@ -29,6 +34,7 @@ const Navbar = () => {
             e.currentTarget.src = "/logo.svg";
           }}
         />
+        </div>
       </div>
     </nav>
   )
