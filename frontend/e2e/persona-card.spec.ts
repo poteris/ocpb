@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 import dotenv from 'dotenv';
+import { goToInitiateChat, startChatFromInitiate } from './helpers/journey';
 import { seedParticipantIdentity } from './helpers/participant';
 
 // Load environment variables from root level .env file
@@ -23,31 +24,11 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
 
 test.describe('Persona Card Feature', () => {
   test('Setup - Navigate to chat page with persona', async () => {
-    // Navigate through the flow to get to chat page
-    await page.goto(`${baseUrl}`);
-    await page.waitForResponse(`${baseUrl}/api/scenarios`);
-    
-    // Start scenario
-    const startScenarioButton = page.getByTestId('startScenarioButton-0');
-    await startScenarioButton.click();
-    await expect(page).toHaveURL(`${baseUrl}/scenario-setup?scenarioId=member-recruitment`);
-    
-    // Wait for persona to load
-    await page.waitForResponse(`${baseUrl}/api/persona/generate-new-persona`);
-    await expect(page.getByRole('heading', { name: 'Personal Background' })).toBeVisible();
-    
-    // Start chat
-    const startChatButton = page.getByTestId('startChatButton');
-    await startChatButton.click();
-    await expect(page).toHaveURL(new RegExp(`^${baseUrl}/initiate-chat`));
-    
-    // Enter message and start chat
-    const startChatInput = page.getByTestId('startChatInput');
-    await startChatInput.fill(startChatText);
-    await Promise.all([
-      page.waitForURL(`${baseUrl}/chat-screen**`),
-      page.getByTestId('initiateSendButton').click()
-    ]);
+    // Use the shared journey helpers: goToInitiateChat waits for the persona atom
+    // to be populated before clicking through, which the previous inline navigation
+    // did not — clicking start-chat before the atom is set no-ops handleStartChat.
+    await goToInitiateChat(page, baseUrl!);
+    await startChatFromInitiate(page, baseUrl!, startChatText);
   });
 
   test('Persona card appears on chat page', async () => {
