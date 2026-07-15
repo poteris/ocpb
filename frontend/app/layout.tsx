@@ -15,7 +15,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Rep Coach",
+  title: "Convo Coach",
   description: "Training scenarios for union representatives",
 };
 
