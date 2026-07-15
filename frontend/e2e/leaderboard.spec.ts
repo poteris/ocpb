@@ -68,7 +68,7 @@ test('Selecting a scenario loads its leaderboard', async () => {
 });
 
 test('Player names themselves and completes a conversation', async () => {
-  test.setTimeout(60_000); // real-LLM latency in CI
+  test.setTimeout(120_000); // real-LLM latency: persona generation + first-message reply
 
   await goToInitiateChat(playerPage, baseUrl!);
 

@@ -10,7 +10,14 @@ export async function goToInitiateChat(page: Page, baseUrl: string): Promise<voi
   await expect(startScenarioButton).toBeVisible();
   await startScenarioButton.click();
 
-  await page.waitForResponse(`${baseUrl}/api/persona/generate-new-persona`);
+  // Persona generation is a real LLM call and can be slow; give the response headroom.
+  await page.waitForResponse(`${baseUrl}/api/persona/generate-new-persona`, { timeout: 60_000 });
+
+  // handleStartChat no-ops until the persona atom is populated, so clicking before the
+  // persona renders leaves us stranded on scenario-setup and waitForURL hangs. Wait for
+  // the "no persona" fallback to clear (i.e. the persona is present) before continuing.
+  await expect(page.getByText('No persona data available')).toHaveCount(0, { timeout: 30_000 });
+
   const startChatButton = page.getByTestId('startChatButton');
   await expect(startChatButton).toBeVisible();
   await Promise.all([
