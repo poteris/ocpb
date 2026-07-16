@@ -22,6 +22,9 @@
     "db:reset:all": "pnpm --filter backend db:reset && pnpm --filter backend db:pull && pnpm --filter backend db:push"
   },
   "packageManager": "pnpm@11.13.0",
+  "engines": {
+    "node": "24.x"
+  },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/node": "20.16.11"
