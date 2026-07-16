@@ -3,6 +3,7 @@ import { genericNewPersonaPrompt } from "@/utils/genericNewPersonaPrompt";
 import { v4 as uuidv4 } from "uuid";
 import { tools as openAifunctions } from "@/utils/openaiTools";
 import { getOpenAIClient } from "../openai/OpenAIClientFactory";
+import { getLlmModel } from "../../llmModel";
 
 export const generateNewPersona = async (headers: Headers = new Headers()) => {
 
@@ -43,7 +44,7 @@ const retryPersonaGeneration = async (headers: Headers) => {
 
 const generatePersona = async (headers: Headers) => {
   const messages = [{ role: "user", content: genericNewPersonaPrompt }];
-  const llm = process.env.LLM_MODEL ?? "gpt-4o";
+  const llm = await getLlmModel();
   const openaiClient = getOpenAIClient(headers);
   const completion = await openaiClient.createChatCompletion({
     model: llm,

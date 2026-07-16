@@ -1,5 +1,5 @@
 "use client"
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { FeedbackPopover as FeedbackView } from "@/components/screens/FeedbackScreen/FeedbackScreen";
@@ -10,8 +10,15 @@ function FeedbackContent() {
   const router = useRouter();
   const conversationId = searchParams ? searchParams.get('conversationId') : null;
 
+  // Redirect from an effect: router.push during render throws on the server
+  // (location is not defined) whenever this page is requested directly.
+  useEffect(() => {
+    if (!conversationId) {
+      router.push("/");
+    }
+  }, [conversationId, router]);
+
   if (!conversationId) {
-    router.push("/");
     return null;
   }
 

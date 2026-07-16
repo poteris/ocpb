@@ -6,6 +6,7 @@ export interface FeedbackData {
   strengths: { title: string; description: string }[];
   areas_for_improvement: { title: string; description: string }[];
   summary: string;
+  scenario_id?: string;
 }
 
 export const feedbackDataSchema = z.object({
@@ -23,6 +24,7 @@ export const feedbackDataSchema = z.object({
     })
   ),
   summary: z.string(),
+  scenario_id: z.string().optional(),
 });
 
 export interface MessageData {

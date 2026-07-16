@@ -28,6 +28,14 @@ const Navbar = () => {
           Canvass Coach
         </Link>
       </div>
+
+      <Link
+        href="/leaderboard"
+        className={`text-sm md:text-lg font-regular ${useLightBackground ? 'text-black' : 'text-white'}`}
+        data-testid="navbarLeaderboardLink"
+      >
+        Leaderboard
+      </Link>
     </nav>
   )
 }

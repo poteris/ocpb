@@ -1,11 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
 
 
+// The leaderboard feature suite is excluded from the CI smoke pipeline (set
+// SKIP_LEADERBOARD_TESTS=true there). These specs still run locally by default.
+const LEADERBOARD_SPECS = [
+  '**/leaderboard.spec.ts',
+  '**/leaderboard-api.spec.ts',
+  '**/participant-name.spec.ts',
+];
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: process.env.SKIP_LEADERBOARD_TESTS === 'true' ? LEADERBOARD_SPECS : [],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -16,6 +25,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   timeout: 20000,
+  /* Cold dev-server compiles under parallel load can exceed the 5s default. */
+  expect: { timeout: 10000 },
+  /* Warm the dev server so no test pays the first-compile cost. */
+  globalSetup: './e2e/global-setup.ts',
   reporter: [
     ['line'],
     ['html', {  outputFile: 'playwright-report/results.html' }],

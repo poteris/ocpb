@@ -2,10 +2,11 @@
 import { getFeedbackPrompt } from "@/lib/server/services/feedback/feedbackPrompt";
 import { getOpenAIClient } from "../openai/OpenAIClientFactory";
 import { tools } from "@/utils/openaiTools";
+import { getLlmModel } from "../../llmModel";
 
 export async function generateFeedbackUsingLLM(conversationId: string) {
   const feedbackPrompt = await getFeedbackPrompt(conversationId);
-  const llm = process.env.LLM_MODEL || "gpt-4o";
+  const llm = await getLlmModel();
   const openaiClient = getOpenAIClient();
   const completion = await openaiClient.createChatCompletion({
     model: llm,

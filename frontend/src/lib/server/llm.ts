@@ -5,8 +5,7 @@ import { TrainingScenario } from "@/types/scenarios";
 import Handlebars from "handlebars";
 import { getOpenAIClient } from './services/openai/OpenAIClientFactory';
 import { ChatCompletionRequest } from './services/openai/ChatCompletionTypes';
-
-const llm_model = process.env.LLM_MODEL || "gpt-4o";
+import { getLlmModel } from './llmModel';
 
 export async function getAIResponse(messages: OpenAI.ChatCompletionMessageParam[], headers: Headers = new Headers()): Promise<string | null> {
   const formattedMessages = messages.map((msg) => ({
@@ -15,7 +14,7 @@ export async function getAIResponse(messages: OpenAI.ChatCompletionMessageParam[
   }));
   const params: ChatCompletionRequest = {
     messages: formattedMessages,
-    model: llm_model,
+    model: await getLlmModel(),
   };
 
   const completion = await getOpenAIClient(headers).createChatCompletion(params);

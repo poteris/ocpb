@@ -52,3 +52,4 @@ node_modules
 /playwright-report/
 /frontend/blob-report/
 /frontend/playwright/.cache/
+.env*

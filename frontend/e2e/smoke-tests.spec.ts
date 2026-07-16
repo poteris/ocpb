@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Browser, ConsoleMessage, Response } from '@playwright/test';
 import dotenv from 'dotenv';
+import { seedParticipantIdentity } from './helpers/participant';
 
 // Load environment variables from root level .env file
 dotenv.config({ path: '../.env' });
@@ -13,6 +14,7 @@ let page: Page;
 
 test.beforeAll(async ({ browser }: { browser: Browser }) => {
   page = await browser.newPage();
+  await seedParticipantIdentity(page);
   if (process.env.E2E_TEST_DEBUG_LOG === 'true') {
     page.on('console', (msg: ConsoleMessage) => {
       console.log('Browser console message:', msg.text());

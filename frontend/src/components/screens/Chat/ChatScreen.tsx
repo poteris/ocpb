@@ -161,7 +161,11 @@ const ChatScreen = () => {
 
   const handleConfirmEndChat = () => {
     setIsEndChatModalOpen(false)
-    router.push(`/feedback?conversationId=${conversationData?.conversationId}`)
+    // Use the URL param, not conversationData?.conversationId: the latter is
+    // undefined until the async chat fetch resolves, which would send feedback
+    // to /feedback?conversationId=undefined and 500 the generate-feedback route.
+    if (!conversationId) return
+    router.push(`/feedback?conversationId=${conversationId}`)
   }
 
   return (

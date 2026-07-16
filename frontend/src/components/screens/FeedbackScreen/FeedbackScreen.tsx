@@ -1,7 +1,7 @@
 import React from "react";
 import { X, CheckCircle, AlertCircle, CircleArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {useState, useEffect } from "react";
+import {useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FeedbackData } from "@/types/feedback";
 import FeedbackSkeleton from "./FeedbackSkeleton";
@@ -28,7 +28,11 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   const router = useRouter();
+  const requestedForConversationRef = useRef<string | null>(null);
   useEffect(() => {
+    if (requestedForConversationRef.current === conversationId) return;
+    requestedForConversationRef.current = conversationId;
+
     setIsLoadingFeedback(true);
     generateFeedbackOnConversation(conversationId).then((data) => {
       setFeedbackData(data);
@@ -44,6 +48,10 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 
   const handleContinueChat = () => {
     router.push(`/chat-screen?conversationId=${conversationId}`);
+  }
+
+  const handleViewLeaderboard = () => {
+    router.push(`/leaderboard?scenarioId=${feedbackData?.scenario_id}`);
   }
 
   return (
@@ -136,7 +144,10 @@ export const FeedbackPopover: React.FC<FeedbackPopoverProps> = ({
 
         {/* Footer */}
         <div className="p-4 flex justify-between border-t border-gray-200 ">
-          {<Button onClick={handleContinueChat}>Continue Chatting</Button>}
+          <Button onClick={handleContinueChat}>Continue Chatting</Button>
+          {feedbackData?.scenario_id && (
+            <Button variant="outline" onClick={handleViewLeaderboard} data-testid="viewLeaderboardButton">View Leaderboard</Button>
+          )}
         </div>
       </div>
     )
